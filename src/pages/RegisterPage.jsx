@@ -1,0 +1,110 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { registerUser } from "../api/authService";
+import "./RegisterPage.css";
+
+const RegisterPage = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+
+  const navigate = useNavigate();
+
+  const showMessage = (msg) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(""), 4000);
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+
+    try {
+      const registerData = { name, email, password };
+      await registerUser(registerData);
+      showMessage("Registration Successful ✅");
+      navigate("/login");
+    } catch (error) {
+      const msg = error.response?.data?.message || "Error registering user";
+      showMessage(msg);
+      console.error("Register error:", error);
+    }
+  };
+
+  return (
+    <div className="auth-wrapper">
+      <div className="auth-left">
+        <div className="brand-box">
+          <div className="brand-pill">BioGenHoldings</div>
+          <p className="brand-text">
+            Smart inventory control powered by real-time analytics
+          </p>
+        </div>
+
+        <div className="brand-footer">
+          © BioGenHolding {new Date().getFullYear()}
+        </div>
+      </div>
+      <div className="auth-right">
+        <div className="auth-form-container">
+          <h2 className="auth-title">
+            Create your account <span>✨</span>
+          </h2>
+          <p className="auth-subtitle">
+            Register to start managing your inventory efficiently
+          </p>
+
+          {message && <p className="message">{message}</p>}
+
+          <form onSubmit={handleRegister} className="auth-form">
+            <label>Name</label>
+            <input
+              type="text"
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+
+            <label>Email</label>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <label>Password</label>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <div className="auth-options">
+              <label className="remember">
+                <input type="checkbox" />
+                Remember for 30 days
+              </label>
+              <span className="forgot">Forgot password</span>
+            </div>
+
+            <button type="submit" className="auth-btn">
+              Register
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            Already have an account?{" "}
+            <span onClick={() => navigate("/login")}>Login</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RegisterPage;
