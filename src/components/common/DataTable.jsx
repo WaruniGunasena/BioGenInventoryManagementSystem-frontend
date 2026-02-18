@@ -95,13 +95,6 @@ const DataTable = ({
                 <table className="common-table">
                     <thead>
                         <tr>
-                            <th style={{ width: '40px' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={isAllSelected}
-                                    onChange={handleSelectAll}
-                                />
-                            </th>
                             {columns.map((col, index) => (
                                 <th key={index}>{col.header}</th>
                             ))}
@@ -111,13 +104,6 @@ const DataTable = ({
                     <tbody>
                         {data.map((row) => (
                             <tr key={row.id}>
-                                <td>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedIds.includes(row.id)}
-                                        onChange={() => handleSelectRow(row.id)}
-                                    />
-                                </td>
                                 {columns.map((col, idx) => (
                                     <td key={idx}>
                                         {col.render ? col.render(row) : row[col.accessor]}
