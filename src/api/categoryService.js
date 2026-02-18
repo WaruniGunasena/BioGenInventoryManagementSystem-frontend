@@ -19,3 +19,6 @@ export const updateCategory = (id, data) =>
 // Delete category
 export const deleteCategory = (id) =>
   api.delete(`/categories/delete/${id}`);
+
+export const searchCategory = (query) =>
+  api.get(`/categories/search?searchKey=${query}`);
