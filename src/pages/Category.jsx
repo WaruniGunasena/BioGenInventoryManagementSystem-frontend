@@ -1,17 +1,106 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import MetricCard from '../components/common/MetricCard';
 import DataTable from '../components/common/DataTable';
+import Modal from '../components/common/Modal'; // Import Modal
+import { Filter, Users, UserX } from 'lucide-react';
 import '../components/Dashboard/Dashboard.css';
+import { getAllCategory, createCategory, updateCategory, deleteCategory } from '../api/categoryService';
 
 const Category = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-    // Metrics
+    // API Data State
+    const [categories, setCategories] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    // const [error, setError] = useState(null); // Optional: Handle errors
+
+    // Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
+    const [selectedCategory, setSelectedCategory] = useState(null);
+
+    // Form State
+    const [formData, setFormData] = useState({ name: '', description: '' });
+
+    // Fetch Categories
+    const fetchCategories = async () => {
+        setIsLoading(true);
+        try {
+            const response = await getAllCategory();
+            console.log("API Response:", response);
+            if (response.data && response.data.categories && Array.isArray(response.data.categories)) {
+                setCategories(response.data.categories);
+            } else {
+                console.error("Unexpected response format:", response);
+                setCategories([]);
+            }
+        } catch (err) {
+            console.error("Failed to fetch categories:", err);
+            // setError("Failed to load categories.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    const handleOpenModal = (mode, category = null) => {
+        setModalMode(mode);
+        setSelectedCategory(category);
+        setFormData(category ? { name: category.name, description: category.description } : { name: '', description: '' });
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedCategory(null);
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async () => {
+        try {
+            console.log("Form data", formData)
+            if (modalMode === 'add') {
+                console.log("inside formData")
+                await createCategory(formData);
+            } else {
+                // Determine ID field (id or _id)
+                const id = selectedCategory.id || selectedCategory._id;
+                await updateCategory(id, formData);
+            }
+            fetchCategories(); // Refresh list
+            handleCloseModal();
+        } catch (error) {
+            console.error("Error saving category:", error);
+            // Handle error (e.g., show toast)
+        }
+    };
+
+    const handleDelete = async (row) => {
+        if (window.confirm("Are you sure you want to delete this category?")) {
+            try {
+                const id = row.id || row._id;
+                await deleteCategory(id);
+                fetchCategories(); // Refresh list
+            } catch (error) {
+                console.error("Error deleting category:", error);
+            }
+        }
+    };
+
+    // Metric Cards Data (Static for now, could be calculated from categories)
     const metrics = [
-        { title: "Active Categories", value: 100, trend: { value: "12%", isPositive: true }, isPrimary: true },
-        { title: "Inactive Categories", value: 19, trend: { value: "12%", isPositive: true }, isPrimary: false },
+        { title: "Total Categories", value: categories.length.toString(), trend: { value: "12%", isPositive: true }, icon: Filter, isPrimary: true },
+        { title: "Active Categories", value: categories.length.toString(), trend: { value: "0%", isPositive: true }, icon: Users },
+        { title: "Inactive Categories", value: "0", trend: { value: "2%", isPositive: false }, icon: UserX },
     ];
 
     // Table
@@ -19,26 +108,29 @@ const Category = () => {
     const [selectedIds, setSelectedIds] = useState([]);
 
     const columns = [
-        { header: "Category Name", accessor: "name" },
-        { header: "Category ID", accessor: "categoryId" },
+        { header: "Category Name", accessor: "name", render: (row) => <span style={{ fontWeight: '500', color: '#6366f1' }}>{row.name}</span> },
+        { header: "Category ID", accessor: "_id", render: (row) => row.categoryId || row._id }, // Fallback for ID
         { header: "Description", accessor: "description" },
         {
-            header: "Products", accessor: "products", render: () => (
-                <div style={{ display: 'flex' }}>
+            header: "Products", accessor: "products", render: (row) => (
+                <div className="product-avatars" style={{ display: 'flex' }}>
+                    {/* Dummy avatar group for now */}
                     {[1, 2, 3].map(i => (
-                        <img key={i} src={`https://ui-avatars.com/api/?name=P${i}&background=random`} alt="" className="user-avatar" style={{ marginLeft: i > 0 ? '-10px' : 0, border: '2px solid white' }} />
+                        <img key={i} src={`https://ui-avatars.com/api/?name=Product+${i}&background=random`}
+                            style={{
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '50%',
+                                border: '2px solid white',
+                                marginLeft: '-8px',
+                                firstOfType: { marginLeft: 0 }
+                            }}
+                            alt=""
+                        />
                     ))}
-                    <span style={{ marginLeft: '5px', fontSize: '12px', alignSelf: 'center' }}>+5</span>
                 </div>
             )
         },
-    ];
-
-    const data = [
-        { id: 1, name: "Antibiotics", categoryId: "BC2022110001", description: "Used to treat bacterial infections", isActive: true },
-        { id: 2, name: "Painkillers", categoryId: "BC2022110002", description: "Relieve pain and fever", isActive: true },
-        { id: 3, name: "Vitamins & Supplements", categoryId: "BC2022110003", description: "Nutritional support", isActive: true },
-        { id: 4, name: "Cold & Flu", categoryId: "BC2022110004", description: "Relieves cold and flu symptoms", isActive: true },
     ];
 
 
@@ -55,28 +147,60 @@ const Category = () => {
                     <h2>Category</h2>
                 </header>
 
-                {/* Metrics */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-                    {metrics.map((m, i) => (
-                        <MetricCard key={i} {...m} />
+                    {metrics.map((metric, index) => (
+                        <MetricCard key={index} {...metric} />
                     ))}
                 </div>
 
-                {/* Table */}
-                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>Active Categories</h3>
                 <DataTable
                     columns={columns}
-                    data={data}
+                    data={categories} // Use API data
                     currentPage={currentPage}
-                    totalPages={10}
+                    totalPages={1} // TODO: Implement backend pagination if available
                     onPageChange={setCurrentPage}
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
                     addButtonLabel="Add New Category"
-                    onAddClick={() => { }}
-                    onToggleStatus={(row) => console.log("Toggle", row.id)}
+                    onAddClick={() => handleOpenModal('add')}
+                    onEdit={(row) => handleOpenModal('edit', row)}
+                    onDelete={handleDelete}
                     showFilter={true}
                 />
+
+                {/* Reusable Modal */}
+                <Modal
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
+                    title={modalMode === 'add' ? "Add New Category" : "Edit Category"}
+                >
+                    <div className="form-group">
+                        <label className="form-label">Category Name</label>
+                        <input
+                            type="text"
+                            name="name"
+                            className="form-input"
+                            placeholder="Enter Category Name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Description</label>
+                        <textarea
+                            name="description"
+                            className="form-textarea"
+                            placeholder="Enter Description"
+                            value={formData.description}
+                            onChange={handleInputChange}
+                        ></textarea>
+                    </div>
+                    <div className="form-actions">
+                        <button className="btn-primary btn-full" onClick={handleSubmit}>
+                            {modalMode === 'add' ? "Add New Category" : "Save Changes"}
+                        </button>
+                    </div>
+                </Modal>
             </div>
         </div>
     );
