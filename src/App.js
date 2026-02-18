@@ -5,7 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import Dashboard from "./components/Dashboard/Dashboard";
 import Products from "./pages/Products";
 import Suppliers from "./pages/Suppliers";
-import Category from "./pages/Category";
+import Category from "./pages/Category/Category";
 import SalesReps from "./pages/SalesReps";
 import Customers from "./pages/Customers";
 import ComponentsDemo from "./pages/ComponentsDemo";

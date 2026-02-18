@@ -139,7 +139,7 @@ const DataTable = ({
             <div className="pagination-container">
                 <button
                     className="nav-btn"
-                    disabled={currentPage === 1}
+                    disabled={currentPage === 0}
                     onClick={() => onPageChange(currentPage - 1)}
                 >
                     <ChevronLeft size={16} /> Previous
@@ -149,7 +149,7 @@ const DataTable = ({
                     {[...Array(totalPages)].map((_, i) => (
                         <button
                             key={i}
-                            className={`page-btn ${currentPage === i + 1 ? 'active' : ''}`}
+                            className={`page-btn ${currentPage === i ? 'active' : ''}`}
                             onClick={() => onPageChange(i + 1)}
                         >
                             {i + 1}
@@ -159,7 +159,7 @@ const DataTable = ({
 
                 <button
                     className="nav-btn"
-                    disabled={currentPage === totalPages}
+                    disabled={currentPage === totalPages-1}
                     onClick={() => onPageChange(currentPage + 1)}
                 >
                     Next <ChevronRight size={16} />

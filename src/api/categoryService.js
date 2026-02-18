@@ -22,3 +22,6 @@ export const deleteCategory = (id) =>
 
 export const searchCategory = (query) =>
   api.get(`/categories/search?searchKey=${query}`);
+
+export const getPaginatedResults = (page, size, filter) =>
+  api.get(`/categories?page=${page}&size=${size}&filter=${filter}`);
