@@ -22,6 +22,7 @@ const AddCategory = ({ formData, handleInputChange, handleFormSubmitClick, modal
                     placeholder="Enter Description"
                     value={formData.description}
                     onChange={handleInputChange}
+                    maxLength={255}
                 ></textarea>
             </div>
             <div className="form-actions">
