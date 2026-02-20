@@ -43,7 +43,7 @@ const Category = () => {
     const fetchCategories = async () => {
         setIsLoading(true);
         try {
-            const response = await getPaginatedResults(currentPage, 5, FilterType.DESC)
+            const response = await getPaginatedResults(currentPage, 5, filter)
             console.log(response);
             if (response.data && response.data.categories && Array.isArray(response.data.categories)) {
                 setCategories(response.data.categories);
@@ -60,7 +60,7 @@ const Category = () => {
 
     useEffect(() => {
         fetchCategories();
-    }, [currentPage]);
+    }, [currentPage, filter]);
 
     // --- Add/Edit Modal Handlers ---
 
@@ -83,21 +83,9 @@ const Category = () => {
 
     const handleFormSubmitClick = () => {
         if (modalMode === 'add') {
-            // For Add, we might just submit directly or ask confirmation? 
-            // User asked specifically for "Edit confirmation modal"
-            // Let's assume Add is direct, Edit needs confirmation.
             performAction('add', formData);
         } else {
-            // Open Confirmation for Edit
-            setConfirmModal({
-                isOpen: true,
-                type: 'edit',
-                data: formData,
-                message: `Are you sure you want to update the category details?`
-            });
-            // Close the form modal temporarily or keep it open? 
-            // Usually better to keep it open or close it. 
-            // Let's keep it open and if confirmed, we do the action and close both.
+            performAction('edit', formData);
         }
     };
 
@@ -152,6 +140,16 @@ const Category = () => {
                 handleCloseModal();
             } catch (error) {
                 console.error("Error creating category:", error);
+            }
+        }
+        if (type === 'edit') {
+            try {
+                const id = selectedCategory?.id || selectedCategory?._id;
+                await updateCategory(id, data);
+                fetchCategories();
+                handleCloseModal();
+            } catch (error) {
+                console.error("Error updating category:", error);
             }
         }
     }
@@ -227,6 +225,14 @@ const Category = () => {
                     onEdit={(row) => handleOpenModal('edit', row)}
                     onDelete={handleDeleteClick}
                     onSearch={handleSearch}
+                    filterOptions={[
+                        { label: 'Name: A → Z', value: FilterType.ASC },
+                        { label: 'Name: Z → A', value: FilterType.DESC },
+                    ]}
+                    onFilter={(value) => {
+                        SetFilter(value ?? FilterType.ASC);
+                        setCurrentPage(0); // reset to first page on filter change
+                    }}
                 />
 
                 {/* Add/Edit Modal */}
@@ -251,7 +257,7 @@ const Category = () => {
                     message={confirmModal.message}
                     confirmLabel="Yes"
                     cancelLabel="No"
-                    title={confirmModal.type === 'delete' ? "Delete Category?" : "Update Category?"}
+                    title={"Delete Category?"}
                 />
             </div>
         </div>

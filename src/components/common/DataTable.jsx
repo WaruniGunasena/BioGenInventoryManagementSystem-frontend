@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, Filter, Download, Plus, Trash2, Edit2, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Filter, Download, Plus, Trash2, Edit2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import './Common.css';
 
 const DataTable = ({
@@ -18,6 +18,9 @@ const DataTable = ({
     onFilter = () => { },
     onExport = () => { },
 
+    // Filter dropdown options: [{ label: 'A to Z', value: 'name_asc' }, ...]
+    filterOptions = [],
+
     // Pagination
     currentPage = 1,
     totalPages = 10,
@@ -32,6 +35,27 @@ const DataTable = ({
     onDelete = () => { },
     onToggleStatus = () => { },
 }) => {
+
+    const [filterOpen, setFilterOpen] = useState(false);
+    const [activeFilter, setActiveFilter] = useState(null);
+    const filterRef = useRef(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (filterRef.current && !filterRef.current.contains(e.target)) {
+                setFilterOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleFilterSelect = (option) => {
+        setActiveFilter(option.value);
+        setFilterOpen(false);
+        onFilter(option.value);
+    };
 
     const isAllSelected = data.length > 0 && selectedIds.length === data.length;
 
@@ -68,14 +92,44 @@ const DataTable = ({
                                 />
                             </div>
                         )}
-                        {showFilter && (
-                            <button className="btn-secondary" onClick={onFilter}>
-                                <Filter size={16} /> Filters
-                            </button>
-                        )}
                     </div>
 
                     <div className="control-right">
+                        {showFilter && (
+                            <div className="filter-dropdown-wrapper" ref={filterRef}>
+                                <button
+                                    className={`btn-secondary ${activeFilter ? 'btn-secondary--active' : ''}`}
+                                    onClick={() => setFilterOpen((prev) => !prev)}
+                                >
+                                    <Filter size={16} />
+                                    {activeFilter
+                                        ? (filterOptions.find(o => o.value === activeFilter)?.label || 'Filter')
+                                        : 'Filter'}
+                                    <ChevronDown size={14} className={`filter-chevron ${filterOpen ? 'filter-chevron--open' : ''}`} />
+                                </button>
+                                {filterOpen && filterOptions.length > 0 && (
+                                    <ul className="filter-dropdown-menu">
+                                        {filterOptions.map((option) => (
+                                            <li
+                                                key={option.value}
+                                                className={`filter-dropdown-item ${activeFilter === option.value ? 'filter-dropdown-item--selected' : ''}`}
+                                                onClick={() => handleFilterSelect(option)}
+                                            >
+                                                {option.label}
+                                            </li>
+                                        ))}
+                                        {activeFilter && (
+                                            <li
+                                                className="filter-dropdown-item filter-dropdown-item--clear"
+                                                onClick={() => { setActiveFilter(null); setFilterOpen(false); onFilter(null); }}
+                                            >
+                                                Clear filter
+                                            </li>
+                                        )}
+                                    </ul>
+                                )}
+                            </div>
+                        )}
                         {showExport && (
                             <button className="btn-secondary" onClick={onExport}>
                                 <Download size={16} /> Export
@@ -150,7 +204,7 @@ const DataTable = ({
                         <button
                             key={i}
                             className={`page-btn ${currentPage === i ? 'active' : ''}`}
-                            onClick={() => onPageChange(i + 1)}
+                            onClick={() => onPageChange(i)}
                         >
                             {i + 1}
                         </button>
