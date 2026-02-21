@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import MetricCard from '../components/common/MetricCard';
-import DataTable from '../components/common/DataTable';
-import Modal from '../components/common/Modal';
-import ConfirmationModal from '../components/common/ConfirmationModal'; // Import ConfirmationModal
+import Sidebar from '../../components/Sidebar';
+import MetricCard from '../../components/common/MetricCard';
+import DataTable from '../../components/common/DataTable';
+import Modal from '../../components/common/Modal';
+import ConfirmationModal from '../../components/common/ConfirmationModal'; // Import ConfirmationModal
 import { Filter, Users, UserX } from 'lucide-react';
-import '../components/Dashboard/Dashboard.css';
-import { getAllCategory, createCategory, updateCategory, deleteCategory, searchCategory } from '../api/categoryService';
+import { getAllCategory, createCategory, updateCategory, deleteCategory, searchCategory, getPaginatedResults } from '../../api/categoryService';
+import AddCategory from './AddCategory';
+import FilterType from '../../enums/FilterType'; // Import FilterType
 
 const Category = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -29,6 +30,12 @@ const Category = () => {
         message: ''
     });
 
+    //Table 
+    const [currentPage, setCurrentPage] = useState(0);
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [totalPages, setTotalPages] = useState(0);
+    const [filter, SetFilter] = useState(FilterType.ASC); // Use FilterType Enum
+
     // Form State
     const [formData, setFormData] = useState({ name: '', description: '' });
 
@@ -36,13 +43,11 @@ const Category = () => {
     const fetchCategories = async () => {
         setIsLoading(true);
         try {
-            const response = await getAllCategory();
-            if (response.data && Array.isArray(response.data)) {
-                setCategories(response.data);
-            } else if (response.data && response.data.categories && Array.isArray(response.data.categories)) {
+            const response = await getPaginatedResults(currentPage, 5, filter)
+            console.log(response);
+            if (response.data && response.data.categories && Array.isArray(response.data.categories)) {
                 setCategories(response.data.categories);
-            } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
-                setCategories(response.data.data);
+                setTotalPages(response.data.totalPages);
             } else {
                 setCategories([]);
             }
@@ -55,7 +60,7 @@ const Category = () => {
 
     useEffect(() => {
         fetchCategories();
-    }, []);
+    }, [currentPage, filter]);
 
     // --- Add/Edit Modal Handlers ---
 
@@ -78,21 +83,9 @@ const Category = () => {
 
     const handleFormSubmitClick = () => {
         if (modalMode === 'add') {
-            // For Add, we might just submit directly or ask confirmation? 
-            // User asked specifically for "Edit confirmation modal"
-            // Let's assume Add is direct, Edit needs confirmation.
             performAction('add', formData);
         } else {
-            // Open Confirmation for Edit
-            setConfirmModal({
-                isOpen: true,
-                type: 'edit',
-                data: formData,
-                message: `Are you sure you want to update the category details?`
-            });
-            // Close the form modal temporarily or keep it open? 
-            // Usually better to keep it open or close it. 
-            // Let's keep it open and if confirmed, we do the action and close both.
+            performAction('edit', formData);
         }
     };
 
@@ -149,6 +142,16 @@ const Category = () => {
                 console.error("Error creating category:", error);
             }
         }
+        if (type === 'edit') {
+            try {
+                const id = selectedCategory?.id || selectedCategory?._id;
+                await updateCategory(id, data);
+                fetchCategories();
+                handleCloseModal();
+            } catch (error) {
+                console.error("Error updating category:", error);
+            }
+        }
     }
 
     const handleSearch = async (query) => {
@@ -171,10 +174,6 @@ const Category = () => {
         { title: "Active Categories", value: categories.length.toString(), trend: { value: "0%", isPositive: true }, icon: Users },
         { title: "Inactive Categories", value: "0", trend: { value: "2%", isPositive: false }, icon: UserX },
     ];
-
-    // Table
-    const [currentPage, setCurrentPage] = useState(1);
-    const [selectedIds, setSelectedIds] = useState([]);
 
     const columns = [
         { header: "Category Name", accessor: "name", render: (row) => <span style={{ fontWeight: '500', color: '#6366f1' }}>{row.name}</span> },
@@ -217,7 +216,7 @@ const Category = () => {
                     columns={columns}
                     data={categories}
                     currentPage={currentPage}
-                    totalPages={1}
+                    totalPages={totalPages}
                     onPageChange={setCurrentPage}
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
@@ -226,6 +225,14 @@ const Category = () => {
                     onEdit={(row) => handleOpenModal('edit', row)}
                     onDelete={handleDeleteClick}
                     onSearch={handleSearch}
+                    filterOptions={[
+                        { label: 'Name: A → Z', value: FilterType.ASC },
+                        { label: 'Name: Z → A', value: FilterType.DESC },
+                    ]}
+                    onFilter={(value) => {
+                        SetFilter(value ?? FilterType.ASC);
+                        setCurrentPage(0); // reset to first page on filter change
+                    }}
                 />
 
                 {/* Add/Edit Modal */}
@@ -234,32 +241,12 @@ const Category = () => {
                     onClose={handleCloseModal}
                     title={modalMode === 'add' ? "Add New Category" : "Edit Category"}
                 >
-                    <div className="form-group">
-                        <label className="form-label">Category Name</label>
-                        <input
-                            type="text"
-                            name="name"
-                            className="form-input"
-                            placeholder="Enter Category Name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Description</label>
-                        <textarea
-                            name="description"
-                            className="form-textarea"
-                            placeholder="Enter Description"
-                            value={formData.description}
-                            onChange={handleInputChange}
-                        ></textarea>
-                    </div>
-                    <div className="form-actions">
-                        <button className="btn-primary btn-full" onClick={handleFormSubmitClick}>
-                            {modalMode === 'add' ? "Add New Category" : "Save Changes"}
-                        </button>
-                    </div>
+                    <AddCategory
+                        formData={formData}
+                        handleInputChange={handleInputChange}
+                        handleFormSubmitClick={handleFormSubmitClick}
+                        modalMode={modalMode}
+                    />
                 </Modal>
 
                 {/* Confirmation Modal */}
@@ -270,7 +257,7 @@ const Category = () => {
                     message={confirmModal.message}
                     confirmLabel="Yes"
                     cancelLabel="No"
-                    title={confirmModal.type === 'delete' ? "Delete Category?" : "Update Category?"}
+                    title={"Delete Category?"}
                 />
             </div>
         </div>
