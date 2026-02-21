@@ -8,6 +8,8 @@ import { Filter, Users, UserX } from 'lucide-react';
 import { getAllCategory, createCategory, updateCategory, deleteCategory, searchCategory, getPaginatedResults } from '../../api/categoryService';
 import AddCategory from './AddCategory';
 import FilterType from '../../enums/FilterType'; // Import FilterType
+import { exportToCSV } from '../../components/common/Export/ExportToCSV';
+import { exportToPDF } from '../../components/common/Export/ExportToPDF';
 
 const Category = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -16,6 +18,7 @@ const Category = () => {
     // API Data State
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
     // Modal State (Add/Edit Form)
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -193,6 +196,41 @@ const Category = () => {
         },
     ];
 
+    const handleFilter = (value) => {
+        SetFilter(value ?? FilterType.ASC);
+        setCurrentPage(0);
+    }
+
+    const handleExportToCsv = () => {
+        exportToCSV({
+            fetchData: async () => { const res = await getAllCategory(); return res.data; },
+            extractRows: (data) => Array.isArray(data) ? data : (data?.categories ?? []),
+            columnMap: [
+                { key: 'id', label: 'Category ID' },
+                { key: 'name', label: 'Category Name' },
+                { key: 'description', label: 'Description' },
+            ],
+            filenamePrefix: 'categories',
+            onStart: () => setIsExporting(true),
+            onEnd: () => setIsExporting(false),
+        });
+    }   
+
+    const handleExportToPdf = () => {
+        exportToPDF({
+            fetchData: async () => { const res = await getAllCategory(); return res.data; },
+            extractRows: (data) => Array.isArray(data) ? data : (data?.categories ?? []),
+            columnMap: [
+                { key: 'id', label: 'Category ID' },
+                { key: 'name', label: 'Category Name' },
+                { key: 'description', label: 'Description' },
+            ],
+            filenamePrefix: 'categories',
+            onStart: () => setIsExporting(true),
+            onEnd: () => setIsExporting(false),
+        });
+    }
+
     return (
         <div className={`dashboard-container ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
             <Sidebar
@@ -229,10 +267,10 @@ const Category = () => {
                         { label: 'Name: A → Z', value: FilterType.ASC },
                         { label: 'Name: Z → A', value: FilterType.DESC },
                     ]}
-                    onFilter={(value) => {
-                        SetFilter(value ?? FilterType.ASC);
-                        setCurrentPage(0); // reset to first page on filter change
-                    }}
+                    onFilter={handleFilter}
+                    onExportCSV={handleExportToCsv}
+                    onExportPDF={handleExportToPdf}
+                    showStatusToggle={false}
                 />
 
                 {/* Add/Edit Modal */}
