@@ -106,7 +106,10 @@ const DataTable = ({
                             <tr key={row.id}>
                                 {columns.map((col, idx) => (
                                     <td key={idx}>
-                                        {col.render ? col.render(row) : row[col.accessor]}
+                                        {(() => {
+                                            const value = col.render ? col.render(row) : row[col.accessor];
+                                            return (value === null || value === undefined || value === "") ? "-" : value;
+                                        })()}
                                     </td>
                                 ))}
                                 <td style={{ textAlign: 'right' }}>
@@ -117,7 +120,7 @@ const DataTable = ({
                                         <button className="action-btn delete-btn" onClick={() => onDelete(row)}>
                                             <Trash2 size={18} />
                                         </button>
-                                        {onToggleStatus && (
+                                        {/* {onToggleStatus && (
                                             <label className="switch">
                                                 <input
                                                     type="checkbox"
@@ -126,7 +129,7 @@ const DataTable = ({
                                                 />
                                                 <span className="slider round"></span>
                                             </label>
-                                        )}
+                                        )} */}
                                     </div>
                                 </td>
                             </tr>

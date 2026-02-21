@@ -1,22 +1,127 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import MetricCard from '../components/common/MetricCard';
 import DataTable from '../components/common/DataTable';
-import { Users, UserMinus, UserX } from 'lucide-react';
+import ConfirmationModal from '../components/common/ConfirmationModal'; // Import ConfirmationModal
+import { useNavigate } from 'react-router-dom';
+import { getAllSuppliers, deleteSupplier, searchSupplier } from "../api/supplierService"
 import '../components/Dashboard/Dashboard.css';
+import Layout from '../components/Layout';
+import AddSupplierModal from '../components/Suppliers/AddSupplierModal';
+import EditSupplierModal from '../components/Suppliers/EditSupplierModal';
 
 const Suppliers = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-    // Metrics
     const metrics = [
         { title: "Active Suppliers", value: 100, trend: { value: "12%", isPositive: true }, isPrimary: true },
         { title: "Inactive Suppliers", value: 19, trend: { value: "12%", isPositive: true }, isPrimary: false },
         { title: "Deleted Suppliers", value: 10, trend: { value: "12%", isPositive: true }, isPrimary: false },
     ];
 
-    // Table
+    const [supplier, setSupplier] = useState([]);
+    const [message, setMessage] = useState("");
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedSupplier, setSelectedSupplier] = useState(null);
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        data: null,
+        message: ''
+    });
+
+    const navigate = useNavigate();
+
+    const getSupplier = async () => {
+        try {
+            const response = await getAllSuppliers();
+            console.log(response.data);
+            if (response.data && Array.isArray(response.data)) {
+                setSupplier(response.data);
+            } else if (response.data && response.data.suppliers && Array.isArray(response.data.suppliers)) {
+                setSupplier(response.data.suppliers);
+            } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+                setSupplier(response.data.data);
+            } else {
+                setSupplier([]);
+            }
+        } catch (error) {
+            showMessage(error.response?.data?.message || "Error getting supplier: " + error.message);
+            console.error(error);
+        }
+    };
+
+    useEffect(() => {
+        getSupplier();
+    }, []);
+
+    const handleSupplierAdded = () => {
+        showMessage("Supplier added successfully");
+        setIsAddModalOpen(false);
+        getSupplier();
+    };
+
+    const handleSupplierUpdated = () => {
+        showMessage("Supplier updated successfully");
+        setIsEditModalOpen(false);
+        getSupplier();
+    };
+
+    const showMessage = (msg) => {
+        setMessage(msg);
+        setTimeout(() => {
+            setMessage("");
+        }, 4000);
+    };
+
+    // --- Delete Confirmation Handlers ---
+
+    const handleDeleteClick = (row) => {
+        setConfirmModal({
+            isOpen: true,
+            data: row,
+            message: `Do you really want to delete the supplier "${row.name}"?`
+        });
+    };
+
+    const handleConfirmDelete = async () => {
+        const id = confirmModal.data.id || confirmModal.data._id;
+        try {
+            await deleteSupplier(id);
+            showMessage("Supplier deleted successfully");
+            getSupplier();
+        } catch (error) {
+            showMessage(error.response?.data?.message || "Error deleting supplier: " + error.message);
+            console.error(error);
+        } finally {
+            setConfirmModal({ isOpen: false, data: null, message: '' });
+        }
+    };
+
+    const handleSearch = async (query) => {
+        if (query.trim() === "") {
+            getSupplier();
+            return;
+        }
+        try {
+            const res = await searchSupplier(query);
+            if (res.data && Array.isArray(res.data)) {
+                setSupplier(res.data);
+            } else if (res.data && res.data.suppliers && Array.isArray(res.data.suppliers)) {
+                setSupplier(res.data.suppliers);
+            } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
+                setSupplier(res.data.data);
+            } else {
+                setSupplier([]);
+            }
+        } catch (error) {
+            console.error("Error searching suppliers:", error);
+        }
+    };
+
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedIds, setSelectedIds] = useState([]);
 
@@ -29,58 +134,79 @@ const Suppliers = () => {
                 </div>
             )
         },
-        { header: "Supplier ID", accessor: "supplierId" },
         { header: "Contact Person", accessor: "contactPerson" },
-        { header: "Phone Number", accessor: "phone" },
-        { header: "Address", accessor: "address" },
+        { header: "Phone Number", accessor: "phoneNumber" },
+        { header: "Credit Period", accessor: "creditPeriod" },
         { header: "Email", accessor: "email" },
+        { header: "Address", accessor: "address" },
+        { header: "Postal Code", accessor: "postalCode" },
     ];
-
-    const data = [
-        { id: 1, name: "BioMedicals Pvt. Ltd", supplierId: "BC2022110001", contactPerson: "Sandeepa", phone: "0713245623", address: "Colombo", email: "person@gmail.com", isActive: true },
-        { id: 2, name: "Thomas Medicines", supplierId: "BC2022110002", contactPerson: "Waruni", phone: "0713245623", address: "Gampaha", email: "person@gmail.com", isActive: true },
-        { id: 3, name: "Ananda Heath Pvt. Ltd", supplierId: "BC2022110003", contactPerson: "Nipuni", phone: "0713245623", address: "Ratnapura", email: "person@gmail.com", isActive: true },
-        { id: 4, name: "abeyweera Medicines", supplierId: "BC2022110004", contactPerson: "Haritha C", phone: "0713245623", address: "Kaluthara", email: "person@gmail.com", isActive: true },
-    ];
-
 
     return (
-        <div className={`dashboard-container ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-            <Sidebar
-                isCollapsed={isSidebarCollapsed}
-                toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                isMobileOpen={isMobileSidebarOpen}
-                toggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-            />
-            <div className="dashboard-content">
-                <header className="dashboard-header">
-                    <h2>Suppliers</h2>
-                </header>
-
-                {/* Metrics */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-                    {metrics.map((m, i) => (
-                        <MetricCard key={i} {...m} />
-                    ))}
-                </div>
-
-                {/* Table */}
-                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>Active Suppliers</h3>
-                <DataTable
-                    columns={columns}
-                    data={data}
-                    currentPage={currentPage}
-                    totalPages={10}
-                    onPageChange={setCurrentPage}
-                    selectedIds={selectedIds}
-                    onSelectionChange={setSelectedIds}
-                    addButtonLabel="Add New Supplier"
-                    onAddClick={() => { }}
-                    onToggleStatus={(row) => console.log("Toggle", row.id)}
-                    showFilter={false} // Match design
+        <Layout>
+            <div className={`dashboard-container ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+                <Sidebar
+                    isCollapsed={isSidebarCollapsed}
+                    toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    isMobileOpen={isMobileSidebarOpen}
+                    toggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
                 />
+                <div className="dashboard-content">
+                    <header className="dashboard-header">
+                        <h2>Suppliers</h2>
+                    </header>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+                        {metrics.map((m, i) => (
+                            <MetricCard key={i} {...m} />
+                        ))}
+                    </div>
+
+                    <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>Active Suppliers</h3>
+                    <DataTable
+                        columns={columns}
+                        data={supplier}
+                        currentPage={currentPage}
+                        totalPages={5}
+                        onPageChange={setCurrentPage}
+                        selectedIds={selectedIds}
+                        onSelectionChange={setSelectedIds}
+                        onSearch={handleSearch}
+                        addButtonLabel="Add New Supplier"
+                        onAddClick={() => setIsAddModalOpen(true)}
+                        onEdit={(row) => {
+                            setSelectedSupplier(row);
+                            setIsEditModalOpen(true);
+                        }}
+                        onDelete={handleDeleteClick}
+                        onToggleStatus={(row) => console.log("Toggle", row.id || row._id)}
+                        showFilter={false}
+                    />
+                    <AddSupplierModal
+                        isOpen={isAddModalOpen}
+                        onClose={() => setIsAddModalOpen(false)}
+                        onSupplierAdded={handleSupplierAdded}
+                    />
+                    <EditSupplierModal
+                        isOpen={isEditModalOpen}
+                        onClose={() => setIsEditModalOpen(false)}
+                        onSupplierUpdated={handleSupplierUpdated}
+                        supplier={selectedSupplier}
+                    />
+
+                    {/* Confirmation Modal */}
+                    <ConfirmationModal
+                        isOpen={confirmModal.isOpen}
+                        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                        onConfirm={handleConfirmDelete}
+                        message={confirmModal.message}
+                        confirmLabel="Yes"
+                        cancelLabel="No"
+                        title="Delete Supplier?"
+                    />
+                </div>
             </div>
-        </div>
+        </Layout>
     );
 };
 
