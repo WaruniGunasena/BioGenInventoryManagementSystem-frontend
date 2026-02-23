@@ -21,6 +21,7 @@ import {
   Menu
 } from "lucide-react";
 import "./Sidebar.css";
+import { getUserName, getUserRole } from "./common/Utils/userUtils/userUtils";
 
 const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar }) => {
   const navigate = useNavigate();
@@ -29,12 +30,22 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
   const [isAuth, setIsAuth] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [inventoryManager, setInventoryManager] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState('');
+  const [loggedInUserRole, setLoggedInUserRole] = useState('');
+
+  const fetchUserInfo = async () => {
+    const name = await getUserName();
+    const role = await getUserRole();
+    setLoggedInUser(name);
+    setLoggedInUserRole(role);
+  };
 
   useEffect(() => {
     const token = getToken();
     setIsAuth(!!token);
     setAdmin(isAdmin());
     setInventoryManager(isInventoryManager());
+    fetchUserInfo();
   }, []);
 
   const handleLogout = async () => {
@@ -168,10 +179,10 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
         <div className="sidebar-footer">
           <div className="user-info">
             {/* Placeholder Avatar */}
-            <img src="https://ui-avatars.com/api/?name=Waruni&background=random" alt="User" className="avatar" />
+            <img src={`https://ui-avatars.com/api/?name=${loggedInUser}&background=random`} alt="User" className="avatar" />
             <div className="user-details">
-              <span className="user-name">Waruni</span>
-              <span className="user-role">Admin</span>
+              <span className="user-name">{loggedInUser}</span>
+              <span className="user-role">{loggedInUserRole}</span>
             </div>
           </div>
           <LogOut size={20} className="logout-icon" onClick={handleLogout} />
