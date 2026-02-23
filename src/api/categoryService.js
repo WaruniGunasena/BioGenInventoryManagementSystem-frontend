@@ -20,6 +20,10 @@ export const updateCategory = (id, data) =>
 export const deleteCategory = (id) =>
   api.delete(`/categories/delete/${id}`);
 
+// soft Delete category
+export const softDeleteCategory = (id, userId) =>
+  api.put(`/categories/softDelete?id=${id}&userId=${userId}`);
+
 export const searchCategory = (query) =>
   api.get(`/categories/search?searchKey=${query}`);
 

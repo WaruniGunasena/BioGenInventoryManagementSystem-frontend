@@ -5,11 +5,12 @@ import DataTable from '../../components/common/DataTable';
 import Modal from '../../components/common/Modal';
 import ConfirmationModal from '../../components/common/ConfirmationModal'; // Import ConfirmationModal
 import { Filter, Users, UserX } from 'lucide-react';
-import { getAllCategory, createCategory, updateCategory, deleteCategory, searchCategory, getPaginatedResults } from '../../api/categoryService';
+import { getAllCategory, createCategory, updateCategory, deleteCategory, searchCategory, getPaginatedResults, softDeleteCategory } from '../../api/categoryService';
 import AddCategory from './AddCategory';
 import FilterType from '../../enums/FilterType'; // Import FilterType
-import { exportToCSV } from '../../components/common/Export/ExportToCSV';
-import { exportToPDF } from '../../components/common/Export/ExportToPDF';
+import { exportToCSV } from '../../components/common/Utils/Export/ExportToCSV';
+import { exportToPDF } from '../../components/common/Utils/Export/ExportToPDF';
+import { getUserId } from '../../components/common/Utils/userUtils/userUtils';
 
 const Category = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -113,7 +114,9 @@ const Category = () => {
         try {
             if (type === 'delete') {
                 const id = data.id || data._id;
-                await deleteCategory(id);
+                const userId = await getUserId();
+                await softDeleteCategory(id, userId);
+                fetchCategories();
             } else if (type === 'edit') {
                 // For edit, 'data' is the formData, we need the ID from selectedCategory
                 const id = selectedCategory.id || selectedCategory._id;
@@ -214,7 +217,7 @@ const Category = () => {
             onStart: () => setIsExporting(true),
             onEnd: () => setIsExporting(false),
         });
-    }   
+    }
 
     const handleExportToPdf = () => {
         exportToPDF({
