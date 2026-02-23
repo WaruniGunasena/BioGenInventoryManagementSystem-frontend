@@ -38,7 +38,6 @@ const Suppliers = () => {
     const getSupplier = async () => {
         try {
             const response = await getAllSuppliers();
-            console.log(response.data);
             if (response.data && Array.isArray(response.data)) {
                 setSupplier(response.data);
             } else if (response.data && response.data.suppliers && Array.isArray(response.data.suppliers)) {
