@@ -5,8 +5,8 @@ export const addProduct = (formData) =>
     headers: { "Content-Type": "multipart/form-data" },
   });
 
-export const updateProduct = (formData) =>
-  api.put("/products/update", formData, {
+export const updateProduct = (id, formData) =>
+  api.put(`/products/update/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 
@@ -15,3 +15,8 @@ export const getAllProducts = () => api.get("/products/all");
 export const getProductById = (id) => api.get(`/products/${id}`);
 
 export const deleteProduct = (id) => api.delete(`/products/delete/${id}`);
+
+export const searchProduct = (query) => api.get(`/products/search?searchKey=${query}`);
+
+export const getPaginatedProductResults = (page, size, filter) =>
+  api.get(`/products?page=${page}&size=${size}&filter=${filter}`);

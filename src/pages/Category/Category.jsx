@@ -44,7 +44,6 @@ const Category = () => {
         setIsLoading(true);
         try {
             const response = await getPaginatedResults(currentPage, 5, filter)
-            console.log(response);
             if (response.data && response.data.categories && Array.isArray(response.data.categories)) {
                 setCategories(response.data.categories);
                 setTotalPages(response.data.totalPages);
