@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Filter, Download, Plus, Trash2, Edit2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { Search, Filter, Download, FileText, Plus, Trash2, Edit2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import './Common.css';
 
 const DataTable = ({
@@ -13,10 +13,12 @@ const DataTable = ({
     showExport = true,
     showAddButton = true,
     addButtonLabel = "Add New",
+    showStatusToggle = true,
     onAddClick = () => { },
     onSearch = () => { },
     onFilter = () => { },
-    onExport = () => { },
+    onExportCSV = null,
+    onExportPDF = null,
 
     // Filter dropdown options: [{ label: 'A to Z', value: 'name_asc' }, ...]
     filterOptions = [],
@@ -40,11 +42,17 @@ const DataTable = ({
     const [activeFilter, setActiveFilter] = useState(null);
     const filterRef = useRef(null);
 
-    // Close dropdown when clicking outside
+    const [exportOpen, setExportOpen] = useState(false);
+    const exportRef = useRef(null);
+
+    // Close dropdowns when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (filterRef.current && !filterRef.current.contains(e.target)) {
                 setFilterOpen(false);
+            }
+            if (exportRef.current && !exportRef.current.contains(e.target)) {
+                setExportOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -130,10 +138,41 @@ const DataTable = ({
                                 )}
                             </div>
                         )}
-                        {showExport && (
-                            <button className="btn-secondary" onClick={onExport}>
-                                <Download size={16} /> Export
-                            </button>
+                        {showExport && (onExportCSV || onExportPDF) && (
+                            <div className="filter-dropdown-wrapper" ref={exportRef}>
+                                <button
+                                    className={`btn-secondary ${exportOpen ? 'btn-secondary--active' : ''}`}
+                                    onClick={() => setExportOpen((prev) => !prev)}
+                                >
+                                    <Download size={16} />
+                                    Export
+                                    <ChevronDown size={14} className={`filter-chevron ${exportOpen ? 'filter-chevron--open' : ''}`} />
+                                </button>
+                                {exportOpen && (
+                                    <ul className="filter-dropdown-menu">
+                                        {onExportCSV && (
+                                            <li
+                                                className="filter-dropdown-item"
+                                                onClick={() => { setExportOpen(false); onExportCSV(); }}
+                                            >
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <Download size={14} /> Export as CSV
+                                                </span>
+                                            </li>
+                                        )}
+                                        {onExportPDF && (
+                                            <li
+                                                className="filter-dropdown-item"
+                                                onClick={() => { setExportOpen(false); onExportPDF(); }}
+                                            >
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <FileText size={14} /> Export as PDF
+                                                </span>
+                                            </li>
+                                        )}
+                                    </ul>
+                                )}
+                            </div>
                         )}
                         {showAddButton && (
                             <button className="btn-primary" onClick={onAddClick}>
@@ -174,7 +213,7 @@ const DataTable = ({
                                         <button className="action-btn delete-btn" onClick={() => onDelete(row)}>
                                             <Trash2 size={18} />
                                         </button>
-                                        {/* {onToggleStatus && (
+                                        {showStatusToggle && (
                                             <label className="switch">
                                                 <input
                                                     type="checkbox"
@@ -183,7 +222,7 @@ const DataTable = ({
                                                 />
                                                 <span className="slider round"></span>
                                             </label>
-                                        )} */}
+                                        )}
                                     </div>
                                 </td>
                             </tr>
@@ -216,7 +255,7 @@ const DataTable = ({
 
                 <button
                     className="nav-btn"
-                    disabled={currentPage === totalPages-1}
+                    disabled={currentPage === totalPages - 1}
                     onClick={() => onPageChange(currentPage + 1)}
                 >
                     Next <ChevronRight size={16} />
