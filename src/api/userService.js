@@ -17,6 +17,6 @@ export const updateUser = (id, data) =>
 export const deleteUser = (id) =>
   api.delete(`/user/delete/${id}`);
 
-// Reset temporary password (used after first OTP login)
+// Reset temporary password (sends JSON body matching ResetPasswordDto)
 export const resetTempPassword = (userId, password) =>
-  api.put(`/user/resetTempPassword?userId=${userId}&password=${password}`);
+  api.put(`/user/resetTempPassword`, { userId, password });

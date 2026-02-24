@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { isTempPassword, clearTempPasswordFlag } from "../auth/tokenService";
 import { resetTempPassword } from "../api/userService";
 import { getUserId } from "../components/common/Utils/userUtils/userUtils";
-import "./LoginPage.css"; // reuses the same split-panel styles
+import { Eye, EyeOff } from "lucide-react";
+import "./LoginPage.css";
 
 const ResetPasswordPage = () => {
     const [newPassword, setNewPassword] = useState("");
@@ -11,6 +12,8 @@ const ResetPasswordPage = () => {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const navigate = useNavigate();
 
@@ -94,24 +97,44 @@ const ResetPasswordPage = () => {
 
                     <form onSubmit={handleSubmit} className="auth-form">
                         <label>New Password</label>
-                        <input
-                            type="password"
-                            placeholder="Enter new password (min. 8 characters)"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            required
-                            minLength={8}
-                        />
+                        <div className="password-wrapper">
+                            <input
+                                type={showNewPassword ? "text" : "password"}
+                                placeholder="Enter new password (min. 8 characters)"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                required
+                                minLength={8}
+                            />
+                            <button
+                                type="button"
+                                className="password-toggle"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                tabIndex={-1}
+                            >
+                                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
 
                         <label>Confirm New Password</label>
-                        <input
-                            type="password"
-                            placeholder="Re-enter new password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                            minLength={8}
-                        />
+                        <div className="password-wrapper">
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                placeholder="Re-enter new password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                                minLength={8}
+                            />
+                            <button
+                                type="button"
+                                className="password-toggle"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                tabIndex={-1}
+                            >
+                                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
 
                         <button type="submit" className="auth-btn" disabled={isSubmitting}>
                             {isSubmitting ? "Saving…" : "Set Password & Continue"}

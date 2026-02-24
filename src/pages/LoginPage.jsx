@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { login } from "../api/authService";
 import { saveTempPasswordFlag } from "../auth/tokenService";
 import { fetchCurrentUser } from "../components/common/Utils/userUtils/userUtils";
+import { Eye, EyeOff } from "lucide-react";
 import "./LoginPage.css";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -80,13 +82,23 @@ const LoginPage = () => {
             />
 
             <label>Password</label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="password-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
             <div className="auth-options">
               <label className="remember">
