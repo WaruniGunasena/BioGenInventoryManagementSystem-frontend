@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Modal from '../common/Modal';
-import AddCategory from '../../pages/Category/AddCategory';
+import AddCategory from './AddCategory';
 import { createCategory } from '../../api/categoryService';
 
 const AddCategoryModal = ({ isOpen, onClose, onSuccess }) => {
