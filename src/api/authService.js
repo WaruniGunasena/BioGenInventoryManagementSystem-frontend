@@ -1,10 +1,11 @@
 import api from "./axios";
-import { saveToken, saveRole, clearAuth } from "../auth/tokenService";
+import { saveToken, saveRole, clearAuth, saveTempPasswordFlag } from "../auth/tokenService";
 
 export const login = async (data) => {
   const res = await api.post("/auth/login", data);
   saveToken(res.data.token);
   saveRole(res.data.role);
+  saveTempPasswordFlag(res.data.isTempPassword ?? false);
   return res.data;
 };
 

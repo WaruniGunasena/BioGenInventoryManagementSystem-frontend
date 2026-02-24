@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/authService";
-import { saveToken, saveRole } from "../auth/tokenService";
+import { saveTempPasswordFlag } from "../auth/tokenService";
+import { fetchCurrentUser } from "../components/common/Utils/userUtils/userUtils";
 import "./LoginPage.css";
 
 const LoginPage = () => {
@@ -21,22 +22,27 @@ const LoginPage = () => {
 
     try {
       const loginData = { email, password };
-      const response = await login(loginData);
+      await login(loginData); // saves token + role to localStorage
 
-      console.log(response);
+      // Fetch the actual user object to reliably check isTempPassword
+      const user = await fetchCurrentUser();
+      const tempFlag = user?.isTempPassword === true || user?.tempPassword === true;
 
-      if (response.status === 200) {
-        saveToken(response.token);
-        saveRole(response.role);
-        showMessage(response.message);
+      // Persist the flag so ResetPasswordPage can guard itself
+      saveTempPasswordFlag(tempFlag);
+
+      if (tempFlag) {
+        navigate("/reset-password");
+      } else {
         navigate("/dashboard");
       }
     } catch (error) {
-      const msg = error.response?.data?.message || "Error Sign in a user";
+      const msg = error.response?.data?.message || "Error signing in";
       showMessage(msg);
       console.error("Sign in error:", error);
     }
   };
+
 
   return (
     <div className="auth-wrapper">
