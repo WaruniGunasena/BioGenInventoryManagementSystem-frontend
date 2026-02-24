@@ -6,7 +6,7 @@ import Modal from '../../components/common/Modal';
 import ConfirmationModal from '../../components/common/ConfirmationModal'; // Import ConfirmationModal
 import { Filter, Users, UserX } from 'lucide-react';
 import { getAllCategory, createCategory, updateCategory, deleteCategory, searchCategory, getPaginatedResults, softDeleteCategory } from '../../api/categoryService';
-import AddCategory from './AddCategory';
+import AddCategory from '../../components/Category/AddCategory';
 import FilterType from '../../enums/FilterType'; // Import FilterType
 import { exportToCSV } from '../../components/common/Utils/Export/ExportToCSV';
 import { exportToPDF } from '../../components/common/Utils/Export/ExportToPDF';
