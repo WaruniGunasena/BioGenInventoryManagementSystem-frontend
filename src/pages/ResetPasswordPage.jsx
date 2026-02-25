@@ -47,10 +47,7 @@ const ResetPasswordPage = () => {
         try {
             const userId = await getUserId();
             await resetTempPassword(userId, newPassword);
-
-            // Clear the flag so the user can access the system normally from now on
             clearTempPasswordFlag();
-
             showMessage("Password updated successfully! Redirecting…");
             setTimeout(() => navigate("/dashboard"), 1500);
         } catch (error) {

@@ -17,6 +17,12 @@ export const updateUser = (id, data) =>
 export const deleteUser = (id) =>
   api.delete(`/user/delete/${id}`);
 
-// Reset temporary password (sends JSON body matching ResetPasswordDto)
+// Reset temporary password — employee first-login flow (PUT /user/resetTempPassword)
 export const resetTempPassword = (userId, password) =>
   api.put(`/user/resetTempPassword`, { userId, password });
+
+// Forgot password — step 1: generate OTP and email it
+export const generateForgotPassword = (email) =>
+  api.post(`/user/forgetPassword/${encodeURIComponent(email)}`);
+
+

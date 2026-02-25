@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/authService";
-import { saveTempPasswordFlag } from "../auth/tokenService";
+import { saveTempPasswordFlag, saveForgotPasswordFlow } from "../auth/tokenService";
 import { fetchCurrentUser } from "../components/common/Utils/userUtils/userUtils";
 import { Eye, EyeOff } from "lucide-react";
+import ForgotPasswordModal from "../components/ForgotPassword/ForgotPasswordModal";
 import "./LoginPage.css";
 
 const LoginPage = () => {
@@ -11,6 +12,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -30,8 +32,9 @@ const LoginPage = () => {
       const user = await fetchCurrentUser();
       const tempFlag = user?.isTempPassword === true || user?.tempPassword === true;
 
-      // Persist the flag so ResetPasswordPage can guard itself
       saveTempPasswordFlag(tempFlag);
+      // Mark whether this is a forgot-password flow so ResetPasswordPage uses the right endpoint
+      saveForgotPasswordFlow(tempFlag && !user?.isFirstLogin);
 
       if (tempFlag) {
         navigate("/reset-password");
@@ -105,7 +108,13 @@ const LoginPage = () => {
                 <input type="checkbox" />
                 Remember for 30 days
               </label>
-              <span className="forgot">Forgot password</span>
+              <span
+                className="forgot"
+                onClick={() => setIsForgotOpen(true)}
+                style={{ cursor: 'pointer' }}
+              >
+                Forgot password?
+              </span>
             </div>
 
             <button type="submit" className="auth-btn">
@@ -119,6 +128,12 @@ const LoginPage = () => {
           </p>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={isForgotOpen}
+        onClose={() => setIsForgotOpen(false)}
+      />
     </div>
   );
 };
