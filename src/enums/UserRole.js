@@ -1,0 +1,11 @@
+const UserRole = {
+    CASHIER: 'CASHIER',
+    DRIVER: 'DRIVER',
+    INVENTORY_MANAGER: 'INVENTORY_MANAGER',
+    AREA_MANAGER: 'AREA_MANAGER',
+    DIRECTOR: 'DIRECTOR',
+    ADMIN: 'ADMIN',
+    SALES_REP: 'SALES_REP',
+};
+
+export default UserRole;

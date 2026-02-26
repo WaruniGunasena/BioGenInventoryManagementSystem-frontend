@@ -1,13 +1,18 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/authService";
-import { saveToken, saveRole } from "../auth/tokenService";
+import { saveTempPasswordFlag, saveForgotPasswordFlow } from "../auth/tokenService";
+import { fetchCurrentUser } from "../components/common/Utils/userUtils/userUtils";
+import { Eye, EyeOff } from "lucide-react";
+import ForgotPasswordModal from "../components/ForgotPassword/ForgotPasswordModal";
 import "./LoginPage.css";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -21,22 +26,28 @@ const LoginPage = () => {
 
     try {
       const loginData = { email, password };
-      const response = await login(loginData);
+      await login(loginData); // saves token + role to localStorage
 
-      console.log(response);
+      // Fetch the actual user object to reliably check isTempPassword
+      const user = await fetchCurrentUser();
+      const tempFlag = user?.isTempPassword === true || user?.tempPassword === true;
 
-      if (response.status === 200) {
-        saveToken(response.token);
-        saveRole(response.role);
-        showMessage(response.message);
+      saveTempPasswordFlag(tempFlag);
+      // Mark whether this is a forgot-password flow so ResetPasswordPage uses the right endpoint
+      saveForgotPasswordFlow(tempFlag && !user?.isFirstLogin);
+
+      if (tempFlag) {
+        navigate("/reset-password");
+      } else {
         navigate("/dashboard");
       }
     } catch (error) {
-      const msg = error.response?.data?.message || "Error Sign in a user";
+      const msg = error.response?.data?.message || "Error signing in";
       showMessage(msg);
       console.error("Sign in error:", error);
     }
   };
+
 
   return (
     <div className="auth-wrapper">
@@ -74,20 +85,36 @@ const LoginPage = () => {
             />
 
             <label>Password</label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="password-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
             <div className="auth-options">
               <label className="remember">
                 <input type="checkbox" />
                 Remember for 30 days
               </label>
-              <span className="forgot">Forgot password</span>
+              <span
+                className="forgot"
+                onClick={() => setIsForgotOpen(true)}
+                style={{ cursor: 'pointer' }}
+              >
+                Forgot password?
+              </span>
             </div>
 
             <button type="submit" className="auth-btn">
@@ -101,6 +128,12 @@ const LoginPage = () => {
           </p>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={isForgotOpen}
+        onClose={() => setIsForgotOpen(false)}
+      />
     </div>
   );
 };
