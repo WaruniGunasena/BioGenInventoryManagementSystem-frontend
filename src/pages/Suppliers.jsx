@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useToast } from '../context/ToastContext';
 import Sidebar from '../components/Sidebar';
 import MetricCard from '../components/common/MetricCard';
 import DataTable from '../components/common/DataTable';
@@ -11,6 +12,8 @@ import AddSupplierModal from '../components/Suppliers/AddSupplierModal';
 import EditSupplierModal from '../components/Suppliers/EditSupplierModal';
 
 const Suppliers = () => {
+    const { showToast } = useToast();
+
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -21,7 +24,6 @@ const Suppliers = () => {
     ];
 
     const [supplier, setSupplier] = useState([]);
-    const [message, setMessage] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState(null);
@@ -48,8 +50,7 @@ const Suppliers = () => {
                 setSupplier([]);
             }
         } catch (error) {
-            showMessage(error.response?.data?.message || "Error getting supplier: " + error.message);
-            console.error(error);
+            showToast('error', error.response?.data?.message || 'Failed to load suppliers.');
         }
     };
 
@@ -58,22 +59,15 @@ const Suppliers = () => {
     }, []);
 
     const handleSupplierAdded = () => {
-        showMessage("Supplier added successfully");
+        showToast('success', 'Supplier added successfully!');
         setIsAddModalOpen(false);
         getSupplier();
     };
 
     const handleSupplierUpdated = () => {
-        showMessage("Supplier updated successfully");
+        showToast('success', 'Supplier updated successfully!');
         setIsEditModalOpen(false);
         getSupplier();
-    };
-
-    const showMessage = (msg) => {
-        setMessage(msg);
-        setTimeout(() => {
-            setMessage("");
-        }, 4000);
     };
 
     // --- Delete Confirmation Handlers ---
@@ -90,11 +84,10 @@ const Suppliers = () => {
         const id = confirmModal.data.id || confirmModal.data._id;
         try {
             await deleteSupplier(id);
-            showMessage("Supplier deleted successfully");
+            showToast('success', 'Supplier deleted successfully!');
             getSupplier();
         } catch (error) {
-            showMessage(error.response?.data?.message || "Error deleting supplier: " + error.message);
-            console.error(error);
+            showToast('error', error.response?.data?.message || 'Failed to delete supplier.');
         } finally {
             setConfirmModal({ isOpen: false, data: null, message: '' });
         }
