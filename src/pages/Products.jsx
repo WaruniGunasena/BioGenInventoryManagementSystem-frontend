@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useToast } from '../context/ToastContext';
 import Sidebar from '../components/Sidebar';
 import DataTable from '../components/common/DataTable';
 import ConfirmationModal from '../components/common/ConfirmationModal';
@@ -11,11 +12,12 @@ import FilterType from '../enums/FilterType';
 
 const Products = () => {
 
+    const { showToast } = useToast();
+
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
     const [products, setProducts] = useState([]);
-    const [message, setMessage] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -53,22 +55,15 @@ const Products = () => {
     }, [fetchProducts]);
 
     const handleProductAdded = () => {
-        showMessage("Product added successfully");
+        showToast('success', 'Product added successfully!');
         setIsAddModalOpen(false);
         fetchProducts();
     };
 
     const handleProductUpdated = () => {
-        showMessage("Product updated successfully");
+        showToast('success', 'Product updated successfully!');
         setIsEditModalOpen(false);
         fetchProducts();
-    };
-
-    const showMessage = (msg) => {
-        setMessage(msg);
-        setTimeout(() => {
-            setMessage("");
-        }, 4000);
     };
 
     const handleDeleteClick = (row) => {
@@ -83,11 +78,10 @@ const Products = () => {
         const id = confirmModal.data.id || confirmModal.data._id;
         try {
             await deleteProduct(id);
-            showMessage("Product deleted successfully");
+            showToast('success', 'Product deleted successfully!');
             fetchProducts();
         } catch (error) {
-            showMessage(error.response?.data?.message || "Error deleting product: " + error.message);
-            console.error(error);
+            showToast('error', error.response?.data?.message || 'Failed to delete product.');
         } finally {
             setConfirmModal({ isOpen: false, data: null, message: '' });
         }
@@ -135,8 +129,6 @@ const Products = () => {
                     <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h2>Products</h2>
                     </header>
-
-                    {message && <div className="alert-message">{message}</div>}
 
                     {isLoading && <div className="loading-overlay">Loading...</div>}
                     <DataTable
