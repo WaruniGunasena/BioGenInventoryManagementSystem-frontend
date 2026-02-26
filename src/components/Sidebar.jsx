@@ -132,9 +132,9 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
           )}
 
           <li className="nav-item">
-            <Link to="/warehouse" className={`nav-link ${isActive('/warehouse') ? 'active' : ''}`}>
+            <Link to="/grn-window" className={`nav-link ${isActive('/grn-window') ? 'active' : ''}`}>
               <Box size={20} className="nav-icon" />
-              <span className="link-text">Warehouse</span>
+              <span className="link-text">GRN Window</span>
             </Link>
           </li>
 
