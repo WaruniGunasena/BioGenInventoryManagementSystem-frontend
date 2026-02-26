@@ -6,6 +6,7 @@ import Dashboard from "./components/Dashboard/Dashboard";
 import Products from "./pages/Products";
 import Suppliers from "./pages/Suppliers";
 import Category from "./pages/Category/Category";
+import GRN from "./pages/GRN/GRN";
 import SalesReps from "./pages/SalesReps";
 import Customers from "./pages/Customers";
 import ComponentsDemo from "./pages/ComponentsDemo";
@@ -21,6 +22,7 @@ function App() {
         <Route path="/product" element={<Products />} />
         <Route path="/supplier" element={<Suppliers />} />
         <Route path="/category" element={<Category />} />
+        <Route path="/grn-window" element={<GRN />} />
         <Route path="/salesreps" element={<SalesReps />} />
         <Route path="/customers" element={<Customers />} />
         <Route path="/test-components" element={<ComponentsDemo />} />
