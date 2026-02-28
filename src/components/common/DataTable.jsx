@@ -36,6 +36,7 @@ const DataTable = ({
     onEdit = () => { },
     onDelete = () => { },
     onToggleStatus = () => { },
+    onRowClick = null,          // optional: fires when a data row (not action buttons) is clicked
 }) => {
 
     const [filterOpen, setFilterOpen] = useState(false);
@@ -196,7 +197,11 @@ const DataTable = ({
                     </thead>
                     <tbody>
                         {data.map((row) => (
-                            <tr key={row.id}>
+                            <tr
+                                key={row.id}
+                                onClick={() => onRowClick && onRowClick(row)}
+                                style={onRowClick ? { cursor: 'pointer' } : {}}
+                            >
                                 {columns.map((col, idx) => (
                                     <td key={idx}>
                                         {(() => {
@@ -205,7 +210,10 @@ const DataTable = ({
                                         })()}
                                     </td>
                                 ))}
-                                <td style={{ textAlign: 'right' }}>
+                                <td
+                                    style={{ textAlign: 'right' }}
+                                    onClick={(e) => e.stopPropagation()} // prevent row click when using action buttons
+                                >
                                     <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
                                         <button className="action-btn edit-btn" onClick={() => onEdit(row)}>
                                             <Edit2 size={18} />
