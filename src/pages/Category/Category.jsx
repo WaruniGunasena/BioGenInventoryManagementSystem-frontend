@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../../context/ToastContext';
 import Sidebar from '../../components/Sidebar';
 import MetricCard from '../../components/common/MetricCard';
 import DataTable from '../../components/common/DataTable';
@@ -13,6 +14,7 @@ import { exportToPDF } from '../../components/common/Utils/Export/ExportToPDF';
 import { getUserId } from '../../components/common/Utils/userUtils/userUtils';
 
 const Category = () => {
+    const { showToast } = useToast();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -116,20 +118,23 @@ const Category = () => {
                 const userId = await getUserId();
                 await softDeleteCategory(id, userId);
                 fetchCategories();
+                showToast('success', 'Category deleted successfully!');
             } else if (type === 'edit') {
                 // For edit, 'data' is the formData, we need the ID from selectedCategory
                 const id = selectedCategory.id || selectedCategory._id;
                 await updateCategory(id, data);
                 // Close the form modal as well since we finished editing
                 handleCloseModal();
+                showToast('success', 'Category updated successfully!');
             } else if (type === 'add') {
                 await createCategory(data);
                 handleCloseModal();
+                showToast('success', 'Category added successfully!');
             }
 
             fetchCategories(); // Refresh list
         } catch (error) {
-            console.error(`Error performing ${type}:`, error);
+            showToast('error', 'Something went wrong. Please try again.');
         } finally {
             // Close Confirmation Modal
             setConfirmModal({ isOpen: false, type: null, data: null, message: '' });
@@ -143,8 +148,10 @@ const Category = () => {
                 await createCategory(data);
                 fetchCategories();
                 handleCloseModal();
+                showToast('success', 'Category added successfully!');
             } catch (error) {
                 console.error("Error creating category:", error);
+                showToast('error', 'Failed to add category. Please try again.');
             }
         }
         if (type === 'edit') {
@@ -153,8 +160,10 @@ const Category = () => {
                 await updateCategory(id, data);
                 fetchCategories();
                 handleCloseModal();
+                showToast('success', 'Category updated successfully!');
             } catch (error) {
                 console.error("Error updating category:", error);
+                showToast('error', 'Failed to update category. Please try again.');
             }
         }
     }

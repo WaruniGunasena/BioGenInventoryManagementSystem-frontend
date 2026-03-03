@@ -1,4 +1,5 @@
 import React from "react";
+import ToastProvider from "./context/ToastProvider";
 
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";

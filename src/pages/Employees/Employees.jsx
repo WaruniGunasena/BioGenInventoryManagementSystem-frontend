@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../../context/ToastContext';
 import Sidebar from '../../components/Sidebar';
 import MetricCard from '../../components/common/MetricCard';
 import DataTable from '../../components/common/DataTable';
@@ -25,6 +26,8 @@ const ROLE_LABELS = {
 };
 
 const Employees = () => {
+    const { showToast } = useToast();
+
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -122,9 +125,10 @@ const Employees = () => {
         const id = confirmModal.data?.id || confirmModal.data?._id;
         try {
             await deleteEmployee(id);
+            showToast('success', 'Employee removed successfully!');
             fetchEmployees();
         } catch (err) {
-            console.error('Error deleting employee:', err);
+            showToast('error', err.response?.data?.message || 'Failed to remove employee.');
         } finally {
             setConfirmModal({ isOpen: false, data: null, message: '' });
         }
@@ -133,11 +137,13 @@ const Employees = () => {
     // ─── Callbacks from modals ────────────────────────────────────────────────
 
     const handleEmployeeAdded = () => {
+        showToast('success', 'Employee added successfully!');
         fetchEmployees();
         setIsAddModalOpen(false);
     };
 
     const handleEmployeeUpdated = () => {
+        showToast('success', 'Employee updated successfully!');
         fetchEmployees();
         setIsEditModalOpen(false);
     };
