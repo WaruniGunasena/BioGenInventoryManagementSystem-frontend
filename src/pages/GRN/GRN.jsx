@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Layout from "../../components/Layout";
 import { getAllSuppliers } from "../../api/supplierService";
 import { getAllProducts } from "../../api/productService";
 import { createGRN } from "../../api/grnService";
 import AddProductModal from "../../components/Products/AddProductModal";
-import { PlusCircle, Trash2, Edit3 } from "lucide-react";
+import { PlusCircle, Trash2, Edit3, FileText } from "lucide-react";
+import { getUserId } from "../../components/common/Utils/userUtils/userUtils";
 import "./GRN.css";
 
 const GRN = () => {
+    const navigate = useNavigate();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -34,11 +37,23 @@ const GRN = () => {
 
     const [selectedSupplierData, setSelectedSupplierData] = useState(null);
     const [addedItems, setAddedItems] = useState([]);
+    const [editingItemId, setEditingItemId] = useState(null);
+    const [currentUserId, setCurrentUserId] = useState(null);
 
     useEffect(() => {
         fetchSuppliers();
         fetchProducts();
+        fetchUserId();
     }, []);
+
+    const fetchUserId = async () => {
+        try {
+            const id = await getUserId();
+            setCurrentUserId(id);
+        } catch (error) {
+            console.error("Error fetching user ID:", error);
+        }
+    };
 
     const fetchSuppliers = async () => {
         try {
@@ -101,18 +116,47 @@ const GRN = () => {
         });
     };
 
+    const handleEditItem = (item) => {
+        setFormData({
+            ...item,
+        });
+        setEditingItemId(item.id);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingItemId(null);
+        setFormData((prev) => ({
+            ...prev,
+            productId: "",
+            productName: "",
+            productCode: "",
+            batchNumber: "",
+            mfgDate: "",
+            expDate: "",
+            purchasePrice: "",
+            quantity: "",
+            totalAmount: "0.00",
+        }));
+    };
+
     const handleAddItem = () => {
         if (!formData.productId || !formData.purchasePrice || !formData.quantity) {
             alert("Please select a product and enter price/quantity");
             return;
         }
 
-        const newItem = {
-            ...formData,
-            id: Date.now(),
-        };
-
-        setAddedItems((prev) => [...prev, newItem]);
+        if (editingItemId) {
+            setAddedItems((prev) =>
+                prev.map((item) => (item.id === editingItemId ? { ...formData, id: editingItemId } : item))
+            );
+            setEditingItemId(null);
+        } else {
+            const newItem = {
+                ...formData,
+                id: Date.now(),
+            };
+            setAddedItems((prev) => [...prev, newItem]);
+        }
 
         setFormData((prev) => ({
             ...prev,
@@ -144,6 +188,7 @@ const GRN = () => {
 
         const grnData = {
             supplierId: formData.supplierId,
+            userId: currentUserId,
             date: formData.date,
             invoiceNumber: formData.invoiceNumber,
             items: addedItems.map(item => ({
@@ -159,7 +204,6 @@ const GRN = () => {
         };
 
         try {
-            console.log(grnData);
             await createGRN(grnData);
             alert("Stock added successfully!");
             setAddedItems([]);
@@ -198,6 +242,9 @@ const GRN = () => {
                     <div className="grn-container">
                         <header className="grn-header">
                             <h2>Good Receive Note</h2>
+                            <button className="see-invoices-btn" onClick={() => navigate("/invoices")}>
+                                <FileText size={18} /> See All Invoices
+                            </button>
                         </header>
 
                         <div className="grn-form-section">
@@ -347,7 +394,14 @@ const GRN = () => {
                                     />
                                 </div>
                                 <div className="add-btn-wrapper">
-                                    <button className="grn-add-btn" onClick={handleAddItem}>Add</button>
+                                    <button className="grn-add-btn" onClick={handleAddItem}>
+                                        {editingItemId ? "Update" : "Add"}
+                                    </button>
+                                    {editingItemId && (
+                                        <button className="grn-cancel-btn" onClick={handleCancelEdit}>
+                                            Cancel
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -389,7 +443,11 @@ const GRN = () => {
                                                 <td>{item.totalAmount}</td>
                                                 <td>
                                                     <div className="action-btns">
-                                                        <Edit3 size={18} className="edit-icon" />
+                                                        <Edit3
+                                                            size={18}
+                                                            className="edit-icon"
+                                                            onClick={() => handleEditItem(item)}
+                                                        />
                                                         <Trash2
                                                             size={18}
                                                             className="delete-icon"

@@ -5,6 +5,9 @@
 }
 
 .grn-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
 }
 
@@ -99,6 +102,23 @@
     background-color: #4f46e5;
 }
 
+.grn-cancel-btn {
+    background-color: #e5e7eb;
+    color: #4b5563;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background-color 0.2s;
+}
+
+.grn-cancel-btn:hover {
+    background-color: #d1d5db;
+}
+
 .grn-summary-section {
     background-color: #d1d5db;
     padding: 20px;
@@ -186,7 +206,6 @@
     cursor: pointer;
 }
 
-/* Date input with icon appearance if possible, though standard type="date" is browse-dependent */
 .date-input-wrapper {
     position: relative;
     display: flex;
@@ -195,4 +214,23 @@
 
 .date-input-wrapper input {
     width: 100%;
+}
+
+.see-invoices-btn {
+    background-color: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.see-invoices-btn:hover {
+    background-color: #4f46e5;
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getToken } from "../auth/tokenService";
-import { isAdmin, isInventoryManager } from "../auth/roleService";
+import { isAdmin, isInventoryManager, isSalesRep } from "../auth/roleService";
 import { logout as logoutService } from "../api/authService";
 import {
   LayoutDashboard,
@@ -9,8 +9,8 @@ import {
   Users,
   CheckSquare,
   Box,
-  UserCheck,
-  User,
+  // UserCheck,
+  // User,
   UserRound,
   Layers,
   LifeBuoy,
@@ -19,7 +19,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Menu
+  Menu,
+  FileText
 } from "lucide-react";
 import "./Sidebar.css";
 import { getUserName, getUserRole } from "./common/Utils/userUtils/userUtils";
@@ -31,6 +32,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
   const [isAuth, setIsAuth] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [inventoryManager, setInventoryManager] = useState(false);
+  const [salesRep, setSalesRep] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState('');
   const [loggedInUserRole, setLoggedInUserRole] = useState('');
 
@@ -46,6 +48,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
     setIsAuth(!!token);
     setAdmin(isAdmin());
     setInventoryManager(isInventoryManager());
+    setSalesRep(isSalesRep());
     fetchUserInfo();
   }, []);
 
@@ -106,12 +109,14 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
             </Link>
           </li>
 
-          <li className="nav-item">
-            <Link to="/product" className={`nav-link ${isActive('/product') ? 'active' : ''}`}>
-              <ShoppingCart size={20} className="nav-icon" />
-              <span className="link-text">Products</span>
-            </Link>
-          </li>
+          {(admin || inventoryManager || salesRep) && (
+            <li className="nav-item">
+              <Link to="/product" className={`nav-link ${isActive('/product') ? 'active' : ''}`}>
+                <ShoppingCart size={20} className="nav-icon" />
+                <span className="link-text">Products</span>
+              </Link>
+            </li>
+          )}
 
           {(admin || inventoryManager) && (
             <li className="nav-item">
@@ -122,7 +127,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
             </li>
           )}
 
-          {(admin || inventoryManager) && (
+          {(admin || inventoryManager || salesRep) && (
             <li className="nav-item">
               <Link to="/category" className={`nav-link ${isActive('/category') ? 'active' : ''}`}>
                 <CheckSquare size={20} className="nav-icon" />
@@ -131,26 +136,46 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
             </li>
           )}
 
-          <li className="nav-item">
-            <Link to="/grn-window" className={`nav-link ${isActive('/grn-window') ? 'active' : ''}`}>
-              <Box size={20} className="nav-icon" />
-              <span className="link-text">GRN Window</span>
-            </Link>
-          </li>
+          {(admin || inventoryManager) && (
+            <li className="nav-item">
+              <Link to="/grn-window" className={`nav-link ${isActive('/grn-window') ? 'active' : ''}`}>
+                <Box size={20} className="nav-icon" />
+                <span className="link-text">GRN Window</span>
+              </Link>
+            </li>
+          )}
 
-          <li className="nav-item">
+          {(admin || inventoryManager || salesRep) && (
+            <li className="nav-item">
+              <Link to="/stock" className={`nav-link ${isActive('/stock') ? 'active' : ''}`}>
+                <Layers size={20} className="nav-icon" />
+                <span className="link-text">Stock</span>
+              </Link>
+            </li>
+          )}
+
+          {(admin || inventoryManager) && (
+            <li className="nav-item">
+              <Link to="/invoices" className={`nav-link ${isActive('/invoices') ? 'active' : ''}`}>
+                <FileText size={20} className="nav-icon" />
+                <span className="link-text">Invoices</span>
+              </Link>
+            </li>
+          )}
+
+          {/* <li className="nav-item">
             <Link to="/salesreps" className={`nav-link ${isActive('/salesreps') ? 'active' : ''}`}>
               <UserCheck size={20} className="nav-icon" />
               <span className="link-text">SalesReps</span>
             </Link>
-          </li>
+          </li> */}
 
-          <li className="nav-item">
+          {/* <li className="nav-item">
             <Link to="/customers" className={`nav-link ${isActive('/customers') ? 'active' : ''}`}>
               <User size={20} className="nav-icon" />
               <span className="link-text">Customers</span>
             </Link>
-          </li>
+          </li> */}
 
           {admin && (
             <li className="nav-item">

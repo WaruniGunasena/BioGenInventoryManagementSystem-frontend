@@ -5,9 +5,8 @@ import './Common.css';
 const DataTable = ({
     columns = [],
     data = [],
-    title = "", // Optional title inside table
+    title = "",
 
-    // Controls
     showSearch = true,
     showFilter = true,
     showExport = true,
@@ -20,22 +19,21 @@ const DataTable = ({
     onExportCSV = null,
     onExportPDF = null,
 
-    // Filter dropdown options: [{ label: 'A to Z', value: 'name_asc' }, ...]
     filterOptions = [],
 
-    // Pagination
     currentPage = 1,
     totalPages = 10,
     onPageChange = () => { },
 
-    // Selection
     selectedIds = [],
     onSelectionChange = () => { },
 
-    // Actions
+    showActions = true,
     onEdit = () => { },
     onDelete = () => { },
     onToggleStatus = () => { },
+
+    rowKey = "id",
 }) => {
 
     const [filterOpen, setFilterOpen] = useState(false);
@@ -45,7 +43,6 @@ const DataTable = ({
     const [exportOpen, setExportOpen] = useState(false);
     const exportRef = useRef(null);
 
-    // Close dropdowns when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (filterRef.current && !filterRef.current.contains(e.target)) {
@@ -191,12 +188,12 @@ const DataTable = ({
                             {columns.map((col, index) => (
                                 <th key={index}>{col.header}</th>
                             ))}
-                            <th style={{ textAlign: 'right' }}>Actions</th>
+                            {showActions && <th style={{ textAlign: 'right' }}>Actions</th>}
                         </tr>
                     </thead>
                     <tbody>
                         {data.map((row) => (
-                            <tr key={row.id}>
+                            <tr key={row[rowKey] || Math.random()}>
                                 {columns.map((col, idx) => (
                                     <td key={idx}>
                                         {(() => {
@@ -205,26 +202,28 @@ const DataTable = ({
                                         })()}
                                     </td>
                                 ))}
-                                <td style={{ textAlign: 'right' }}>
-                                    <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
-                                        <button className="action-btn edit-btn" onClick={() => onEdit(row)}>
-                                            <Edit2 size={18} />
-                                        </button>
-                                        <button className="action-btn delete-btn" onClick={() => onDelete(row)}>
-                                            <Trash2 size={18} />
-                                        </button>
-                                        {showStatusToggle && (
-                                            <label className="switch">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={row.isActive}
-                                                    onChange={() => onToggleStatus(row)}
-                                                />
-                                                <span className="slider round"></span>
-                                            </label>
-                                        )}
-                                    </div>
-                                </td>
+                                {showActions && (
+                                    <td style={{ textAlign: 'right' }}>
+                                        <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
+                                            <button className="action-btn edit-btn" onClick={() => onEdit(row)}>
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button className="action-btn delete-btn" onClick={() => onDelete(row)}>
+                                                <Trash2 size={18} />
+                                            </button>
+                                            {showStatusToggle && (
+                                                <label className="switch">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={row.isActive}
+                                                        onChange={() => onToggleStatus(row)}
+                                                    />
+                                                    <span className="slider round"></span>
+                                                </label>
+                                            )}
+                                        </div>
+                                    </td>
+                                )}
                             </tr>
                         ))}
                     </tbody>
