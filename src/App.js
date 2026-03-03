@@ -11,6 +11,8 @@ import GRN from "./pages/GRN/GRN";
 import SalesReps from "./pages/SalesReps";
 import Customers from "./pages/Customers";
 import Employees from "./pages/Employees/Employees";
+import Stock from "./pages/Stock/Stock";
+import Invoices from "./pages/Invoices/Invoices";
 import ComponentsDemo from "./pages/ComponentsDemo";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
@@ -29,6 +31,8 @@ function App() {
         <Route path="/salesreps" element={<SalesReps />} />
         <Route path="/customers" element={<Customers />} />
         <Route path="/employees" element={<Employees />} />
+        <Route path="/stock" element={<Stock />} />
+        <Route path="/invoices" element={<Invoices />} />
         <Route path="/test-components" element={<ComponentsDemo />} />
       </Routes>
     </Router>
