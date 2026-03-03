@@ -1,0 +1,143 @@
+import { useState, useEffect, useCallback } from 'react';
+import Sidebar from '../../components/Sidebar';
+import DataTable from '../../components/common/DataTable';
+import Layout from '../../components/Layout';
+import { searchStock, getPaginatedStock } from '../../api/stockService';
+import FilterType from '../../enums/FilterType';
+import './Stock.css';
+
+const Stock = () => {
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+    const [stockItems, setStockItems] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [selectedIds, setSelectedIds] = useState([]);
+
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [filter, setFilter] = useState(FilterType.ASC);
+
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const fetchStock = useCallback(async (signal) => {
+
+        setIsLoading(true);
+
+        try {
+            if (searchQuery.trim() !== "") {
+                const res = await searchStock(searchQuery, { signal });
+
+                if (signal.aborted) return;
+
+                if (res.data?.productStocks && Array.isArray(res.data.productStocks)) {
+                    setStockItems(res.data.productStocks);
+                    setTotalPages(1);
+                } else if (res.data && Array.isArray(res.data)) {
+                    setStockItems(res.data);
+                    setTotalPages(1);
+                } else {
+                    setStockItems([]);
+                    setTotalPages(0);
+                }
+            }
+            else {
+                const response = await getPaginatedStock(currentPage, 5, filter, { signal });
+
+                if (signal.aborted) return;
+
+                if (response.data?.productStocks && Array.isArray(response.data.productStocks)) {
+                    setStockItems(response.data.productStocks);
+                    setTotalPages(response.data.totalPages);
+                } else {
+                    setStockItems([]);
+                    setTotalPages(0);
+                }
+            }
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                if (!signal.aborted) {
+                    setStockItems([]);
+                    setTotalPages(0);
+                }
+            }
+        } finally {
+            if (!signal.aborted) {
+                setIsLoading(false);
+            }
+        }
+    }, [currentPage, filter, searchQuery]);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        const delay = searchQuery.trim() !== "" ? 300 : 0;
+        const timer = setTimeout(() => {
+            fetchStock(controller.signal);
+        }, delay);
+
+        return () => {
+            clearTimeout(timer);
+            controller.abort();
+        };
+    }, [fetchStock, searchQuery]);
+
+    const handleSearch = (query) => {
+        setSearchQuery(query);
+        setCurrentPage(0);   
+    };
+
+    const columns = [
+        { header: "Product Name", accessor: "productName" },
+        { header: "Product ID", accessor: "productId" },
+        { header: "Quantity", accessor: "quantity" },
+        { header: "Selling Price", accessor: "sellingPrice" },
+        { header: "Minimum Stock", accessor: "minimumStockLevel" },
+        { header: "Reorder Level", accessor: "reorderLevel" },
+    ];
+
+    return (
+        <Layout>
+            <div className={`dashboard-container ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+                <Sidebar
+                    isCollapsed={isSidebarCollapsed}
+                    toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    isMobileOpen={isMobileSidebarOpen}
+                    toggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+                />
+
+                <div className="dashboard-content">
+                    <header className="stock-header">
+                        <h2>Stock</h2>
+                    </header>
+
+                    {isLoading && <div className="loading-overlay">Loading...</div>}
+
+                    <DataTable
+                        columns={columns}
+                        data={stockItems}
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                        selectedIds={selectedIds}
+                        onSelectionChange={setSelectedIds}
+                        onSearch={handleSearch}
+                        rowKey="stockId"
+                        filterOptions={[
+                            { label: 'Ascending: A → Z', value: FilterType.ASC },
+                            { label: 'Descending: Z → A', value: FilterType.DESC },
+                        ]}
+                        onFilter={(value) => {
+                            setFilter(value ?? FilterType.ASC);
+                            setCurrentPage(0);
+                        }}
+                        showAddButton={false}
+                        showStatusToggle={false}
+                        showActions={false}
+                    />
+                </div>
+            </div>
+        </Layout>
+    );
+};
+
+export default Stock;
