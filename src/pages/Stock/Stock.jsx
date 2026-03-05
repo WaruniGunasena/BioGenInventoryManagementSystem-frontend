@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '../../components/Sidebar';
 import DataTable from '../../components/common/DataTable';
 import Layout from '../../components/Layout';
@@ -20,70 +20,44 @@ const Stock = () => {
 
     const [searchQuery, setSearchQuery] = useState("");
 
-    const fetchStock = useCallback(async (signal) => {
+    useEffect(() => {
+        const controller = new AbortController();
 
-        setIsLoading(true);
+        const fetchStock = async () => {
+            setIsLoading(true);
+            try {
+                // Use dedicated search endpoint when a query is present
+                const response = searchQuery.trim()
+                    ? await searchStock(searchQuery, currentPage, 5, filter, { signal: controller.signal })
+                    : await getPaginatedStock(currentPage, 5, filter, { signal: controller.signal });
 
-        try {
-            if (searchQuery.trim() !== "") {
-                const res = await searchStock(searchQuery, { signal });
-
-                if (signal.aborted) return;
-
-                if (res.data?.productStocks && Array.isArray(res.data.productStocks)) {
-                    setStockItems(res.data.productStocks);
-                    setTotalPages(1);
-                } else if (res.data && Array.isArray(res.data)) {
-                    setStockItems(res.data);
-                    setTotalPages(1);
-                } else {
-                    setStockItems([]);
-                    setTotalPages(0);
-                }
-            }
-            else {
-                const response = await getPaginatedStock(currentPage, 5, filter, { signal });
-
-                if (signal.aborted) return;
+                if (controller.signal.aborted) return;
 
                 if (response.data?.productStocks && Array.isArray(response.data.productStocks)) {
                     setStockItems(response.data.productStocks);
-                    setTotalPages(response.data.totalPages);
+                    setTotalPages(response.data.totalPages ?? 1);
                 } else {
                     setStockItems([]);
                     setTotalPages(0);
                 }
-            }
-        } catch (err) {
-            if (err.name !== 'AbortError') {
-                if (!signal.aborted) {
+            } catch (err) {
+                if (err.name !== 'AbortError' && !controller.signal.aborted) {
                     setStockItems([]);
                     setTotalPages(0);
                 }
+            } finally {
+                if (!controller.signal.aborted) setIsLoading(false);
             }
-        } finally {
-            if (!signal.aborted) {
-                setIsLoading(false);
-            }
-        }
-    }, [currentPage, filter, searchQuery]);
-
-    useEffect(() => {
-        const controller = new AbortController();
-        const delay = searchQuery.trim() !== "" ? 300 : 0;
-        const timer = setTimeout(() => {
-            fetchStock(controller.signal);
-        }, delay);
-
-        return () => {
-            clearTimeout(timer);
-            controller.abort();
         };
-    }, [fetchStock, searchQuery]);
+
+        fetchStock();
+
+        return () => controller.abort();
+    }, [currentPage, filter, searchQuery]);
 
     const handleSearch = (query) => {
         setSearchQuery(query);
-        setCurrentPage(0);   
+        setCurrentPage(0);
     };
 
     const columns = [
@@ -123,8 +97,10 @@ const Stock = () => {
                         onSearch={handleSearch}
                         rowKey="stockId"
                         filterOptions={[
-                            { label: 'Ascending: A → Z', value: FilterType.ASC },
-                            { label: 'Descending: Z → A', value: FilterType.DESC },
+                            { label: 'Name: A → Z', value: FilterType.ASC },
+                            { label: 'Name: Z → A', value: FilterType.DESC },
+                            { label: 'Date: Oldest to Newest', value: FilterType.DATE_ASC },
+                            { label: 'Date: Newest to Oldest', value: FilterType.DATE_DESC }
                         ]}
                         onFilter={(value) => {
                             setFilter(value ?? FilterType.ASC);
