@@ -13,10 +13,10 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
         address: '',
         province: '',
         postalCode: '',
+        creditPeriod: '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Pre-fill form when a customer is selected
     useEffect(() => {
         if (customer) {
             setFormData({
@@ -26,6 +26,7 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
                 address: customer.address ?? '',
                 province: customer.province ?? '',
                 postalCode: customer.postalCode ?? '',
+                creditPeriod: customer.creditPeriod ?? '30',
             });
         }
     }, [customer]);
@@ -40,7 +41,12 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
         const id = customer?.id ?? customer?._id;
         setIsSubmitting(true);
         try {
-            await updateCustomer(id, formData);
+            const dataToSubmit = {
+                customerId: id,
+                ...formData,
+                creditPeriod: parseInt(formData.creditPeriod, 10)
+            };
+            await updateCustomer(id, dataToSubmit);
             showToast('success', 'Customer updated successfully!');
             onCustomerUpdated();
             onClose();
@@ -56,7 +62,6 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
         <Modal isOpen={isOpen} onClose={onClose} title="Edit Customer">
             <form onSubmit={handleSubmit}>
 
-                {/* Row 1: Name + Email */}
                 <div className="form-row">
                     <div className="form-group form-col">
                         <label className="form-label">Full Name *</label>
@@ -84,7 +89,6 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
                     </div>
                 </div>
 
-                {/* Row 2: Contact No + Province */}
                 <div className="form-row">
                     <div className="form-group form-col">
                         <label className="form-label">Contact No</label>
@@ -110,7 +114,6 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
                     </div>
                 </div>
 
-                {/* Row 3: Address + Postal Code */}
                 <div className="form-row">
                     <div className="form-group form-col">
                         <label className="form-label">Address</label>
@@ -133,6 +136,23 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
                             value={formData.postalCode}
                             onChange={handleChange}
                         />
+                    </div>
+                </div>
+
+                <div className="form-row">
+                    <div className="form-group form-col">
+                        <label className="form-label">Credit Term *</label>
+                        <select
+                            name="creditPeriod"
+                            className="form-input"
+                            value={formData.creditPeriod}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="30">30 days</option>
+                            <option value="60">60 days</option>
+                            <option value="90">90 days</option>
+                        </select>
                     </div>
                 </div>
 

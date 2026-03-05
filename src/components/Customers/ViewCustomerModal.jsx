@@ -2,10 +2,6 @@ import React from 'react';
 import Modal from '../common/Modal';
 import './CustomerModal.css';
 
-/**
- * ViewCustomerModal — read-only modal opened when a table row is clicked.
- * Shows ALL customer fields as static text. No inputs, no save button.
- */
 const ViewCustomerModal = ({ isOpen, onClose, customer }) => {
     if (!customer) return null;
 
@@ -17,6 +13,7 @@ const ViewCustomerModal = ({ isOpen, onClose, customer }) => {
         { label: 'Province', value: customer.province },
         { label: 'Address', value: customer.address },
         { label: 'Postal Code', value: customer.postalCode },
+        { label: 'Credit Term', value: customer.creditPeriod ? `${customer.creditPeriod} days` : '—' },
     ];
 
     const ReadOnlyField = ({ label, value }) => (
@@ -37,7 +34,6 @@ const ViewCustomerModal = ({ isOpen, onClose, customer }) => {
         </div>
     );
 
-    // Pair fields into 2-column rows
     const rows = [];
     for (let i = 0; i < fields.length; i += 2) {
         rows.push(fields.slice(i, i + 2));
