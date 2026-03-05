@@ -31,7 +31,6 @@ const Invoices = () => {
         setLoading(true);
         try {
             const res = await getPaginatedGRNs(page, pageSize);
-            console.log("dtaa", res);
             if (res.data) {
                 const data = res.data.grnList || [];
                 const total = res.data.totalPages || 1;

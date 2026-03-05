@@ -9,8 +9,8 @@ import {
   Users,
   CheckSquare,
   Box,
-  // UserCheck,
-  // User,
+  UserCheck,
+  User,
   UserRound,
   Layers,
   LifeBuoy,
@@ -67,16 +67,9 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
 
   const isActive = (path) => location.pathname === path;
 
-  // Render Logic
-  // Mobile overlay
   const mobileOverlay = isMobileOpen ? (
     <div className="sidebar-overlay active" onClick={toggleMobileSidebar}></div>
   ) : null;
-
-  // Mobile toggle button (rendered outside sidebar, handled by layout or here?)
-  // Ideally, the toggle button should be visible when sidebar is closed on mobile.
-  // We'll render it here just in case, but usually it's better in the main layout.
-  // For this self-contained refactor, we'll keep it simple.
 
   return (
     <>
@@ -154,14 +147,14 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
             </li>
           )}
 
-          {(admin || inventoryManager) && (
+          {/* {(admin || inventoryManager) && (
             <li className="nav-item">
               <Link to="/invoices" className={`nav-link ${isActive('/invoices') ? 'active' : ''}`}>
                 <FileText size={20} className="nav-icon" />
                 <span className="link-text">Invoices</span>
               </Link>
             </li>
-          )}
+          )} */}
 
           {/* <li className="nav-item">
             <Link to="/salesreps" className={`nav-link ${isActive('/salesreps') ? 'active' : ''}`}>
@@ -170,12 +163,19 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
             </Link>
           </li> */}
 
-          {/* <li className="nav-item">
+          {(admin || salesRep) && (<li className="nav-item">
+            <Link to="/sales-order" className={`nav-link ${isActive('/sales-order') ? 'active' : ''}`}>
+              <UserCheck size={20} className="nav-icon" />
+              <span className="link-text">Sales Order</span>
+            </Link>
+          </li>)}
+
+          {(admin || salesRep) && (<li className="nav-item">
             <Link to="/customers" className={`nav-link ${isActive('/customers') ? 'active' : ''}`}>
               <User size={20} className="nav-icon" />
               <span className="link-text">Customers</span>
             </Link>
-          </li> */}
+          </li>)}
 
           {admin && (
             <li className="nav-item">
@@ -192,8 +192,6 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
               <span className="link-text">Roles</span>
             </Link>
           </li>
-
-          {/* Spacer or Divider if needed */}
           <div style={{ flex: 1 }}></div>
 
           <li className="nav-item">
@@ -213,7 +211,6 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
 
         <div className="sidebar-footer">
           <div className="user-info">
-            {/* Placeholder Avatar */}
             <img src={`https://ui-avatars.com/api/?name=${loggedInUser}&background=random`} alt="User" className="avatar" />
             <div className="user-details">
               <span className="user-name">{loggedInUser}</span>
