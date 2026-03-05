@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Sidebar from '../../components/Sidebar';
 import DataTable from '../../components/common/DataTable';
 import Layout from '../../components/Layout';
-import { getPaginatedStock } from '../../api/stockService';
+import { searchStock, getPaginatedStock } from '../../api/stockService';
 import FilterType from '../../enums/FilterType';
 import './Stock.css';
 
@@ -26,10 +26,10 @@ const Stock = () => {
         const fetchStock = async () => {
             setIsLoading(true);
             try {
-                const response = await getPaginatedStock(
-                    currentPage, 5, filter, searchQuery,
-                    { signal: controller.signal }
-                );
+                // Use dedicated search endpoint when a query is present
+                const response = searchQuery.trim()
+                    ? await searchStock(searchQuery, currentPage, 5, filter, { signal: controller.signal })
+                    : await getPaginatedStock(currentPage, 5, filter, { signal: controller.signal });
 
                 if (controller.signal.aborted) return;
 
