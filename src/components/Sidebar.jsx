@@ -170,12 +170,14 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
             </Link>
           </li> */}
 
-          {/* <li className="nav-item">
-            <Link to="/customers" className={`nav-link ${isActive('/customers') ? 'active' : ''}`}>
-              <User size={20} className="nav-icon" />
-              <span className="link-text">Customers</span>
-            </Link>
-          </li> */}
+          {(admin || inventoryManager || salesRep) && (
+            <li className="nav-item">
+              <Link to="/customers" className={`nav-link ${isActive('/customers') ? 'active' : ''}`}>
+                <UserRound size={20} className="nav-icon" />
+                <span className="link-text">Customers</span>
+              </Link>
+            </li>
+          )}
 
           {admin && (
             <li className="nav-item">
