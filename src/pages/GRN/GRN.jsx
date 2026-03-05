@@ -6,7 +6,7 @@ import { getAllSuppliers } from "../../api/supplierService";
 import { getAllProducts } from "../../api/productService";
 import { createGRN } from "../../api/grnService";
 import AddProductModal from "../../components/Products/AddProductModal";
-import { PlusCircle, Trash2, Edit3, FileText } from "lucide-react";
+import { PlusCircle, Trash2, Edit3, FileText, Plus } from "lucide-react";
 import { getUserId } from "../../components/common/Utils/userUtils/userUtils";
 import "./GRN.css";
 
@@ -105,21 +105,17 @@ const GRN = () => {
         const { name, value } = e.target;
         setFormData((prev) => {
             const newData = { ...prev, [name]: value };
-
             if (name === "purchasePrice" || name === "quantity") {
                 const price = parseFloat(newData.purchasePrice) || 0;
                 const qty = parseFloat(newData.quantity) || 0;
                 newData.totalAmount = (price * qty).toFixed(2);
             }
-
             return newData;
         });
     };
 
     const handleEditItem = (item) => {
-        setFormData({
-            ...item,
-        });
+        setFormData({ ...item });
         setEditingItemId(item.id);
     };
 
@@ -144,20 +140,14 @@ const GRN = () => {
             alert("Please select a product and enter price/quantity");
             return;
         }
-
         if (editingItemId) {
             setAddedItems((prev) =>
                 prev.map((item) => (item.id === editingItemId ? { ...formData, id: editingItemId } : item))
             );
             setEditingItemId(null);
         } else {
-            const newItem = {
-                ...formData,
-                id: Date.now(),
-            };
-            setAddedItems((prev) => [...prev, newItem]);
+            setAddedItems((prev) => [...prev, { ...formData, id: Date.now() }]);
         }
-
         setFormData((prev) => ({
             ...prev,
             productId: "",
@@ -185,24 +175,22 @@ const GRN = () => {
             alert("Please add at least one item");
             return;
         }
-
         const grnData = {
             supplierId: formData.supplierId,
             userId: currentUserId,
             date: formData.date,
             invoiceNumber: formData.invoiceNumber,
-            items: addedItems.map(item => ({
+            items: addedItems.map((item) => ({
                 productId: item.productId,
                 batchNumber: item.batchNumber,
                 mfgDate: item.mfgDate,
                 expDate: item.expDate,
                 purchasePrice: item.purchasePrice,
                 quantity: item.quantity,
-                totalAmount: item.totalAmount
+                totalAmount: item.totalAmount,
             })),
-            grandTotal: calculateGrandTotal()
+            grandTotal: calculateGrandTotal(),
         };
-
         try {
             await createGRN(grnData);
             alert("Stock added successfully!");
@@ -229,6 +217,38 @@ const GRN = () => {
         }
     };
 
+    // ── Shared input style ────────────────────────────────────────────────────
+    const inputStyle = {
+        width: "100%",
+        padding: "8px 12px",
+        border: "1px solid #cbd5e1",
+        borderRadius: "8px",
+        fontSize: "14px",
+        backgroundColor: "#f8fafc",
+        outline: "none",
+        transition: "border-color 0.2s, box-shadow 0.2s",
+        boxSizing: "border-box",
+    };
+    // Custom arrow: hide native, inject SVG chevron positioned 10px from right edge
+    const selectStyle = {
+        ...inputStyle,
+        appearance: "none",
+        WebkitAppearance: "none",
+        MozAppearance: "none",
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right 10px center",
+        paddingRight: "36px",
+    };
+    const labelStyle = {
+        display: "block",
+        fontSize: "14px",
+        fontWeight: "500",
+        color: "#475569",
+        marginBottom: "4px",
+    };
+    const fieldStyle = { display: "flex", flexDirection: "column", flex: 1, minWidth: "180px" };
+
     return (
         <Layout>
             <div className={`dashboard-container ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
@@ -239,186 +259,161 @@ const GRN = () => {
                     toggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
                 />
                 <div className="dashboard-content">
-                    <div className="grn-container">
-                        <header className="grn-header">
-                            <h2>Good Receive Note</h2>
-                            <button className="see-invoices-btn" onClick={() => navigate("/invoices")}>
-                                <FileText size={18} /> See All Invoices
-                            </button>
-                        </header>
+                    <div style={{ minHeight: "100vh", background: "#f8f9fa" }}>
 
-                        <div className="grn-form-section">
-                            <div className="grn-row">
-                                <div className="grn-field">
-                                    <label>Supplier</label>
-                                    <select
-                                        className="grn-select"
-                                        value={formData.supplierId}
-                                        onChange={handleSupplierChange}
-                                    >
+                        {/* ── Header ─────────────────────────────────────────── */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                            <h1 style={{ fontSize: "24px", fontWeight: "700", color: "#1e293b", margin: 0 }}>Good Receive Note</h1>
+                            <button
+                                onClick={() => navigate("/invoices")}
+                                style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 18px", border: "1px solid #c7d2fe", borderRadius: "8px", background: "white", color: "#6366f1", fontSize: "14px", fontWeight: "500", cursor: "pointer", transition: "all 0.2s" }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = "#eef2ff"; e.currentTarget.style.borderColor = "#a5b4fc"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = "white"; e.currentTarget.style.borderColor = "#c7d2fe"; }}
+                            >
+                                <FileText size={16} /> See All Invoices
+                            </button>
+                        </div>
+
+                        {/* ── Main Card ──────────────────────────────────────── */}
+                        <div style={{ background: "white", borderRadius: "16px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0", padding: "20px" }}>
+
+                            {/* Section 1: Supplier, Date, Credit Period */}
+                            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Supplier</label>
+                                    <select style={selectStyle} value={formData.supplierId} onChange={handleSupplierChange}>
                                         <option value="">Select Supplier</option>
                                         {suppliers.map((s) => (
-                                            <option key={s.id || s._id} value={s.id || s._id}>
-                                                {s.name}
-                                            </option>
+                                            <option key={s.id || s._id} value={s.id || s._id}>{s.name}</option>
                                         ))}
                                     </select>
                                 </div>
-                                <div className="grn-field">
-                                    <label>Date</label>
-                                    <div className="date-input-wrapper">
-                                        <input
-                                            type="date"
-                                            name="date"
-                                            className="grn-input"
-                                            value={formData.date}
-                                            onChange={handleInputChange}
-                                        />
-                                    </div>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Date</label>
+                                    <input type="date" name="date" style={inputStyle} value={formData.date} onChange={handleInputChange} />
                                 </div>
-                                <div className="grn-field">
-                                    <label>Credit Period</label>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Credit Period</label>
                                     <input
                                         type="text"
-                                        className="grn-input"
+                                        style={{ ...inputStyle, backgroundColor: "#f1f5f9", cursor: "not-allowed" }}
                                         value={formData.creditPeriod ? `${formData.creditPeriod} days` : ""}
-                                        placeholder="Credit Period"
+                                        placeholder="Auto-filled from supplier"
                                         readOnly
                                     />
                                 </div>
-                                <div className="grn-field">
-                                    <label>Product</label>
-                                    <select
-                                        className="grn-select"
-                                        value={formData.productId}
-                                        onChange={handleProductChange}
-                                    >
+                            </div>
+
+                            {/* Section 2: Product, Product ID + Add New Product — single row */}
+                            <div style={{ display: "flex", alignItems: "flex-end", gap: "14px", flexWrap: "wrap", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
+                                <div style={{ ...fieldStyle, flex: 2 }}>
+                                    <label style={labelStyle}>Product</label>
+                                    <select style={selectStyle} value={formData.productId} onChange={handleProductChange}>
                                         <option value="">Select Product</option>
                                         {products.map((p) => (
-                                            <option key={p.id || p._id} value={p.id || p._id}>
-                                                {p.name}
-                                            </option>
+                                            <option key={p.id || p._id} value={p.id || p._id}>{p.name}</option>
                                         ))}
                                     </select>
-                                    <button className="add-product-btn" onClick={() => setIsAddProductModalOpen(true)}>
-                                        <PlusCircle size={14} /> Add New Product
-                                    </button>
                                 </div>
-                                <div className="grn-field">
-                                    <label>Product Id</label>
+                                <div style={{ ...fieldStyle, flex: 1 }}>
+                                    <label style={labelStyle}>Product ID</label>
                                     <input
                                         type="text"
-                                        className="grn-input"
+                                        style={{ ...inputStyle, backgroundColor: "#f1f5f9", cursor: "not-allowed" }}
                                         value={formData.productCode}
-                                        placeholder="ID"
+                                        placeholder="Auto-filled"
                                         readOnly
                                     />
                                 </div>
+                                <button
+                                    onClick={() => setIsAddProductModalOpen(true)}
+                                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", background: "linear-gradient(135deg, #10b981, #0d9488)", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(16,185,129,0.3)", transition: "all 0.2s", flexShrink: 0 }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 12px rgba(16,185,129,0.4)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(16,185,129,0.3)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                                >
+                                    <Plus size={16} /> Add New Product
+                                </button>
                             </div>
 
-                            <div className="grn-row">
-                                <div className="grn-field">
-                                    <label>Batch Number</label>
-                                    <input
-                                        type="text"
-                                        name="batchNumber"
-                                        className="grn-input"
-                                        placeholder="Enter Batch NUmber"
-                                        value={formData.batchNumber}
-                                        onChange={handleInputChange}
-                                    />
+
+                            {/* Section 3: Batch Details */}
+                            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Batch Number</label>
+                                    <input type="text" name="batchNumber" style={inputStyle} placeholder="Enter Batch Number" value={formData.batchNumber} onChange={handleInputChange} />
                                 </div>
-                                <div className="grn-field">
-                                    <label>Manufacture Date</label>
-                                    <input
-                                        type="date"
-                                        name="mfgDate"
-                                        className="grn-input"
-                                        value={formData.mfgDate}
-                                        onChange={handleInputChange}
-                                    />
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Manufacture Date</label>
+                                    <input type="date" name="mfgDate" style={inputStyle} value={formData.mfgDate} onChange={handleInputChange} />
                                 </div>
-                                <div className="grn-field">
-                                    <label>Expiry Date</label>
-                                    <input
-                                        type="date"
-                                        name="expDate"
-                                        className="grn-input"
-                                        value={formData.expDate}
-                                        onChange={handleInputChange}
-                                    />
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Expiry Date</label>
+                                    <input type="date" name="expDate" style={inputStyle} value={formData.expDate} onChange={handleInputChange} />
                                 </div>
                             </div>
 
-                            <div className="grn-row">
-                                <div className="grn-field">
-                                    <label>Purchase Price</label>
-                                    <input
-                                        type="number"
-                                        name="purchasePrice"
-                                        className="grn-input"
-                                        placeholder="Enter Purchase Price"
-                                        value={formData.purchasePrice}
-                                        onChange={handleInputChange}
-                                    />
+                            {/* Section 4: Pricing */}
+                            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px" }}>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Purchase Price</label>
+                                    <input type="number" name="purchasePrice" style={inputStyle} placeholder="0.00" value={formData.purchasePrice} onChange={handleInputChange} />
                                 </div>
-                                <div className="grn-field">
-                                    <label>Quantity</label>
-                                    <input
-                                        type="number"
-                                        name="quantity"
-                                        className="grn-input"
-                                        placeholder="Enter Quantity"
-                                        value={formData.quantity}
-                                        onChange={handleInputChange}
-                                    />
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Quantity</label>
+                                    <input type="number" name="quantity" style={inputStyle} placeholder="0" value={formData.quantity} onChange={handleInputChange} />
                                 </div>
-                                <div className="grn-field">
-                                    <label>Total Amount</label>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Total Amount</label>
                                     <input
                                         type="text"
-                                        className="grn-input"
+                                        style={{ ...inputStyle, backgroundColor: "#eef2ff", borderColor: "#c7d2fe", color: "#4338ca", fontWeight: "600", cursor: "not-allowed" }}
                                         value={formData.totalAmount}
                                         readOnly
                                     />
                                 </div>
-                                <div className="grn-field">
-                                    <label>Invoice Number</label>
-                                    <input
-                                        type="text"
-                                        name="invoiceNumber"
-                                        className="grn-input"
-                                        placeholder="Enter Invoice Number"
-                                        value={formData.invoiceNumber}
-                                        onChange={handleInputChange}
-                                    />
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Invoice Number</label>
+                                    <input type="text" name="invoiceNumber" style={inputStyle} placeholder="INV-00000" value={formData.invoiceNumber} onChange={handleInputChange} />
                                 </div>
-                                <div className="add-btn-wrapper">
-                                    <button className="grn-add-btn" onClick={handleAddItem}>
-                                        {editingItemId ? "Update" : "Add"}
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", paddingTop: "14px", borderTop: "1px solid #f1f5f9" }}>
+                                {editingItemId && (
+                                    <button
+                                        onClick={handleCancelEdit}
+                                        style={{ padding: "10px 28px", border: "1px solid #cbd5e1", borderRadius: "8px", background: "white", color: "#64748b", fontSize: "14px", fontWeight: "500", cursor: "pointer", transition: "all 0.2s" }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.background = "#f8fafc"; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.background = "white"; }}
+                                    >
+                                        Cancel
                                     </button>
-                                    {editingItemId && (
-                                        <button className="grn-cancel-btn" onClick={handleCancelEdit}>
-                                            Cancel
-                                        </button>
-                                    )}
-                                </div>
+                                )}
+                                <button
+                                    onClick={handleAddItem}
+                                    style={{ padding: "10px 40px", background: "linear-gradient(135deg, #6366f1, #a855f7)", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "600", cursor: "pointer", boxShadow: "0 2px 8px rgba(99,102,241,0.35)", transition: "all 0.2s" }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(99,102,241,0.5)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(99,102,241,0.35)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                                >
+                                    {editingItemId ? "Update" : "Add"}
+                                </button>
                             </div>
                         </div>
 
-                        <div className="grn-summary-section">
+                        {/* ── Summary / Items Table ───────────────────────────── */}
+                        <div className="grn-summary-section" style={{ marginTop: "24px" }}>
                             <div className="supplier-info">
                                 {selectedSupplierData ? (
                                     <>
                                         <h3>{selectedSupplierData.name}</h3>
                                         <p>{selectedSupplierData.address}</p>
-                                        <p>{selectedSupplierData.phoneNumber}  {selectedSupplierData.email}</p>
+                                        <p>{selectedSupplierData.phoneNumber}&nbsp;&nbsp;{selectedSupplierData.email}</p>
                                     </>
                                 ) : (
                                     <>
                                         <h3>Supplier Name</h3>
                                         <p>Address</p>
-                                        <p>Telephone Number  Email Address</p>
+                                        <p>Telephone Number &nbsp; Email Address</p>
                                     </>
                                 )}
                             </div>
@@ -443,16 +438,8 @@ const GRN = () => {
                                                 <td>{item.totalAmount}</td>
                                                 <td>
                                                     <div className="action-btns">
-                                                        <Edit3
-                                                            size={18}
-                                                            className="edit-icon"
-                                                            onClick={() => handleEditItem(item)}
-                                                        />
-                                                        <Trash2
-                                                            size={18}
-                                                            className="delete-icon"
-                                                            onClick={() => handleRemoveItem(item.id)}
-                                                        />
+                                                        <Edit3 size={18} className="edit-icon" onClick={() => handleEditItem(item)} />
+                                                        <Trash2 size={18} className="delete-icon" onClick={() => handleRemoveItem(item.id)} />
                                                     </div>
                                                 </td>
                                             </tr>
