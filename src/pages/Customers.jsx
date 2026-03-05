@@ -23,35 +23,27 @@ const Customers = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-    // API Data State
     const [customers, setCustomers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Pagination & filter
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [filter, setFilter] = useState(FilterType.ASC);
     const [selectedIds, setSelectedIds] = useState([]);
 
-    // Add Modal
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    // Edit Modal
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
 
-    // View Modal (row click — read-only)
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [viewCustomer, setViewCustomer] = useState(null);
 
-    // Delete Confirmation Modal
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         data: null,
         message: '',
     });
-
-    // ── Fetch ────────────────────────────────────────────────────────────────
 
     const fetchCustomers = async () => {
         setIsLoading(true);
@@ -59,29 +51,21 @@ const Customers = () => {
             const response = await getPaginatedCustomers(currentPage, 5, filter);
             const raw = response.data;
 
-            console.log('[Customers] raw response.data:', raw);
-
             if (!raw || typeof raw !== 'object') {
                 setCustomers([]);
                 setTotalPages(0);
                 return;
             }
 
-            // ── Find the data array ───────────────────────────────────────────
-            // First try exact key 'customers', then scan for any array property
             let list = [];
             if (Array.isArray(raw)) {
                 list = raw;
             } else if (Array.isArray(raw.customers)) {
                 list = raw.customers;
             } else {
-                // Scan response for any array-valued property (same approach as Category)
                 const arrayKey = Object.keys(raw).find(k => Array.isArray(raw[k]));
                 if (arrayKey) list = raw[arrayKey];
             }
-
-            // ── Find totalPages ───────────────────────────────────────────────
-            // Check all common field name variants
             const pages =
                 raw.totalPages ??
                 raw.total_pages ??
@@ -103,8 +87,6 @@ const Customers = () => {
         fetchCustomers();
     }, [currentPage, filter]);
 
-    // ── Search ───────────────────────────────────────────────────────────────
-
     const handleSearch = async (query) => {
         if (query.trim() === '') {
             fetchCustomers();
@@ -119,14 +101,10 @@ const Customers = () => {
         }
     };
 
-    // ── Filter ───────────────────────────────────────────────────────────────
-
     const handleFilter = (value) => {
         setFilter(value ?? FilterType.ASC);
         setCurrentPage(0);
     };
-
-    // ── Delete ───────────────────────────────────────────────────────────────
 
     const handleDeleteClick = (row) => {
         setConfirmModal({
@@ -151,14 +129,10 @@ const Customers = () => {
         }
     };
 
-    // ── Row Click (View) ─────────────────────────────────────────────────────
-
     const handleRowClick = (row) => {
         setViewCustomer(row);
         setIsViewModalOpen(true);
     };
-
-    // ── Callbacks from modals ────────────────────────────────────────────────
 
     const handleCustomerAdded = () => {
         fetchCustomers();
@@ -169,8 +143,6 @@ const Customers = () => {
         fetchCustomers();
         setIsEditModalOpen(false);
     };
-
-    // ── Metrics ──────────────────────────────────────────────────────────────
 
     const metrics = [
         {
@@ -193,8 +165,6 @@ const Customers = () => {
             icon: UserX,
         },
     ];
-
-    // ── Table columns ─────────────────────────────────────────────────────────
 
     const columns = [
         {
@@ -224,8 +194,6 @@ const Customers = () => {
         },
     ];
 
-    // ── Render ────────────────────────────────────────────────────────────────
-
     return (
         <div className={`dashboard-container ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
             <Sidebar
@@ -239,7 +207,6 @@ const Customers = () => {
                     <h2>Customers</h2>
                 </header>
 
-                {/* Metric Cards */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
                     {metrics.map((metric, index) => (
                         <MetricCard key={index} {...metric} />
@@ -273,14 +240,12 @@ const Customers = () => {
                     showStatusToggle={false}
                 />
 
-                {/* Add Customer Modal */}
                 <AddCustomerModal
                     isOpen={isAddModalOpen}
                     onClose={() => setIsAddModalOpen(false)}
                     onCustomerAdded={handleCustomerAdded}
                 />
 
-                {/* Edit Customer Modal */}
                 <EditCustomerModal
                     isOpen={isEditModalOpen}
                     onClose={() => setIsEditModalOpen(false)}
@@ -288,14 +253,12 @@ const Customers = () => {
                     customer={selectedCustomer}
                 />
 
-                {/* View Customer Modal (read-only, triggered by row click) */}
                 <ViewCustomerModal
                     isOpen={isViewModalOpen}
                     onClose={() => setIsViewModalOpen(false)}
                     customer={viewCustomer}
                 />
 
-                {/* Delete Confirmation Modal */}
                 <ConfirmationModal
                     isOpen={confirmModal.isOpen}
                     onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}

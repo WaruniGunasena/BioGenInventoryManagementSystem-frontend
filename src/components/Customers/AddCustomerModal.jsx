@@ -11,17 +11,17 @@ const EMPTY_FORM = {
     address: '',
     province: '',
     postalCode: '',
+    creditPeriod: '30',
 };
 
 const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
     const { showToast } = useToast();
     const [formData, setFormData] = useState(EMPTY_FORM);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [emailError, setEmailError] = useState(false); // tracks duplicate email state
+    const [emailError, setEmailError] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        // Clear the email error highlight as soon as the user edits the email field
         if (name === 'email' && emailError) {
             setEmailError(false);
         }
@@ -33,19 +33,22 @@ const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
         setIsSubmitting(true);
 
         try {
-            // ── Step 1: Check if email already exists ────────────────────────
             const emailCheckRes = await checkCustomerEmailExists(formData.email);
-            const emailExists = emailCheckRes.data; // boolean from backend
+            const emailExists = emailCheckRes.data;
 
             if (emailExists) {
-                setEmailError(true); // turn the email field red
+                setEmailError(true);
                 showToast('error', 'This email address is already registered.');
                 setIsSubmitting(false);
-                return; // keep modal open — do NOT proceed
+                return;
             }
 
-            // ── Step 2: Email is unique — create the customer ─────────────────
-            await createCustomer(formData);
+            const dataToSubmit = {
+                ...formData,
+                creditPeriod: parseInt(formData.creditPeriod, 10)
+            };
+            console.log('Creating customer with data (stringified):', JSON.stringify(dataToSubmit, null, 2));
+            await createCustomer(dataToSubmit);
             setFormData(EMPTY_FORM);
             setEmailError(false);
             showToast('success', 'Customer added successfully!');
@@ -63,7 +66,6 @@ const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
         <Modal isOpen={isOpen} onClose={onClose} title="Add New Customer">
             <form onSubmit={handleSubmit}>
 
-                {/* Row 1: Name + Email */}
                 <div className="form-row">
                     <div className="form-group form-col">
                         <label className="form-label">Full Name *</label>
@@ -98,7 +100,6 @@ const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
                     </div>
                 </div>
 
-                {/* Row 2: Contact No + Province */}
                 <div className="form-row">
                     <div className="form-group form-col">
                         <label className="form-label">Contact No</label>
@@ -124,7 +125,6 @@ const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
                     </div>
                 </div>
 
-                {/* Row 3: Address + Postal Code */}
                 <div className="form-row">
                     <div className="form-group form-col">
                         <label className="form-label">Address</label>
@@ -147,6 +147,23 @@ const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
                             value={formData.postalCode}
                             onChange={handleChange}
                         />
+                    </div>
+                </div>
+
+                <div className="form-row">
+                    <div className="form-group form-col">
+                        <label className="form-label">Credit Term *</label>
+                        <select
+                            name="creditPeriod"
+                            className="form-input"
+                            value={formData.creditPeriod}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="30">30 days</option>
+                            <option value="60">60 days</option>
+                            <option value="90">90 days</option>
+                        </select>
                     </div>
                 </div>
 

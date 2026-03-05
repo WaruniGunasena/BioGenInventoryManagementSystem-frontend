@@ -14,7 +14,9 @@ import Customers from "./pages/Customers";
 import Employees from "./pages/Employees/Employees";
 import Stock from "./pages/Stock/Stock";
 import Invoices from "./pages/Invoices/Invoices";
+import SalesOrder from "./pages/SalesOrder/SalesOrder";
 import ComponentsDemo from "./pages/ComponentsDemo";
+import SalesInvoices from "./pages/SalesOrder/SalesInvoices";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 function App() {
@@ -35,6 +37,8 @@ function App() {
           <Route path="/employees" element={<Employees />} />
           <Route path="/stock" element={<Stock />} />
           <Route path="/invoices" element={<Invoices />} />
+          <Route path="/sales-order" element={<SalesOrder />} />
+          <Route path="/sales-invoices" element={<SalesInvoices />} />
           <Route path="/test-components" element={<ComponentsDemo />} />
         </Routes>
       </Router>
