@@ -49,6 +49,7 @@
 .view-link-btn:hover {
     color: #4f46e5;
 }
+
 .sales-invoice-modal-overlay {
     position: fixed;
     top: 0;
@@ -116,6 +117,57 @@
 .close-modal-btn:hover {
     background: #fee2e2;
     color: #ef4444;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.btn-print {
+    background-color: #6366f1;
+    color: white;
+}
+
+.btn-print:hover {
+    background-color: #4f46e5;
+}
+
+.btn-download {
+    background-color: #10b981;
+    color: white;
+}
+
+.btn-download:hover {
+    background-color: #059669;
+}
+
+.btn-whatsapp {
+    background-color: #25d366;
+    color: white;
+}
+
+.btn-whatsapp:hover {
+    background-color: #128c7e;
+}
+
+.action-btn svg {
+    width: 18px;
+    height: 18px;
 }
 
 .modal-body-scroll {
@@ -340,4 +392,77 @@
     font-size: 18px;
     color: #000;
     font-weight: 700;
+}
+
+/* Print Styles */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .sales-invoice-modal-overlay {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        backdrop-filter: none;
+        z-index: 9999;
+    }
+
+    .sales-invoice-modal-content {
+        width: 100%;
+        max-width: none;
+        height: auto;
+        max-height: none;
+        box-shadow: none;
+        border: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .modal-header,
+    .modal-actions,
+    .close-modal-btn {
+        display: none !important;
+    }
+
+    .modal-body-scroll {
+        padding: 0;
+        background: white !important;
+        overflow: visible;
+    }
+
+    .sales-order-summary-section {
+        visibility: visible;
+        border: none;
+        padding: 0;
+        width: 100%;
+        box-shadow: none;
+    }
+
+    .sales-order-summary-section * {
+        visibility: visible;
+    }
+
+    /* Fix table colors for printing */
+    .invoice-table th {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background-color: #4a90e2 !important;
+        color: white !important;
+    }
+
+    .invoice-info-bar {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background-color: #e5eef9 !important;
+    }
+
+    .total-invoice {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background-color: #f0f0f0 !important;
+    }
 }
