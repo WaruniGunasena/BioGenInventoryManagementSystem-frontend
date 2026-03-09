@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Layout from "../../components/Layout";
 import Sidebar from "../../components/Sidebar";
 import DataTable from "../../components/common/DataTable";
-import { X, FileText } from "lucide-react";
+import { X, FileText, Printer, Download, Share2 } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import { getPaginatedSalesOrders, searchSalesOrder } from "../../api/salesOrderService";
 import "./SalesInvoices.css";
 
@@ -11,6 +14,9 @@ const SalesInvoices = () => {
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+    const componentRef = useRef();
 
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -42,7 +48,8 @@ const SalesInvoices = () => {
                     phone: item.customer?.contact_No || "Phone N/A",
                     email: item.customer?.email || "Email N/A",
                     date: item.invoiceDate || item.date || "N/A",
-                    invoiceNumber: item.invoiceNumber || "N/A"
+                    invoiceNumber: item.invoiceNumber || "N/A",
+                    creditTerm: item.creditTerm || "N/A"
                 }));
 
                 setInvoices(mappedData);
@@ -73,7 +80,8 @@ const SalesInvoices = () => {
                 phone: item.customer?.contact_No || "Phone N/A",
                 email: item.customer?.email || "Email N/A",
                 date: item.invoiceDate || item.date || "N/A",
-                invoiceNumber: item.invoiceNumber || "N/A"
+                invoiceNumber: item.invoiceNumber || "N/A",
+                creditTerm: item.creditTerm || "N/A"
             }));
             setInvoices(mappedData);
             setTotalPages(1);
@@ -85,8 +93,54 @@ const SalesInvoices = () => {
     };
 
     const handleViewDetails = (invoice) => {
+        console.log(invoice);
         setSelectedInvoice(invoice);
         setIsModalOpen(true);
+    };
+
+    const handlePrint = useReactToPrint({
+        contentRef: componentRef,
+        documentTitle: `Invoice_${selectedInvoice?.invoiceNumber || 'Detail'}`,
+    });
+
+    const handleDownloadPDF = async () => {
+        if (!componentRef.current) return;
+        setIsGeneratingPDF(true);
+        try {
+            const canvas = await html2canvas(componentRef.current, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: "#ffffff",
+            });
+            const imgData = canvas.toDataURL("image/png");
+            const pdf = new jsPDF("p", "mm", "a4");
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+            pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Invoice_${selectedInvoice.invoiceNumber}.pdf`);
+        } catch (error) {
+            console.error("Error generating PDF:", error);
+            alert("Failed to generate PDF. Please try again.");
+        } finally {
+            setIsGeneratingPDF(false);
+        }
+    };
+
+    const handleWhatsAppShare = () => {
+        if (!selectedInvoice) return;
+
+        const message = `*Invoice from BioGenHoldings*%0A` +
+            `*Invoice No:* ${selectedInvoice.invoiceNumber}%0A` +
+            `*Date:* ${selectedInvoice.date}%0A` +
+            `*Customer:* ${selectedInvoice.customerName}%0A` +
+            `*Total:* LKR ${parseFloat(selectedInvoice.grandTotal).toFixed(2)}%0A%0A` +
+            `Thank you for your business!`;
+
+        const whatsappUrl = `https://wa.me/?text=${message}`;
+        window.open(whatsappUrl, "_blank");
     };
 
     const columns = [
@@ -148,12 +202,27 @@ const SalesInvoices = () => {
                     <div className="sales-invoice-modal-content">
                         <div className="modal-header">
                             <h3>Sales Invoice Details - {selectedInvoice.invoiceNumber}</h3>
-                            <button className="close-modal-btn" onClick={() => setIsModalOpen(false)}>
-                                <X size={24} />
-                            </button>
+                            <div className="modal-actions">
+                                <button className="action-btn btn-print" onClick={handlePrint}>
+                                    <Printer size={18} /> Print
+                                </button>
+                                <button
+                                    className="action-btn btn-download"
+                                    onClick={handleDownloadPDF}
+                                    disabled={isGeneratingPDF}
+                                >
+                                    <Download size={18} /> {isGeneratingPDF ? "Generating..." : "Download"}
+                                </button>
+                                <button className="action-btn btn-whatsapp" onClick={handleWhatsAppShare}>
+                                    <Share2 size={18} /> WhatsApp
+                                </button>
+                                <button className="close-modal-btn" onClick={() => setIsModalOpen(false)}>
+                                    <X size={24} />
+                                </button>
+                            </div>
                         </div>
                         <div className="modal-body-scroll">
-                            <div className="sales-order-summary-section">
+                            <div className="sales-order-summary-section" ref={componentRef}>
                                 <div className="invoice-header">
                                     <div className="company-info">
                                         <h1 className="company-name">BioGenHoldings Pvt Ltd</h1>
