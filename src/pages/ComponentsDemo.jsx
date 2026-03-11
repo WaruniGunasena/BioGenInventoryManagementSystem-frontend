@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import MetricCard from '../components/common/MetricCard';
 import DataTable from '../components/common/DataTable';
-import { Users, Box, ShoppingCart } from 'lucide-react';
+import { Users } from 'lucide-react';
 import '../components/Dashboard/Dashboard.css'; // Reuse dashboard layout styles
 
 const ComponentsDemo = () => {

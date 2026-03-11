@@ -6,7 +6,7 @@ import DataTable from '../../components/common/DataTable';
 import Modal from '../../components/common/Modal';
 import ConfirmationModal from '../../components/common/ConfirmationModal'; // Import ConfirmationModal
 import { Filter, Users, UserX } from 'lucide-react';
-import { getAllCategory, createCategory, updateCategory, deleteCategory, searchCategory, getPaginatedResults, softDeleteCategory } from '../../api/categoryService';
+import { getAllCategory, createCategory, updateCategory, searchCategory, getPaginatedResults, softDeleteCategory } from '../../api/categoryService';
 import AddCategory from '../../components/Category/AddCategory';
 import FilterType from '../../enums/FilterType'; // Import FilterType
 import { exportToCSV } from '../../components/common/Utils/Export/ExportToCSV';
@@ -20,7 +20,9 @@ const Category = () => {
 
     // API Data State
     const [categories, setCategories] = useState([]);
+    // eslint-disable-next-line no-unused-vars
     const [isLoading, setIsLoading] = useState(false);
+    // eslint-disable-next-line no-unused-vars
     const [isExporting, setIsExporting] = useState(false);
 
     // Modal State (Add/Edit Form)
@@ -65,6 +67,7 @@ const Category = () => {
 
     useEffect(() => {
         fetchCategories();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage, filter]);
 
     // --- Add/Edit Modal Handlers ---

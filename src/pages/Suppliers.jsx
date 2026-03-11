@@ -35,6 +35,7 @@ const Suppliers = () => {
         message: ''
     });
 
+    // eslint-disable-next-line no-unused-vars
     const navigate = useNavigate();
 
     const getSupplier = async () => {
@@ -56,6 +57,7 @@ const Suppliers = () => {
 
     useEffect(() => {
         getSupplier();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleSupplierAdded = () => {
