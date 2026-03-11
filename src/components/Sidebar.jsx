@@ -19,8 +19,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Menu,
-  FileText
+  Menu
 } from "lucide-react";
 import "./Sidebar.css";
 import { getUserName, getUserRole } from "./common/Utils/userUtils/userUtils";

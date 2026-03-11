@@ -19,6 +19,7 @@ const SalesInvoices = () => {
     const componentRef = useRef();
 
     const [invoices, setInvoices] = useState([]);
+    // eslint-disable-next-line no-unused-vars
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
@@ -31,6 +32,7 @@ const SalesInvoices = () => {
         } else {
             fetchInvoices(currentPage);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage, searchQuery]);
 
     const fetchInvoices = async (page) => {

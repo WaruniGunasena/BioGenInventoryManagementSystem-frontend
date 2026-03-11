@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const data = [
@@ -17,8 +17,6 @@ const data = [
 ];
 
 const DashboardSalesChart = () => {
-    const [year, setYear] = useState('2023');
-
     return (
         <div className="dashboard-chart-container">
             <div className="chart-header">

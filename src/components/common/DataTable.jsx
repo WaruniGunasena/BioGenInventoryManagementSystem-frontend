@@ -65,6 +65,7 @@ const DataTable = ({
 
     const isAllSelected = data.length > 0 && selectedIds.length === data.length;
 
+    // eslint-disable-next-line no-unused-vars
     const handleSelectAll = () => {
         if (isAllSelected) {
             onSelectionChange([]);
@@ -73,6 +74,7 @@ const DataTable = ({
         }
     };
 
+    // eslint-disable-next-line no-unused-vars
     const handleSelectRow = (id) => {
         if (selectedIds.includes(id)) {
             onSelectionChange(selectedIds.filter(itemId => itemId !== id));

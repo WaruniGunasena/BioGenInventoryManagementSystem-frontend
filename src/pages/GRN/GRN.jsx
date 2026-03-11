@@ -6,7 +6,7 @@ import { getAllSuppliers } from "../../api/supplierService";
 import { getAllProducts } from "../../api/productService";
 import { createGRN } from "../../api/grnService";
 import AddProductModal from "../../components/Products/AddProductModal";
-import { PlusCircle, Trash2, Edit3, FileText, Plus } from "lucide-react";
+import { Trash2, Edit3, FileText, Plus } from "lucide-react";
 import { getUserId } from "../../components/common/Utils/userUtils/userUtils";
 import "./GRN.css";
 

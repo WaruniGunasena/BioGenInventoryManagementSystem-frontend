@@ -85,6 +85,7 @@ const Customers = () => {
 
     useEffect(() => {
         fetchCustomers();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage, filter]);
 
     const handleSearch = async (query) => {

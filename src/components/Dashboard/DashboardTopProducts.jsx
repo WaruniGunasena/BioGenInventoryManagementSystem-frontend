@@ -1,6 +1,7 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
+// eslint-disable-next-line no-unused-vars
 const data = [
     { name: 'Purchased', value: 300, color: '#3b82f6' }, // blue
     { name: 'Remaining', value: 700, color: '#e5e7eb' }, // gray
