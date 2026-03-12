@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../../context/ToastContext';
 import Sidebar from '../../components/Sidebar';
 import MetricCard from '../../components/common/MetricCard';
@@ -44,7 +44,7 @@ const Category = () => {
 
     const [formData, setFormData] = useState({ name: '', description: '' });
 
-    const fetchCategories = async () => {
+    const fetchCategories = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await getPaginatedResults(currentPage, 5, filter)
@@ -60,11 +60,11 @@ const Category = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [currentPage, filter]);
 
     useEffect(() => {
         fetchCategories();
-    }, [currentPage, filter]);
+    }, [fetchCategories]);
 
 
     const handleOpenModal = (mode, category = null) => {
@@ -248,6 +248,8 @@ const Category = () => {
                     ))}
                 </div>
 
+                {isLoading && <div className="loading-overlay">Loading...</div>}
+
                 <DataTable
                     columns={columns}
                     data={categories}
@@ -268,8 +270,8 @@ const Category = () => {
                         { label: 'Name: Z → A', value: FilterType.DESC },
                     ]}
                     onFilter={handleFilter}
-                    onExportCSV={handleExportToCsv}
-                    onExportPDF={handleExportToPdf}
+                    onExportCSV={isExporting ? undefined : handleExportToCsv}
+                    onExportPDF={isExporting ? undefined : handleExportToPdf}
                     showStatusToggle={false}
                 />
 
