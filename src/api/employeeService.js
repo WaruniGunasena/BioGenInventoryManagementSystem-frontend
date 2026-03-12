@@ -15,5 +15,13 @@ export const updateEmployee = (id, data) => api.put(`/user/update/${id}`, data);
 // Delete employee
 export const deleteEmployee = (id) => api.delete(`/user/delete/${id}`);
 
+// soft Delete employee
+export const softDeleteEmployee = (id, userId) =>
+    api.put(`/user/softDelete?id=${id}&userId=${userId}`);
+
 // Search employees
 export const searchEmployee = (query) => api.get(`/user/search?searchKey=${query}`);
+
+export const getPaginatedEmployeeResults = (page, size, filter) =>
+    api.get(`/user?page=${page}&size=${size}&filter=${filter}`);
+

@@ -5,7 +5,8 @@ import DataTable from '../components/common/DataTable';
 import ConfirmationModal from '../components/common/ConfirmationModal';
 import '../components/Dashboard/Dashboard.css';
 import Layout from '../components/Layout';
-import { deleteProduct, searchProduct, getPaginatedProductResults } from '../api/productService';
+import { softDeleteProduct, searchProduct, getPaginatedProductResults } from '../api/productService';
+import { getUserId } from '../components/common/Utils/userUtils/userUtils';
 import AddProductModal from '../components/Products/AddProductModal';
 import EditProductModal from '../components/Products/EditProductModal';
 import FilterType from '../enums/FilterType';
@@ -37,6 +38,7 @@ const Products = () => {
         setIsLoading(true);
         try {
             const response = await getPaginatedProductResults(currentPage, 5, filter);
+            console.log(response);
             if (response.data && response.data.products && Array.isArray(response.data.products)) {
                 setProducts(response.data.products);
                 setTotalPages(response.data.totalPages);
@@ -77,7 +79,8 @@ const Products = () => {
     const handleConfirmDelete = async () => {
         const id = confirmModal.data.id || confirmModal.data._id;
         try {
-            await deleteProduct(id);
+            const userId = await getUserId();
+            await softDeleteProduct(id, userId);
             showToast('success', 'Product deleted successfully!');
             fetchProducts();
         } catch (error) {

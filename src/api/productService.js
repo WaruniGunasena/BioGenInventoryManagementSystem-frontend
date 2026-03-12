@@ -16,6 +16,9 @@ export const getProductById = (id) => api.get(`/products/${id}`);
 
 export const deleteProduct = (id) => api.delete(`/products/delete/${id}`);
 
+export const softDeleteProduct = (id, userId) =>
+  api.put(`/products/softDelete?id=${id}&userId=${userId}`);
+
 export const searchProduct = (query) => api.get(`/products/search?searchKey=${query}`);
 
 export const getPaginatedProductResults = (page, size, filter) =>

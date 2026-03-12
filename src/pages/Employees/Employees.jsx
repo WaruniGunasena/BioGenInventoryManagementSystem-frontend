@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../../context/ToastContext';
 import Sidebar from '../../components/Sidebar';
 import MetricCard from '../../components/common/MetricCard';
@@ -6,10 +6,11 @@ import DataTable from '../../components/common/DataTable';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { Users, UserCheck, UserX } from 'lucide-react';
 import {
-    getAllEmployees,
-    deleteEmployee,
+    softDeleteEmployee,
     searchEmployee,
+    getPaginatedEmployeeResults,
 } from '../../api/employeeService';
+import { getUserId } from '../../components/common/Utils/userUtils/userUtils';
 import AddEmployeeModal from '../../components/Employees/AddEmployeeModal';
 import EditEmployeeModal from '../../components/Employees/EditEmployeeModal';
 import FilterType from '../../enums/FilterType';
@@ -31,53 +32,45 @@ const Employees = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-    // API Data State
-    const [employees, setEmployees] = useState([]);
-    // eslint-disable-next-line no-unused-vars
-    const [isLoading, setIsLoading] = useState(false);
 
-    // Modal State
+    const [employees, setEmployees] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [totalPages, setTotalPages] = useState(0);
+
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
 
-    // Confirmation Modal State
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         data: null,
         message: '',
     });
 
-    // Table state
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(0);
     const [selectedIds, setSelectedIds] = useState([]);
     const [filter, setFilter] = useState(FilterType.ASC);
 
-    // ─── Fetch ────────────────────────────────────────────────────────────────
-
-    const fetchEmployees = async () => {
+    const fetchEmployees = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await getAllEmployees();
-            const raw = response?.data;
-            const list =
-                Array.isArray(raw) ? raw :
-                    Array.isArray(raw?.users) ? raw.users :
-                        Array.isArray(raw?.employees) ? raw.employees :
-                            [];
-            setEmployees(list);
+            const response = await getPaginatedEmployeeResults(currentPage, 5, filter);
+            if (response.data && response.data.users && Array.isArray(response.data.users)) {
+                setEmployees(response.data.users);
+                setTotalPages(response.data.totalPages);
+            } else {
+                setEmployees([]);
+            }
         } catch (err) {
             console.error('Failed to fetch employees:', err);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [currentPage, filter]);
 
     useEffect(() => {
         fetchEmployees();
-    }, []);
-
-    // ─── Search ───────────────────────────────────────────────────────────────
+    }, [fetchEmployees]);
 
     const handleSearch = async (query) => {
         if (query.trim() === '') {
@@ -86,22 +79,19 @@ const Employees = () => {
         }
         try {
             const res = await searchEmployee(query);
-            const raw = res?.data;
-            const list =
-                Array.isArray(raw) ? raw :
-                    Array.isArray(raw?.users) ? raw.users :
-                        Array.isArray(raw?.employees) ? raw.employees :
-                            [];
-            setEmployees(list);
+            if (res.data && res.data.users && Array.isArray(res.data.users)) {
+                setEmployees(res.data.users);
+            } else {
+                setEmployees([]);
+            }
         } catch (err) {
             console.error('Error searching employees:', err);
         }
     };
 
-    // ─── Filter ───────────────────────────────────────────────────────────────
-
     const handleFilter = (value) => {
         setFilter(value ?? FilterType.ASC);
+        setCurrentPage(0);
     };
 
     const sortedEmployees = [...employees].sort((a, b) => {
@@ -111,8 +101,6 @@ const Employees = () => {
             ? nameA.localeCompare(nameB)
             : nameB.localeCompare(nameA);
     });
-
-    // ─── Delete ───────────────────────────────────────────────────────────────
 
     const handleDeleteClick = (row) => {
         setConfirmModal({
@@ -125,7 +113,8 @@ const Employees = () => {
     const handleConfirmDelete = async () => {
         const id = confirmModal.data?.id || confirmModal.data?._id;
         try {
-            await deleteEmployee(id);
+            const userId = await getUserId();
+            await softDeleteEmployee(id, userId);
             showToast('success', 'Employee removed successfully!');
             fetchEmployees();
         } catch (err) {
@@ -134,8 +123,6 @@ const Employees = () => {
             setConfirmModal({ isOpen: false, data: null, message: '' });
         }
     };
-
-    // ─── Callbacks from modals ────────────────────────────────────────────────
 
     const handleEmployeeAdded = () => {
         showToast('success', 'Employee added successfully!');
@@ -148,8 +135,6 @@ const Employees = () => {
         fetchEmployees();
         setIsEditModalOpen(false);
     };
-
-    // ─── Metrics ──────────────────────────────────────────────────────────────
 
     const metrics = [
         {
@@ -172,8 +157,6 @@ const Employees = () => {
             icon: UserX,
         },
     ];
-
-    // ─── Table columns ────────────────────────────────────────────────────────
 
     const columns = [
         {
@@ -219,8 +202,6 @@ const Employees = () => {
         { header: 'Address', accessor: 'address', render: (row) => row.address ?? '—' },
     ];
 
-    // ─── Render ───────────────────────────────────────────────────────────────
-
     return (
         <div className={`dashboard-container ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
             <Sidebar
@@ -240,11 +221,12 @@ const Employees = () => {
                     ))}
                 </div>
 
+                {isLoading && <div className="loading-overlay">Loading...</div>}
                 <DataTable
                     columns={columns}
-                    data={sortedEmployees}
+                    data={employees}
                     currentPage={currentPage}
-                    totalPages={1}
+                    totalPages={totalPages}
                     onPageChange={setCurrentPage}
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
@@ -264,14 +246,12 @@ const Employees = () => {
                     showStatusToggle={false}
                 />
 
-                {/* Add Employee Modal */}
                 <AddEmployeeModal
                     isOpen={isAddModalOpen}
                     onClose={() => setIsAddModalOpen(false)}
                     onEmployeeAdded={handleEmployeeAdded}
                 />
 
-                {/* Edit Employee Modal */}
                 <EditEmployeeModal
                     isOpen={isEditModalOpen}
                     onClose={() => setIsEditModalOpen(false)}
@@ -279,7 +259,6 @@ const Employees = () => {
                     employee={selectedEmployee}
                 />
 
-                {/* Delete Confirmation Modal */}
                 <ConfirmationModal
                     isOpen={confirmModal.isOpen}
                     onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
