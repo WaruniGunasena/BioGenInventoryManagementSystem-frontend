@@ -2,7 +2,6 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
-  // baseURL: "http://13.60.37.195:8080/api",
   withCredentials: true, // for cookie-based auth (production standard)
   timeout: 15000,
 });

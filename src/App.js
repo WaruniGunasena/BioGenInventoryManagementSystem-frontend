@@ -1,5 +1,6 @@
 import React from "react";
 import ToastProvider from "./context/ToastProvider";
+import { PermissionsProvider } from "./context/PermissionsContext";
 
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
@@ -17,31 +18,36 @@ import Invoices from "./pages/Invoices/Invoices";
 import SalesOrder from "./pages/SalesOrder/SalesOrder";
 import ComponentsDemo from "./pages/ComponentsDemo";
 import SalesInvoices from "./pages/SalesOrder/SalesInvoices";
+import Settings from "./pages/Settings/Settings";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 function App() {
   return (
     <ToastProvider>
-      <Router>
-        <Routes>
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/product" element={<Products />} />
-          <Route path="/supplier" element={<Suppliers />} />
-          <Route path="/category" element={<Category />} />
-          <Route path="/grn-window" element={<GRN />} />
-          <Route path="/salesreps" element={<SalesReps />} />
-          <Route path="/customers" element={<Customers />} />
-          <Route path="/employees" element={<Employees />} />
-          <Route path="/stock" element={<Stock />} />
-          <Route path="/invoices" element={<Invoices />} />
-          <Route path="/sales-order" element={<SalesOrder />} />
-          <Route path="/sales-invoices" element={<SalesInvoices />} />
-          <Route path="/test-components" element={<ComponentsDemo />} />
-        </Routes>
-      </Router>
+      <PermissionsProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/product" element={<Products />} />
+            <Route path="/supplier" element={<Suppliers />} />
+            <Route path="/category" element={<Category />} />
+            <Route path="/grn-window" element={<GRN />} />
+            <Route path="/salesreps" element={<SalesReps />} />
+            <Route path="/customers" element={<Customers />} />
+            <Route path="/employees" element={<Employees />} />
+            <Route path="/stock" element={<Stock />} />
+            <Route path="/invoices" element={<Invoices />} />
+            <Route path="/sales-order" element={<SalesOrder />} />
+            <Route path="/sales-invoices" element={<SalesInvoices />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/test-components" element={<ComponentsDemo />} />
+          </Routes>
+        </Router>
+      </PermissionsProvider>
     </ToastProvider>
   );
 }

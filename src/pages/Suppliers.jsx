@@ -10,11 +10,13 @@ import { getUserId } from '../components/common/Utils/userUtils/userUtils';
 import FilterType from '../enums/FilterType';
 import '../components/Dashboard/Dashboard.css';
 import Layout from '../components/Layout';
+import usePermissions from '../hooks/usePermissions';
 import AddSupplierModal from '../components/Suppliers/AddSupplierModal';
 import EditSupplierModal from '../components/Suppliers/EditSupplierModal';
 
 const Suppliers = () => {
     const { showToast } = useToast();
+    const { canAdd, canEdit, canDelete } = usePermissions('suppliers');
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -164,6 +166,7 @@ const Suppliers = () => {
                         onSelectionChange={setSelectedIds}
                         onSearch={handleSearch}
                         addButtonLabel="Add New Supplier"
+                        showAddButton={canAdd}
                         onAddClick={() => setIsAddModalOpen(true)}
                         onEdit={(row) => {
                             setSelectedSupplier(row);
