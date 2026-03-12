@@ -4,7 +4,7 @@ const AddCategory = ({ formData, handleInputChange, handleFormSubmitClick, modal
     return (
         <div>
             <div className="form-group">
-                <label className="form-label">Category Name</label>
+                <label className="form-label">Category Name *</label>
                 <input
                     type="text"
                     name="name"

@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../context/ToastContext';
 import Sidebar from '../components/Sidebar';
 import MetricCard from '../components/common/MetricCard';
 import DataTable from '../components/common/DataTable';
-import ConfirmationModal from '../components/common/ConfirmationModal'; // Import ConfirmationModal
+import ConfirmationModal from '../components/common/ConfirmationModal'; 
 import { useNavigate } from 'react-router-dom';
-import { getAllSuppliers, deleteSupplier, searchSupplier } from "../api/supplierService"
+import { softDeleteSupplier, searchSupplier, getPaginatedSupplierResults } from "../api/supplierService"
+import { getUserId } from '../components/common/Utils/userUtils/userUtils';
+import FilterType from '../enums/FilterType';
 import '../components/Dashboard/Dashboard.css';
 import Layout from '../components/Layout';
 import usePermissions from '../hooks/usePermissions';
@@ -19,62 +21,56 @@ const Suppliers = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-    const metrics = [
-        { title: "Active Suppliers", value: 100, trend: { value: "12%", isPositive: true }, isPrimary: true },
-        { title: "Inactive Suppliers", value: 19, trend: { value: "12%", isPositive: true }, isPrimary: false },
-        { title: "Deleted Suppliers", value: 10, trend: { value: "12%", isPositive: true }, isPrimary: false },
-    ];
-
-    const [supplier, setSupplier] = useState([]);
+    const [suppliers, setSuppliers] = useState([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [totalPages, setTotalPages] = useState(0);
+    const [filter, setFilter] = useState(FilterType.ASC);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [selectedIds, setSelectedIds] = useState([]);
 
-    // Confirmation Modal State
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         data: null,
         message: ''
     });
 
-    // eslint-disable-next-line no-unused-vars
     const navigate = useNavigate();
 
-    const getSupplier = async () => {
+    const fetchSuppliers = useCallback(async () => {
+        setIsLoading(true);
         try {
-            const response = await getAllSuppliers();
-            if (response.data && Array.isArray(response.data)) {
-                setSupplier(response.data);
-            } else if (response.data && response.data.suppliers && Array.isArray(response.data.suppliers)) {
-                setSupplier(response.data.suppliers);
-            } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
-                setSupplier(response.data.data);
+            const response = await getPaginatedSupplierResults(currentPage, 5, filter);
+            if (response.data && response.data.suppliers && Array.isArray(response.data.suppliers)) {
+                setSuppliers(response.data.suppliers);
+                setTotalPages(response.data.totalPages);
             } else {
-                setSupplier([]);
+                setSuppliers([]);
             }
         } catch (error) {
             showToast('error', error.response?.data?.message || 'Failed to load suppliers.');
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, [currentPage, filter, showToast]);
 
     useEffect(() => {
-        getSupplier();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        fetchSuppliers();
+    }, [fetchSuppliers]);
 
     const handleSupplierAdded = () => {
         showToast('success', 'Supplier added successfully!');
         setIsAddModalOpen(false);
-        getSupplier();
+        fetchSuppliers();
     };
 
     const handleSupplierUpdated = () => {
         showToast('success', 'Supplier updated successfully!');
         setIsEditModalOpen(false);
-        getSupplier();
+        fetchSuppliers();
     };
-
-    // --- Delete Confirmation Handlers ---
 
     const handleDeleteClick = (row) => {
         setConfirmModal({
@@ -87,9 +83,10 @@ const Suppliers = () => {
     const handleConfirmDelete = async () => {
         const id = confirmModal.data.id || confirmModal.data._id;
         try {
-            await deleteSupplier(id);
+            const userId = await getUserId();
+            await softDeleteSupplier(id, userId);
             showToast('success', 'Supplier deleted successfully!');
-            getSupplier();
+            fetchSuppliers();
         } catch (error) {
             showToast('error', error.response?.data?.message || 'Failed to delete supplier.');
         } finally {
@@ -99,34 +96,34 @@ const Suppliers = () => {
 
     const handleSearch = async (query) => {
         if (query.trim() === "") {
-            getSupplier();
+            fetchSuppliers();
             return;
         }
         try {
             const res = await searchSupplier(query);
-            if (res.data && Array.isArray(res.data)) {
-                setSupplier(res.data);
-            } else if (res.data && res.data.suppliers && Array.isArray(res.data.suppliers)) {
-                setSupplier(res.data.suppliers);
-            } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
-                setSupplier(res.data.data);
+            if (res.data && res.data.suppliers && Array.isArray(res.data.suppliers)) {
+                setSuppliers(res.data.suppliers);
             } else {
-                setSupplier([]);
+                setSuppliers([]);
             }
         } catch (error) {
             console.error("Error searching suppliers:", error);
         }
     };
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const [selectedIds, setSelectedIds] = useState([]);
+    const metrics = [
+        { title: "Total Suppliers", value: suppliers.length.toString(), trend: { value: "12%", isPositive: true }, isPrimary: true },
+        { title: "Active Suppliers", value: suppliers.length.toString(), trend: { value: "0%", isPositive: true }, isPrimary: false },
+        { title: "Inactive Suppliers", value: "0", trend: { value: "0%", isPositive: true }, isPrimary: false },
+    ];
+
 
     const columns = [
         {
             header: "Supplier Name / Company Name", accessor: "name", render: (row) => (
                 <div className="user-cell">
                     <img src={`https://ui-avatars.com/api/?name=${row.name}&background=random`} alt="" className="user-avatar" />
-                    <span>{row.name}</span>
+                    <span style={{ fontWeight: '500', color: '#6366f1' }}>{row.name}</span>
                 </div>
             )
         },
@@ -158,12 +155,12 @@ const Suppliers = () => {
                         ))}
                     </div>
 
-                    <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>Active Suppliers</h3>
+                    {isLoading && <div className="loading-overlay">Loading...</div>}
                     <DataTable
                         columns={columns}
-                        data={supplier}
+                        data={suppliers}
                         currentPage={currentPage}
-                        totalPages={5}
+                        totalPages={totalPages}
                         onPageChange={setCurrentPage}
                         selectedIds={selectedIds}
                         onSelectionChange={setSelectedIds}
@@ -171,11 +168,19 @@ const Suppliers = () => {
                         addButtonLabel="Add New Supplier"
                         showAddButton={canAdd}
                         onAddClick={() => setIsAddModalOpen(true)}
-                        showActions={canEdit || canDelete}
-                        onEdit={canEdit ? (row) => { setSelectedSupplier(row); setIsEditModalOpen(true); } : null}
-                        onDelete={canDelete ? handleDeleteClick : null}
-                        onToggleStatus={(row) => console.log("Toggle", row.id || row._id)}
-                        showFilter={false}
+                        onEdit={(row) => {
+                            setSelectedSupplier(row);
+                            setIsEditModalOpen(true);
+                        }}
+                        onDelete={handleDeleteClick}
+                        filterOptions={[
+                            { label: 'Name: A → Z', value: FilterType.ASC },
+                            { label: 'Name: Z → A', value: FilterType.DESC },
+                        ]}
+                        onFilter={(value) => {
+                            setFilter(value ?? FilterType.ASC);
+                            setCurrentPage(0);
+                        }}
                     />
                     <AddSupplierModal
                         isOpen={isAddModalOpen}
@@ -188,8 +193,6 @@ const Suppliers = () => {
                         onSupplierUpdated={handleSupplierUpdated}
                         supplier={selectedSupplier}
                     />
-
-                    {/* Confirmation Modal */}
                     <ConfirmationModal
                         isOpen={confirmModal.isOpen}
                         onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
