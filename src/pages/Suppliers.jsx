@@ -8,11 +8,13 @@ import { useNavigate } from 'react-router-dom';
 import { getAllSuppliers, deleteSupplier, searchSupplier } from "../api/supplierService"
 import '../components/Dashboard/Dashboard.css';
 import Layout from '../components/Layout';
+import usePermissions from '../hooks/usePermissions';
 import AddSupplierModal from '../components/Suppliers/AddSupplierModal';
 import EditSupplierModal from '../components/Suppliers/EditSupplierModal';
 
 const Suppliers = () => {
     const { showToast } = useToast();
+    const { canAdd, canEdit, canDelete } = usePermissions('suppliers');
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -167,12 +169,11 @@ const Suppliers = () => {
                         onSelectionChange={setSelectedIds}
                         onSearch={handleSearch}
                         addButtonLabel="Add New Supplier"
+                        showAddButton={canAdd}
                         onAddClick={() => setIsAddModalOpen(true)}
-                        onEdit={(row) => {
-                            setSelectedSupplier(row);
-                            setIsEditModalOpen(true);
-                        }}
-                        onDelete={handleDeleteClick}
+                        showActions={canEdit || canDelete}
+                        onEdit={canEdit ? (row) => { setSelectedSupplier(row); setIsEditModalOpen(true); } : null}
+                        onDelete={canDelete ? handleDeleteClick : null}
                         onToggleStatus={(row) => console.log("Toggle", row.id || row._id)}
                         showFilter={false}
                     />

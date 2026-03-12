@@ -9,10 +9,12 @@ import { deleteProduct, searchProduct, getPaginatedProductResults } from '../api
 import AddProductModal from '../components/Products/AddProductModal';
 import EditProductModal from '../components/Products/EditProductModal';
 import FilterType from '../enums/FilterType';
+import usePermissions from '../hooks/usePermissions';
 
 const Products = () => {
 
     const { showToast } = useToast();
+    const { canAdd, canEdit, canDelete } = usePermissions('products');
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -141,12 +143,11 @@ const Products = () => {
                         onSelectionChange={setSelectedIds}
                         onSearch={handleSearch}
                         addButtonLabel="Add New Product"
+                        showAddButton={canAdd}
                         onAddClick={() => setIsAddModalOpen(true)}
-                        onEdit={(row) => {
-                            setSelectedProduct(row);
-                            setIsEditModalOpen(true);
-                        }}
-                        onDelete={handleDeleteClick}
+                        showActions={canEdit || canDelete}
+                        onEdit={canEdit ? (row) => { setSelectedProduct(row); setIsEditModalOpen(true); } : null}
+                        onDelete={canDelete ? handleDeleteClick : null}
                         filterOptions={[
                             { label: 'Ascending: A → Z', value: FilterType.ASC },
                             { label: 'Descending: Z → A', value: FilterType.DESC },

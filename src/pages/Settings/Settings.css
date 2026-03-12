@@ -1,0 +1,340 @@
+.settings-page {
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+/* Header */
+.settings-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 0 24px 0;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 28px;
+}
+
+.settings-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.settings-header p {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 3px 0 0 0;
+}
+
+.settings-header-icon {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+/* Header action buttons */
+.settings-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.settings-btn-save {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 20px;
+    border-radius: 10px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #e5e7eb;
+    color: #9ca3af;
+}
+
+.settings-btn-save.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+.settings-btn-save.active:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.45);
+}
+
+.settings-btn-save:disabled {
+    cursor: default;
+}
+
+.settings-btn-discard {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    border: 1.5px solid #e5e7eb;
+    background: white;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settings-btn-discard:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fef2f2;
+}
+
+/* Saved success toast */
+.settings-saved-toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #d1fae5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    font-weight: 500;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* View-only banner */
+.settings-readonly-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #92400e;
+}
+
+/* Role Tabs */
+.settings-role-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.settings-role-tab {
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 1.5px solid #e5e7eb;
+    background: white;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settings-role-tab:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+}
+
+.settings-role-tab.active {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: white;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+}
+
+/* Permissions Table */
+.settings-table-wrapper {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+}
+
+.settings-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+/* Column widths */
+.settings-table .col-section {
+    width: auto;
+}
+
+.settings-table .col-action {
+    width: 130px;
+    text-align: center;
+}
+
+/* Header row */
+.settings-table thead {
+    background: #f9fafb;
+}
+
+.settings-table thead th {
+    padding: 14px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.settings-table thead th.col-section {
+    text-align: left;
+}
+
+.settings-table thead th.col-action {
+    text-align: center;
+}
+
+/* Colored action column headers */
+.action-th {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.action-th.add {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.action-th.edit {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.action-th.delete {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Body rows */
+.settings-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.15s;
+}
+
+.settings-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.settings-table tbody tr:hover {
+    background: #fafafa;
+}
+
+.settings-table tbody td {
+    padding: 18px 20px;
+    vertical-align: middle;
+}
+
+.settings-table tbody td.col-action {
+    text-align: center;
+}
+
+.section-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* Toggle switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #d1d5db;
+    border-radius: 22px;
+    transition: background 0.2s ease;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked+.toggle-slider {
+    background: #6366f1;
+}
+
+.toggle-switch input:checked+.toggle-slider::before {
+    transform: translateX(18px);
+}
+
+.toggle-switch.disabled .toggle-slider {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Add toggle coloring if enabled */
+.toggle-switch.add input:checked+.toggle-slider {
+    background: #10b981;
+}
+
+.toggle-switch.edit input:checked+.toggle-slider {
+    background: #f59e0b;
+}
+
+.toggle-switch.delete input:checked+.toggle-slider {
+    background: #ef4444;
+}
