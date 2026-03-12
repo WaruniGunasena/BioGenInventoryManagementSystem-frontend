@@ -96,13 +96,6 @@ const Employees = () => {
         setCurrentPage(0);
     };
 
-    const sortedEmployees = [...employees].sort((a, b) => {
-        const nameA = (a.name ?? `${a.firstName} ${a.lastName}`).toLowerCase();
-        const nameB = (b.name ?? `${b.firstName} ${b.lastName}`).toLowerCase();
-        return filter === FilterType.ASC
-            ? nameA.localeCompare(nameB)
-            : nameB.localeCompare(nameA);
-    });
 
     const handleDeleteClick = (row) => {
         setConfirmModal({

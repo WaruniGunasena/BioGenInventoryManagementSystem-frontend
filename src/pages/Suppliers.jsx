@@ -3,8 +3,8 @@ import { useToast } from '../context/ToastContext';
 import Sidebar from '../components/Sidebar';
 import MetricCard from '../components/common/MetricCard';
 import DataTable from '../components/common/DataTable';
-import ConfirmationModal from '../components/common/ConfirmationModal'; 
-import { useNavigate } from 'react-router-dom';
+import ConfirmationModal from '../components/common/ConfirmationModal';
+
 import { softDeleteSupplier, searchSupplier, getPaginatedSupplierResults } from "../api/supplierService"
 import { getUserId } from '../components/common/Utils/userUtils/userUtils';
 import FilterType from '../enums/FilterType';
@@ -37,7 +37,6 @@ const Suppliers = () => {
         message: ''
     });
 
-    const navigate = useNavigate();
 
     const fetchSuppliers = useCallback(async () => {
         setIsLoading(true);
@@ -168,14 +167,12 @@ const Suppliers = () => {
                         addButtonLabel="Add New Supplier"
                         showAddButton={canAdd}
                         onAddClick={() => setIsAddModalOpen(true)}
-                        onEdit={(row) => {
-                            setSelectedSupplier(row);
-                            setIsEditModalOpen(true);
-                        }}
-                        onDelete={handleDeleteClick}
+                        showActions={canEdit || canDelete}
+                        onEdit={canEdit ? (row) => { setSelectedSupplier(row); setIsEditModalOpen(true); } : null}
+                        onDelete={canDelete ? handleDeleteClick : null}
                         filterOptions={[
-                            { label: 'Name: A → Z', value: FilterType.ASC },
-                            { label: 'Name: Z → A', value: FilterType.DESC },
+                            { label: 'Name: A \u2192 Z', value: FilterType.ASC },
+                            { label: 'Name: Z \u2192 A', value: FilterType.DESC },
                         ]}
                         onFilter={(value) => {
                             setFilter(value ?? FilterType.ASC);
