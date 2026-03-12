@@ -1,42 +1,47 @@
 import { getLoggedInUserInfo } from '../../../../api/userService';
 
-/**
- * User Utilities
- *
- * All functions call the `GET /user/current` endpoint and return
- * a specific field from the logged-in user's profile.
- *
- * Usage:
- *   import { getUserId, getUserName, getUserEmail } from '../../components/common/Utils/userUtils/userUtils';
- *
- *   const id    = await getUserId();
- *   const name  = await getUserName();
- *   const email = await getUserEmail();
- */
+// ---------------------------------------------------------------------------
+// Module-level cache — one HTTP call for the entire session
+// ---------------------------------------------------------------------------
+let _userCache = null; // stores the resolved user object
+let _userPromise = null; // stores the in-flight promise (deduplicates concurrent calls)
 
-// ---------------------------------------------------------------------------
-// Internal helper — single fetch, normalises the response shape
-// ---------------------------------------------------------------------------
+/**
+ * Clear the user cache — call this on logout so the next login
+ * fetches fresh data.
+ */
+export const clearUserCache = () => {
+    _userCache = null;
+    _userPromise = null;
+};
 
 /**
  * Fetch the logged-in user's full profile object.
- * Supports both `{ data: { user: {...} } }` and `{ data: {...} }` response shapes.
- *
- * @returns {Promise<Object>} user object
- * @throws {Error} if the request fails or no user is found
+ * Results are cached in memory — only one HTTP request is ever made
+ * per session regardless of how many components call this.
  */
 export const fetchCurrentUser = async () => {
-    const response = await getLoggedInUserInfo();
-    const raw = response?.data;
+    // Return cached object immediately
+    if (_userCache) return _userCache;
 
-    // Support both { user: {...} } and the object directly
-    const user = raw?.user ?? raw;
-
-    if (!user || typeof user !== 'object') {
-        throw new Error('userUtils: unable to extract user from response.');
+    // Deduplicate concurrent calls — reuse the same in-flight promise
+    if (!_userPromise) {
+        _userPromise = getLoggedInUserInfo().then((response) => {
+            const raw = response?.data;
+            const user = raw?.user ?? raw;
+            if (!user || typeof user !== 'object') {
+                throw new Error('userUtils: unable to extract user from response.');
+            }
+            _userCache = user;
+            return user;
+        }).catch((err) => {
+            // Clear promise on error so next call retries
+            _userPromise = null;
+            throw err;
+        });
     }
 
-    return user;
+    return _userPromise;
 };
 
 // ---------------------------------------------------------------------------
