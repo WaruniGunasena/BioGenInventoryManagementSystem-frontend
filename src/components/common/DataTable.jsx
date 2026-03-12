@@ -215,12 +215,16 @@ const DataTable = ({
                                         onClick={(e) => e.stopPropagation()}
                                     >
                                         <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
-                                            <button className="action-btn edit-btn" onClick={() => onEdit(row)}>
-                                                <Edit2 size={18} />
-                                            </button>
-                                            <button className="action-btn delete-btn" onClick={() => onDelete(row)}>
-                                                <Trash2 size={18} />
-                                            </button>
+                                            {onEdit && (
+                                                <button className="action-btn edit-btn" onClick={() => onEdit(row)}>
+                                                    <Edit2 size={18} />
+                                                </button>
+                                            )}
+                                            {onDelete && (
+                                                <button className="action-btn delete-btn" onClick={() => onDelete(row)}>
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            )}
                                             {showStatusToggle && (
                                                 <label className="switch">
                                                     <input

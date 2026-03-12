@@ -15,10 +15,12 @@ import ViewCustomerModal from '../components/Customers/ViewCustomerModal';
 import FilterType from '../enums/FilterType';
 import { getUserId } from '../components/common/Utils/userUtils/userUtils';
 import { useToast } from '../context/ToastContext';
+import usePermissions from '../hooks/usePermissions';
 import '../components/Dashboard/Dashboard.css';
 
 const Customers = () => {
     const { showToast } = useToast();
+    const { canAdd, canEdit, canDelete } = usePermissions('customers');
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -225,12 +227,11 @@ const Customers = () => {
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
                     addButtonLabel="Add New Customer"
+                    showAddButton={canAdd}
                     onAddClick={() => setIsAddModalOpen(true)}
-                    onEdit={(row) => {
-                        setSelectedCustomer(row);
-                        setIsEditModalOpen(true);
-                    }}
-                    onDelete={handleDeleteClick}
+                    showActions={canEdit || canDelete}
+                    onEdit={canEdit ? (row) => { setSelectedCustomer(row); setIsEditModalOpen(true); } : null}
+                    onDelete={canDelete ? handleDeleteClick : null}
                     onSearch={handleSearch}
                     onRowClick={handleRowClick}
                     filterOptions={[

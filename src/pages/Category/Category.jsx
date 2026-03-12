@@ -12,9 +12,11 @@ import FilterType from '../../enums/FilterType'; // Import FilterType
 import { exportToCSV } from '../../components/common/Utils/Export/ExportToCSV';
 import { exportToPDF } from '../../components/common/Utils/Export/ExportToPDF';
 import { getUserId } from '../../components/common/Utils/userUtils/userUtils';
+import usePermissions from '../../hooks/usePermissions';
 
 const Category = () => {
     const { showToast } = useToast();
+    const { canAdd, canEdit, canDelete } = usePermissions('categories');
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -273,9 +275,11 @@ const Category = () => {
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
                     addButtonLabel="Add New Category"
+                    showAddButton={canAdd}
                     onAddClick={() => handleOpenModal('add')}
-                    onEdit={(row) => handleOpenModal('edit', row)}
-                    onDelete={handleDeleteClick}
+                    showActions={canEdit || canDelete}
+                    onEdit={canEdit ? (row) => handleOpenModal('edit', row) : null}
+                    onDelete={canDelete ? handleDeleteClick : null}
                     onSearch={handleSearch}
                     filterOptions={[
                         { label: 'Name: A → Z', value: FilterType.ASC },

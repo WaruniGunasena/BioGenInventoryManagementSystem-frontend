@@ -14,6 +14,7 @@ import AddEmployeeModal from '../../components/Employees/AddEmployeeModal';
 import EditEmployeeModal from '../../components/Employees/EditEmployeeModal';
 import FilterType from '../../enums/FilterType';
 import UserRole from '../../enums/UserRole';
+import usePermissions from '../../hooks/usePermissions';
 
 const ROLE_LABELS = {
     [UserRole.CASHIER]: 'Cashier',
@@ -27,6 +28,7 @@ const ROLE_LABELS = {
 
 const Employees = () => {
     const { showToast } = useToast();
+    const { canAdd, canEdit, canDelete } = usePermissions('employees');
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -249,12 +251,11 @@ const Employees = () => {
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
                     addButtonLabel="Add New Employee"
+                    showAddButton={canAdd}
                     onAddClick={() => setIsAddModalOpen(true)}
-                    onEdit={(row) => {
-                        setSelectedEmployee(row);
-                        setIsEditModalOpen(true);
-                    }}
-                    onDelete={handleDeleteClick}
+                    showActions={canEdit || canDelete}
+                    onEdit={canEdit ? (row) => { setSelectedEmployee(row); setIsEditModalOpen(true); } : null}
+                    onDelete={canDelete ? handleDeleteClick : null}
                     onSearch={handleSearch}
                     filterOptions={[
                         { label: 'Name: A → Z', value: FilterType.ASC },
