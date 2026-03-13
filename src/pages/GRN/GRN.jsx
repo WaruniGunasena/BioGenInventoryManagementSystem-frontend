@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../context/ToastContext";
 import Sidebar from "../../components/Sidebar";
 import Layout from "../../components/Layout";
 import { getAllSuppliers } from "../../api/supplierService";
@@ -12,6 +13,9 @@ import "./GRN.css";
 
 const GRN = () => {
     const navigate = useNavigate();
+    const { showToast } = useToast();
+    const formRef = useRef(null);
+    const today = new Date().toISOString().split("T")[0];
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -33,6 +37,7 @@ const GRN = () => {
         quantity: "",
         totalAmount: "0.00",
         invoiceNumber: "",
+        sellingPricePercentage: "",
     });
 
     const [selectedSupplierData, setSelectedSupplierData] = useState(null);
@@ -117,6 +122,7 @@ const GRN = () => {
     const handleEditItem = (item) => {
         setFormData({ ...item });
         setEditingItemId(item.id);
+        formRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
     const handleCancelEdit = () => {
@@ -132,12 +138,29 @@ const GRN = () => {
             purchasePrice: "",
             quantity: "",
             totalAmount: "0.00",
+            sellingPricePercentage: "",
         }));
     };
 
     const handleAddItem = () => {
-        if (!formData.productId || !formData.purchasePrice || !formData.quantity) {
-            alert("Please select a product and enter price/quantity");
+        if (!formData.productId || !formData.purchasePrice || !formData.quantity || !formData.sellingPricePercentage) {
+            showToast('error', "Please select a product and enter price, quantity, and selling price percentage");
+            return;
+        }
+
+        const percentage = parseFloat(formData.sellingPricePercentage);
+        if (isNaN(percentage) || percentage < 0 || percentage > 100) {
+            showToast('error', "Selling price percentage must be between 0 and 100");
+            return;
+        }
+
+        const isDuplicate = addedItems.some((item) =>
+            (item.productId || item._id) === (formData.productId || formData._id) &&
+            item.id !== editingItemId
+        );
+
+        if (isDuplicate) {
+            showToast('error', `Product "${formData.productName}" is already added. Please update the existing record.`);
             return;
         }
         if (editingItemId) {
@@ -159,6 +182,7 @@ const GRN = () => {
             purchasePrice: "",
             quantity: "",
             totalAmount: "0.00",
+            sellingPricePercentage: "",
         }));
     };
 
@@ -172,7 +196,7 @@ const GRN = () => {
 
     const handleAddStock = async () => {
         if (addedItems.length === 0) {
-            alert("Please add at least one item");
+            showToast('error', "Please add at least one item");
             return;
         }
         const grnData = {
@@ -188,12 +212,13 @@ const GRN = () => {
                 purchasePrice: item.purchasePrice,
                 quantity: item.quantity,
                 totalAmount: item.totalAmount,
+                sellingPricePercentage: item.sellingPricePercentage,
             })),
             grandTotal: calculateGrandTotal(),
         };
         try {
             await createGRN(grnData);
-            alert("Stock added successfully!");
+            showToast('success', "Stock added successfully!");
             setAddedItems([]);
             setFormData({
                 supplierId: "",
@@ -209,15 +234,15 @@ const GRN = () => {
                 quantity: "",
                 totalAmount: "0.00",
                 invoiceNumber: "",
+                sellingPricePercentage: "",
             });
             setSelectedSupplierData(null);
         } catch (error) {
             console.error("Error adding GRN:", error);
-            alert(error.response?.data?.message || "Failed to add stock. Please try again.");
+            showToast('error', error.response?.data?.message || "Failed to add stock. Please try again.");
         }
     };
 
-    // ── Shared input style ────────────────────────────────────────────────────
     const inputStyle = {
         width: "100%",
         padding: "8px 12px",
@@ -229,7 +254,7 @@ const GRN = () => {
         transition: "border-color 0.2s, box-shadow 0.2s",
         boxSizing: "border-box",
     };
-    // Custom arrow: hide native, inject SVG chevron positioned 10px from right edge
+
     const selectStyle = {
         ...inputStyle,
         appearance: "none",
@@ -261,23 +286,15 @@ const GRN = () => {
                 <div className="dashboard-content">
                     <div style={{ minHeight: "100vh", background: "#f8f9fa" }}>
 
-                        {/* ── Header ─────────────────────────────────────────── */}
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
                             <h1 style={{ fontSize: "24px", fontWeight: "700", color: "#1e293b", margin: 0 }}>Good Receive Note</h1>
-                            <button
-                                onClick={() => navigate("/invoices")}
-                                style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 18px", border: "1px solid #c7d2fe", borderRadius: "8px", background: "white", color: "#6366f1", fontSize: "14px", fontWeight: "500", cursor: "pointer", transition: "all 0.2s" }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = "#eef2ff"; e.currentTarget.style.borderColor = "#a5b4fc"; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = "white"; e.currentTarget.style.borderColor = "#c7d2fe"; }}
-                            >
-                                <FileText size={16} /> See All Invoices
+                            <button className="see-invoices-btn" onClick={() => navigate("/invoices")}>
+                                <FileText size={18} /> See All Invoices
                             </button>
                         </div>
 
-                        {/* ── Main Card ──────────────────────────────────────── */}
-                        <div style={{ background: "white", borderRadius: "16px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0", padding: "20px" }}>
+                        <div ref={formRef} style={{ background: "white", borderRadius: "16px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0", padding: "20px" }}>
 
-                            {/* Section 1: Supplier, Date, Credit Period */}
                             <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Supplier</label>
@@ -304,7 +321,6 @@ const GRN = () => {
                                 </div>
                             </div>
 
-                            {/* Section 2: Product, Product ID + Add New Product — single row */}
                             <div style={{ display: "flex", alignItems: "flex-end", gap: "14px", flexWrap: "wrap", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
                                 <div style={{ ...fieldStyle, flex: 2 }}>
                                     <label style={labelStyle}>Product</label>
@@ -327,16 +343,14 @@ const GRN = () => {
                                 </div>
                                 <button
                                     onClick={() => setIsAddProductModalOpen(true)}
-                                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", background: "linear-gradient(135deg, #10b981, #0d9488)", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(16,185,129,0.3)", transition: "all 0.2s", flexShrink: 0 }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 12px rgba(16,185,129,0.4)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(16,185,129,0.3)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", background: "#6366f1", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(99,102,241,0.3)", transition: "all 0.2s", flexShrink: 0 }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = "#4f46e5"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(99,102,241,0.4)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = "#6366f1"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(99,102,241,0.3)"; e.currentTarget.style.transform = "translateY(0)"; }}
                                 >
                                     <Plus size={16} /> Add New Product
                                 </button>
                             </div>
 
-
-                            {/* Section 3: Batch Details */}
                             <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Batch Number</label>
@@ -344,15 +358,14 @@ const GRN = () => {
                                 </div>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Manufacture Date</label>
-                                    <input type="date" name="mfgDate" style={inputStyle} value={formData.mfgDate} onChange={handleInputChange} />
+                                    <input type="date" name="mfgDate" style={inputStyle} value={formData.mfgDate} max={today} onChange={handleInputChange} />
                                 </div>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Expiry Date</label>
-                                    <input type="date" name="expDate" style={inputStyle} value={formData.expDate} onChange={handleInputChange} />
+                                    <input type="date" name="expDate" style={inputStyle} value={formData.expDate} min={today} onChange={handleInputChange} />
                                 </div>
                             </div>
 
-                            {/* Section 4: Pricing */}
                             <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px" }}>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Purchase Price</label>
@@ -361,6 +374,19 @@ const GRN = () => {
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Quantity</label>
                                     <input type="number" name="quantity" style={inputStyle} placeholder="0" value={formData.quantity} onChange={handleInputChange} />
+                                </div>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Selling Price %</label>
+                                    <input
+                                        type="number"
+                                        name="sellingPricePercentage"
+                                        style={inputStyle}
+                                        placeholder="0"
+                                        min="0"
+                                        max="100"
+                                        value={formData.sellingPricePercentage}
+                                        onChange={handleInputChange}
+                                    />
                                 </div>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Total Amount</label>
@@ -377,7 +403,6 @@ const GRN = () => {
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
                             <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", paddingTop: "14px", borderTop: "1px solid #f1f5f9" }}>
                                 {editingItemId && (
                                     <button
@@ -391,16 +416,15 @@ const GRN = () => {
                                 )}
                                 <button
                                     onClick={handleAddItem}
-                                    style={{ padding: "10px 40px", background: "linear-gradient(135deg, #6366f1, #a855f7)", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "600", cursor: "pointer", boxShadow: "0 2px 8px rgba(99,102,241,0.35)", transition: "all 0.2s" }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(99,102,241,0.5)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(99,102,241,0.35)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                                    style={{ padding: "10px 40px", background: "#6366f1", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "600", cursor: "pointer", boxShadow: "0 2px 8px rgba(99,102,241,0.35)", transition: "all 0.2s" }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = "#4f46e5"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(99,102,241,0.5)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = "#6366f1"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(99,102,241,0.35)"; e.currentTarget.style.transform = "translateY(0)"; }}
                                 >
                                     {editingItemId ? "Update" : "Add"}
                                 </button>
                             </div>
                         </div>
 
-                        {/* ── Summary / Items Table ───────────────────────────── */}
                         <div className="grn-summary-section" style={{ marginTop: "24px" }}>
                             <div className="supplier-info">
                                 {selectedSupplierData ? (
