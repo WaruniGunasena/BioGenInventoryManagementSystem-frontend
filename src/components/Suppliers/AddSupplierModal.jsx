@@ -10,8 +10,7 @@ const AddSupplierModal = ({ isOpen, onClose, onSupplierAdded }) => {
         phoneNumber: '',
         creditPeriod: '',
         email: '',
-        address: '',
-        postalCode: ''
+        address: ''
     });
 
     if (!isOpen) return null;
@@ -33,10 +32,8 @@ const AddSupplierModal = ({ isOpen, onClose, onSupplierAdded }) => {
                 phoneNumber: formData.phoneNumber,
                 creditPeriod: formData.creditPeriod,
                 email: formData.email,
-                address: formData.address,
-                postalCode: formData.postalCode
+                address: formData.address
             };
-
             await addSupplier(supplierData);
             onSupplierAdded();
             onClose();
@@ -46,8 +43,7 @@ const AddSupplierModal = ({ isOpen, onClose, onSupplierAdded }) => {
                 phoneNumber: '',
                 creditPeriod: '',
                 email: '',
-                address: '',
-                postalCode: ''
+                address: ''
             });
         } catch (error) {
             console.error("Error adding supplier:", error);
@@ -106,17 +102,19 @@ const AddSupplierModal = ({ isOpen, onClose, onSupplierAdded }) => {
                             />
                         </div>
                         <div className="form-col">
-                            <label className="form-label">Credit period</label>
+                            <label className="form-label">Credit period *</label>
                             <select
                                 name="creditPeriod"
                                 className="form-input"
                                 value={formData.creditPeriod}
                                 onChange={handleChange}
+                                required
                             >
                                 <option value="">select</option>
+                                <option value="cash">cash</option>
+                                <option value="15 days">15 days</option>
                                 <option value="30 days">30 days</option>
-                                <option value="45 days">45 days</option>
-                                <option value="50 days">50 days</option>
+                                <option value="60 days">60 days</option>
                                 <option value="90 days">90 days</option>
                             </select>
                         </div>
@@ -145,19 +143,6 @@ const AddSupplierModal = ({ isOpen, onClose, onSupplierAdded }) => {
                             onChange={handleChange}
                         />
                     </div>
-
-                    <div className="form-group">
-                        <label className="form-label">Postal Code</label>
-                        <input
-                            type="text"
-                            name="postalCode"
-                            className="form-input"
-                            placeholder="Enter postal code"
-                            value={formData.postalCode}
-                            onChange={handleChange}
-                        />
-                    </div>
-
                     <div className="modal-footer">
                         <button type="submit" className="submit-btn">Add Supplier</button>
                     </div>

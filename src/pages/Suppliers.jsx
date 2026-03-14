@@ -130,8 +130,7 @@ const Suppliers = () => {
         { header: "Phone Number", accessor: "phoneNumber" },
         { header: "Credit Period", accessor: "creditPeriod" },
         { header: "Email", accessor: "email" },
-        { header: "Address", accessor: "address" },
-        { header: "Postal Code", accessor: "postalCode" },
+        { header: "Address", accessor: "address" }
     ];
 
     return (
