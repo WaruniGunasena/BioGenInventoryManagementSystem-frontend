@@ -12,7 +12,8 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
         unit: '',
         customUnit: '',
         minimumStockLevel: '',
-        reorderLevel: ''
+        reorderLevel: '',
+        packSize: ''
     });
     const [image, setImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
@@ -34,7 +35,8 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
                     unit: isCustom ? 'Other' : unitValue,
                     customUnit: isCustom ? unitValue : '',
                     minimumStockLevel: product.minimumStockLevel || '',
-                    reorderLevel: product.reorderLevel || ''
+                    reorderLevel: product.reorderLevel || '',
+                    packSize: product.packSize || ''
                 });
                 setImagePreview(product.imageUrl || null);
                 setIsCustomUnit(isCustom);
@@ -92,6 +94,7 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
             data.append('categoryId', formData.categoryId);
             data.append('description', formData.description);
             data.append('unit', isCustomUnit ? formData.customUnit : formData.unit);
+            data.append('packSize', formData.packSize);
             data.append('minimumStockLevel', formData.minimumStockLevel);
             data.append('reorderLevel', formData.reorderLevel);
             if (image) {
@@ -150,18 +153,7 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
                     </div>
                     <div className="form-row">
                         <div className="form-col">
-                            <label className="form-label">Product Description</label>
-                            <textarea
-                                name="description"
-                                className="form-input"
-                                placeholder="Enter product description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                style={{ height: '80px', resize: 'none' }}
-                            />
-                        </div>
-                        <div className="form-col">
-                            <label className="form-label">unit</label>
+                            <label className="form-label">Unit</label>
                             {!isCustomUnit ? (
                                 <select
                                     name="unit"
@@ -169,10 +161,10 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
                                     value={formData.unit}
                                     onChange={handleChange}
                                 >
-                                    <option value="">Enter/select</option>
+                                    <option value="">Select</option>
                                     <option value="PCS">PCS</option>
                                     <option value="Bottle">Bottle</option>
-                                    <option value="Other">Other...</option>
+                                    <option value="Other">Enter...</option>
                                 </select>
                             ) : (
                                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -196,6 +188,17 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
                                 </div>
                             )}
                         </div>
+                        <div className="form-col">
+                            <label className="form-label">Pack Size</label>
+                            <input
+                                type="text"
+                                name="packSize"
+                                className="form-input"
+                                placeholder="Enter pack size"
+                                value={formData.packSize}
+                                onChange={handleChange}
+                            />
+                        </div>
                     </div>
                     <div className="form-row">
                         <div className="form-col">
@@ -218,6 +221,19 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
                                 placeholder="0"
                                 value={formData.reorderLevel}
                                 onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+                    <div className="form-row">
+                        <div className="form-col">
+                            <label className="form-label">Product Description</label>
+                            <textarea
+                                name="description"
+                                className="form-input"
+                                placeholder="Enter product description"
+                                value={formData.description}
+                                onChange={handleChange}
+                                style={{ height: '80px', resize: 'none' }}
                             />
                         </div>
                     </div>
