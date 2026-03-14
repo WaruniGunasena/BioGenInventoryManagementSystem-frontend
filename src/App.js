@@ -19,34 +19,57 @@ import SalesOrder from "./pages/SalesOrder/SalesOrder";
 import ComponentsDemo from "./pages/ComponentsDemo";
 import SalesInvoices from "./pages/SalesOrder/SalesInvoices";
 import Settings from "./pages/Settings/Settings";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from "react-router-dom";
+import { AdminStatusProvider, useAdminStatus } from "./context/AdminStatusContext";
+
+/**
+ * FirstRunGuard — must live inside <Router> to use useLocation / useNavigate.
+ * If no admin exists yet, redirect every route except /register to /register.
+ * Returns null while the check is loading (prevents flicker).
+ */
+const FirstRunGuard = ({ children }) => {
+  const { adminExists, loading } = useAdminStatus();
+  const { pathname } = useLocation();
+
+  if (loading) return null; // wait silently
+
+  if (adminExists === false && pathname !== "/register") {
+    return <Navigate to="/register" replace />;
+  }
+
+  return children;
+};
 
 function App() {
   return (
     <ToastProvider>
       <PermissionsProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/product" element={<Products />} />
-            <Route path="/supplier" element={<Suppliers />} />
-            <Route path="/category" element={<Category />} />
-            <Route path="/grn-window" element={<GRN />} />
-            <Route path="/salesreps" element={<SalesReps />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/employees" element={<Employees />} />
-            <Route path="/stock" element={<Stock />} />
-            <Route path="/invoices" element={<Invoices />} />
-            <Route path="/sales-order" element={<SalesOrder />} />
-            <Route path="/sales-invoices" element={<SalesInvoices />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/test-components" element={<ComponentsDemo />} />
-          </Routes>
-        </Router>
+        <AdminStatusProvider>
+          <Router>
+            <FirstRunGuard>
+              <Routes>
+                <Route path="/" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/product" element={<Products />} />
+                <Route path="/supplier" element={<Suppliers />} />
+                <Route path="/category" element={<Category />} />
+                <Route path="/grn-window" element={<GRN />} />
+                <Route path="/salesreps" element={<SalesReps />} />
+                <Route path="/customers" element={<Customers />} />
+                <Route path="/employees" element={<Employees />} />
+                <Route path="/stock" element={<Stock />} />
+                <Route path="/invoices" element={<Invoices />} />
+                <Route path="/sales-order" element={<SalesOrder />} />
+                <Route path="/sales-invoices" element={<SalesInvoices />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/test-components" element={<ComponentsDemo />} />
+              </Routes>
+            </FirstRunGuard>
+          </Router>
+        </AdminStatusProvider>
       </PermissionsProvider>
     </ToastProvider>
   );

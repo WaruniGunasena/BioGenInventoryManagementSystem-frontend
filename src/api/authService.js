@@ -12,6 +12,8 @@ export const login = async (data) => {
 
 export const registerUser = (data) => api.post("/auth/register", data);
 
+export const checkAdminExists = () => api.get("/auth/AdminExists");
+
 export const logout = async () => {
   await api.post("/auth/logout");
   clearAuth();
