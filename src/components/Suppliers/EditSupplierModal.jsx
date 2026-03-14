@@ -10,8 +10,7 @@ const EditSupplierModal = ({ isOpen, onClose, onSupplierUpdated, supplier }) => 
         phoneNumber: '',
         creditPeriod: '',
         email: '',
-        address: '',
-        postalCode: ''
+        address: ''
     });
 
     useEffect(() => {
@@ -20,10 +19,9 @@ const EditSupplierModal = ({ isOpen, onClose, onSupplierUpdated, supplier }) => 
                 name: supplier.name || '',
                 contactPerson: supplier.contactPerson || '',
                 phoneNumber: supplier.phoneNumber || '',
-                creditPeriod: supplier.creditPeriod || '',
+                creditPeriod: supplier.creditPeriod ? String(supplier.creditPeriod).toLowerCase() : '',
                 email: supplier.email || '',
-                address: supplier.address || '',
-                postalCode: supplier.postalCode || ''
+                address: supplier.address || ''
             });
         }
     }, [supplier]);
@@ -47,8 +45,7 @@ const EditSupplierModal = ({ isOpen, onClose, onSupplierUpdated, supplier }) => 
                 phoneNumber: formData.phoneNumber,
                 creditPeriod: formData.creditPeriod,
                 email: formData.email,
-                address: formData.address,
-                postalCode: formData.postalCode
+                address: formData.address
             };
 
             await updateSupplier(supplier.id || supplier._id, supplierData);
@@ -111,17 +108,19 @@ const EditSupplierModal = ({ isOpen, onClose, onSupplierUpdated, supplier }) => 
                             />
                         </div>
                         <div className="form-col">
-                            <label className="form-label">Credit period</label>
+                            <label className="form-label">Credit period *</label>
                             <select
                                 name="creditPeriod"
                                 className="form-input"
                                 value={formData.creditPeriod}
                                 onChange={handleChange}
+                                required
                             >
                                 <option value="">select</option>
+                                <option value="cash">cash</option>
+                                <option value="15 days">15 days</option>
                                 <option value="30 days">30 days</option>
-                                <option value="45 days">45 days</option>
-                                <option value="50 days">50 days</option>
+                                <option value="60 days">60 days</option>
                                 <option value="90 days">90 days</option>
                             </select>
                         </div>
@@ -147,18 +146,6 @@ const EditSupplierModal = ({ isOpen, onClose, onSupplierUpdated, supplier }) => 
                             className="form-input"
                             placeholder="Enter address"
                             value={formData.address}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label">Postal Code</label>
-                        <input
-                            type="text"
-                            name="postalCode"
-                            className="form-input"
-                            placeholder="Enter postal code"
-                            value={formData.postalCode}
                             onChange={handleChange}
                         />
                     </div>
