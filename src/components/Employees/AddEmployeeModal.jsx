@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import './EmployeeModal.css';
 import { inviteEmployee } from '../../api/employeeService';
 import UserRole from '../../enums/UserRole';
+import { BRANDING } from '../../config/brandingConfig';
 
 const ROLE_LABELS = {
     [UserRole.CASHIER]: 'Cashier',
@@ -102,7 +103,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded }) => {
                             type="email"
                             name="email"
                             className="form-input"
-                            placeholder="employee@biogenholdings.com"
+                            placeholder={`employee@${BRANDING.companyName.toLowerCase().replace(/\s/g, '')}.com`}
                             value={formData.email}
                             onChange={handleChange}
                             required

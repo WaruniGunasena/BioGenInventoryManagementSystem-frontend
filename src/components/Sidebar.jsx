@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getToken } from "../auth/tokenService";
 import { isAdmin, isInventoryManager, isSalesRep } from "../auth/roleService";
 import { logout as logoutService } from "../api/authService";
+import { BRANDING } from "../config/brandingConfig";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -32,24 +33,30 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
   const [admin, setAdmin] = useState(false);
   const [inventoryManager, setInventoryManager] = useState(false);
   const [salesRep, setSalesRep] = useState(false);
-  const [loggedInUser, setLoggedInUser] = useState('');
-  const [loggedInUserRole, setLoggedInUserRole] = useState('');
+  const [loggedInUser, setLoggedInUser] = useState("");
+  const [loggedInUserRole, setLoggedInUserRole] = useState("");
 
   const fetchUserInfo = async () => {
-    const name = await getUserName();
-    const role = await getUserRole();
-    setLoggedInUser(name);
-    setLoggedInUserRole(role);
+    try {
+      const name = await getUserName();
+      const role = await getUserRole();
+      setLoggedInUser(name || "User");
+      setLoggedInUserRole(role || "Member");
+    } catch (error) {
+      console.error("Sidebar: Error fetching user info", error);
+    }
   };
 
   useEffect(() => {
     const token = getToken();
     setIsAuth(!!token);
-    setAdmin(isAdmin());
-    setInventoryManager(isInventoryManager());
-    setSalesRep(isSalesRep());
-    fetchUserInfo();
-  }, []);
+    if (token) {
+      setAdmin(isAdmin());
+      setInventoryManager(isInventoryManager());
+      setSalesRep(isSalesRep());
+      fetchUserInfo();
+    }
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -78,9 +85,9 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
 
       {mobileOverlay}
 
-      <div className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
+      <div className={`sidebar ${isCollapsed ? "collapsed" : ""} ${isMobileOpen ? "mobile-open" : ""}`}>
         <div className="sidebar-header">
-          <h1>BioGenHoldings</h1>
+          <h1>{BRANDING.companyName}</h1>
           <button className="toggle-btn" onClick={toggleSidebar}>
             {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
           </button>
@@ -95,7 +102,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
 
         <ul className="nav-links">
           <li className="nav-item">
-            <Link to="/dashboard" className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}>
+            <Link to="/dashboard" className={`sidebar-item ${isActive("/dashboard") ? "active" : ""}`}>
               <LayoutDashboard size={20} className="nav-icon" />
               <span className="link-text">Overview</span>
             </Link>
@@ -103,7 +110,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
 
           {(admin || inventoryManager || salesRep) && (
             <li className="nav-item">
-              <Link to="/product" className={`nav-link ${isActive('/product') ? 'active' : ''}`}>
+              <Link to="/product" className={`sidebar-item ${isActive("/product") ? "active" : ""}`}>
                 <ShoppingCart size={20} className="nav-icon" />
                 <span className="link-text">Products</span>
               </Link>
@@ -112,7 +119,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
 
           {(admin || inventoryManager) && (
             <li className="nav-item">
-              <Link to="/supplier" className={`nav-link ${isActive('/supplier') ? 'active' : ''}`}>
+              <Link to="/supplier" className={`sidebar-item ${isActive("/supplier") ? "active" : ""}`}>
                 <Users size={20} className="nav-icon" />
                 <span className="link-text">Suppliers</span>
               </Link>
@@ -121,7 +128,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
 
           {(admin || inventoryManager || salesRep) && (
             <li className="nav-item">
-              <Link to="/category" className={`nav-link ${isActive('/category') ? 'active' : ''}`}>
+              <Link to="/category" className={`sidebar-item ${isActive("/category") ? "active" : ""}`}>
                 <CheckSquare size={20} className="nav-icon" />
                 <span className="link-text">Category</span>
               </Link>
@@ -130,7 +137,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
 
           {(admin || inventoryManager) && (
             <li className="nav-item">
-              <Link to="/grn-window" className={`nav-link ${isActive('/grn-window') ? 'active' : ''}`}>
+              <Link to="/grn-window" className={`sidebar-item ${isActive("/grn-window") ? "active" : ""}`}>
                 <Box size={20} className="nav-icon" />
                 <span className="link-text">GRN Window</span>
               </Link>
@@ -139,69 +146,60 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
 
           {(admin || inventoryManager || salesRep) && (
             <li className="nav-item">
-              <Link to="/stock" className={`nav-link ${isActive('/stock') ? 'active' : ''}`}>
+              <Link to="/stock" className={`sidebar-item ${isActive("/stock") ? "active" : ""}`}>
                 <Layers size={20} className="nav-icon" />
                 <span className="link-text">Stock</span>
               </Link>
             </li>
           )}
 
-          {/* {(admin || inventoryManager) && (
+          {(admin || salesRep) && (
             <li className="nav-item">
-              <Link to="/invoices" className={`nav-link ${isActive('/invoices') ? 'active' : ''}`}>
-                <FileText size={20} className="nav-icon" />
-                <span className="link-text">Invoices</span>
+              <Link to="/sales-order" className={`sidebar-item ${isActive("/sales-order") ? "active" : ""}`}>
+                <UserCheck size={20} className="nav-icon" />
+                <span className="link-text">Sales Order</span>
               </Link>
             </li>
-          )} */}
+          )}
 
-          {/* <li className="nav-item">
-            <Link to="/salesreps" className={`nav-link ${isActive('/salesreps') ? 'active' : ''}`}>
-              <UserCheck size={20} className="nav-icon" />
-              <span className="link-text">SalesReps</span>
-            </Link>
-          </li> */}
-
-          {(admin || salesRep) && (<li className="nav-item">
-            <Link to="/sales-order" className={`nav-link ${isActive('/sales-order') ? 'active' : ''}`}>
-              <UserCheck size={20} className="nav-icon" />
-              <span className="link-text">Sales Order</span>
-            </Link>
-          </li>)}
-
-          {(admin || salesRep) && (<li className="nav-item">
-            <Link to="/customers" className={`nav-link ${isActive('/customers') ? 'active' : ''}`}>
-              <User size={20} className="nav-icon" />
-              <span className="link-text">Customers</span>
-            </Link>
-          </li>)}
+          {(admin || salesRep) && (
+            <li className="nav-item">
+              <Link to="/customers" className={`sidebar-item ${isActive("/customers") ? "active" : ""}`}>
+                <User size={20} className="nav-icon" />
+                <span className="link-text">Customers</span>
+              </Link>
+            </li>
+          )}
 
           {admin && (
             <li className="nav-item">
-              <Link to="/employees" className={`nav-link ${isActive('/employees') ? 'active' : ''}`}>
+              <Link to="/employees" className={`sidebar-item ${isActive("/employees") ? "active" : ""}`}>
                 <UserRound size={20} className="nav-icon" />
                 <span className="link-text">Employees</span>
               </Link>
             </li>
           )}
 
-          {admin && <li className="nav-item">
-            <Link to="/roles" className={`nav-link ${isActive('/roles') ? 'active' : ''}`}>
-              <Layers size={20} className="nav-icon" />
-              <span className="link-text">Roles</span>
-            </Link>
-          </li>}
+          {admin && (
+            <li className="nav-item">
+              <Link to="/roles" className={`sidebar-item ${isActive("/roles") ? "active" : ""}`}>
+                <Layers size={20} className="nav-icon" />
+                <span className="link-text">Roles</span>
+              </Link>
+            </li>
+          )}
+
           <div style={{ flex: 1 }}></div>
 
           <li className="nav-item">
-            <Link to="/support" className={`nav-link ${isActive('/support') ? 'active' : ''}`}>
+            <Link to="/support" className={`sidebar-item ${isActive("/support") ? "active" : ""}`}>
               <LifeBuoy size={20} className="nav-icon" />
               <span className="link-text">Support</span>
             </Link>
           </li>
 
           <li className="nav-item">
-            <Link to="/settings" className={`nav-link ${isActive('/settings') ? 'active' : ''}`}>
+            <Link to="/settings" className={`sidebar-item ${isActive("/settings") ? "active" : ""}`}>
               <Settings size={20} className="nav-icon" />
               <span className="link-text">Settings</span>
             </Link>
@@ -210,7 +208,11 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
 
         <div className="sidebar-footer">
           <div className="user-info">
-            <img src={`https://ui-avatars.com/api/?name=${loggedInUser}&background=random`} alt="User" className="avatar" />
+            <img
+              src={`https://ui-avatars.com/api/?name=${loggedInUser}&background=random`}
+              alt="User"
+              className="avatar"
+            />
             <div className="user-details">
               <span className="user-name">{loggedInUser}</span>
               <span className="user-role">{loggedInUserRole}</span>

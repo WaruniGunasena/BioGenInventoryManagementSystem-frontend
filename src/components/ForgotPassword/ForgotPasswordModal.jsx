@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, KeyRound } from 'lucide-react';
 import './ForgotPasswordModal.css';
 import { generateForgotPassword } from '../../api/userService';
+import { BRANDING } from '../../config/brandingConfig';
 
 const ForgotPasswordModal = ({ isOpen, onClose }) => {
     const [email, setEmail] = useState('');
@@ -64,7 +65,7 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
                         id="fp-email"
                         type="email"
                         className="fp-input"
-                        placeholder="you@biogenholdings.com"
+                        placeholder={`you@${BRANDING.companyName.toLowerCase().replace(/\s/g, '')}.com`}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
