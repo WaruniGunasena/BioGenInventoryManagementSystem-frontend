@@ -1,6 +1,6 @@
 .sales-order-container {
     padding: 20px;
-    background-color: #ffffff;
+    background-color: var(--white);
     min-height: 100vh;
 }
 
@@ -13,16 +13,16 @@
 
 .sales-order-header h2 {
     font-size: 24px;
-    color: #1a1a1a;
+    color: var(--text-dark);
     font-weight: 600;
 }
 
 .sales-order-form-section {
-    background-color: #ffffff;
+    background-color: var(--white);
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 16px;
     margin-bottom: 20px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-color);
 }
 
 .sales-order-row {
@@ -41,7 +41,7 @@
 
 .sales-order-field label {
     font-size: 14px;
-    color: #4b5563;
+    color: var(--text-light);
     margin-bottom: 8px;
     font-weight: 500;
 }
@@ -49,17 +49,17 @@
 .sales-order-input,
 .sales-order-select {
     padding: 10px 12px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
-    background-color: white;
+    background-color: var(--white);
     outline: none;
     transition: border-color 0.2s;
 }
 
 .sales-order-input:focus,
 .sales-order-select:focus {
-    border-color: #6366f1;
+    border-color: var(--primary-color);
 }
 
 .sales-order-input:disabled {
@@ -68,8 +68,8 @@
 }
 
 .add-customer-btn {
-    background-color: #6366f1;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--white);
     border: none;
     border-radius: 20px;
     padding: 6px 12px;
@@ -88,8 +88,8 @@
 }
 
 .sales-order-add-btn {
-    background-color: #6366f1;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--white);
     border: none;
     border-radius: 8px;
     padding: 10px 40px;
@@ -100,7 +100,7 @@
 }
 
 .sales-order-add-btn:hover {
-    background-color: #4f46e5;
+    background-color: var(--primary-hover);
 }
 
 .sales-order-cancel-btn {
@@ -117,15 +117,16 @@
 }
 
 .sales-order-cancel-btn:hover {
-    background-color: #d1d5db;
+    background-color: var(--background-light);
 }
+
 .sales-order-summary-section {
     background-color: #ffffff !important;
     padding: 40px;
     border-radius: 8px;
     border: 1px solid #d1d5db;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #2b0958;
+    color: var(--text-dark);
 }
 
 .invoice-header {
@@ -141,7 +142,7 @@
 .company-name {
     font-size: 32px;
     font-weight: 800;
-    color: #2e7d32;
+    color: var(--primary-color);
     margin: 0;
 }
 
@@ -153,7 +154,7 @@
 }
 
 .company-web {
-    color: #2b6cb0;
+    color: var(--primary-color);
     font-size: 13px;
     margin-bottom: 10px;
 }
@@ -166,7 +167,7 @@
 
 .invoice-title h1 {
     font-size: 48px;
-    color: #8bc34a;
+    color: var(--primary-color);
     text-transform: uppercase;
     margin: 0;
     font-weight: 700;
@@ -250,12 +251,12 @@
 }
 
 .invoice-table th {
-    background-color: #4a90e2;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--white);
     text-align: left;
     font-size: 13px;
     padding: 12px 10px;
-    border: 1px solid #357abd;
+    border: 1px solid var(--primary-hover);
     font-weight: 600;
 }
 
@@ -288,12 +289,12 @@
 }
 
 .edit-icon {
-    color: #4a90e2;
+    color: var(--primary-color);
     cursor: pointer;
 }
 
 .delete-icon {
-    color: #d0021b;
+    color: var(--error-text);
     cursor: pointer;
 }
 
@@ -360,22 +361,22 @@
 }
 
 .issue-bill-btn {
-    background-color: #6366f1;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--white);
     border: none;
     border-radius: 8px;
     padding: 14px 40px;
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 4px 6px rgba(var(--primary-color-rgb), 0.2);
     transition: all 0.2s;
 }
 
 .issue-bill-btn:hover {
-    background-color: #4f46e5;
+    background-color: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 6px 12px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 6px 12px rgba(var(--primary-color-rgb), 0.3);
 }
 
 .see-invoices-btn {
@@ -393,7 +394,7 @@
 }
 
 .see-invoices-btn:hover {
-    background-color: #4338ca;
+    background-color: var(--primary-hover);
     transform: scale(1.02);
 }
 

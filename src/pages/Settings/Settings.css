@@ -1,5 +1,5 @@
 .settings-page {
-    background: #f8f9fa;
+    background: var(--background-light);
     min-height: 100vh;
 }
 
@@ -29,12 +29,12 @@
 .settings-header-icon {
     width: 42px;
     height: 42px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: var(--primary-color);
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--white);
     flex-shrink: 0;
 }
 
@@ -63,9 +63,9 @@
 }
 
 .settings-btn-save.active {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    background: var(--primary-color);
+    color: var(--white);
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.35);
 }
 
 .settings-btn-save.active:hover {
@@ -131,13 +131,13 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #fffbeb;
-    border: 1px solid #fcd34d;
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-color);
     border-radius: 10px;
     padding: 12px 16px;
     margin-bottom: 20px;
     font-size: 13px;
-    color: #92400e;
+    color: var(--warning-text);
 }
 
 /* Role Tabs */
@@ -161,15 +161,15 @@
 }
 
 .settings-role-tab:hover {
-    border-color: #6366f1;
-    color: #6366f1;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .settings-role-tab.active {
-    background: #6366f1;
-    border-color: #6366f1;
-    color: white;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--white);
+    box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.35);
 }
 
 /* Permissions Table */
@@ -314,7 +314,7 @@
 }
 
 .toggle-switch input:checked+.toggle-slider {
-    background: #6366f1;
+    background: var(--primary-color);
 }
 
 .toggle-switch input:checked+.toggle-slider::before {
@@ -328,13 +328,13 @@
 
 /* Add toggle coloring if enabled */
 .toggle-switch.add input:checked+.toggle-slider {
-    background: #10b981;
+    background: var(--success-color);
 }
 
 .toggle-switch.edit input:checked+.toggle-slider {
-    background: #f59e0b;
+    background: var(--warning-color);
 }
 
 .toggle-switch.delete input:checked+.toggle-slider {
-    background: #ef4444;
+    background: var(--error-color);
 }

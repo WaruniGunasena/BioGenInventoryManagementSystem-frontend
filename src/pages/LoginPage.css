@@ -8,7 +8,7 @@
 /* LEFT PANEL */
 .auth-left {
   width: 45%;
-  background: #6f42c1;
+  background: var(--primary-color);
   color: white;
   display: flex;
   flex-direction: column;
@@ -27,7 +27,7 @@
 
 .brand-pill {
   background: white;
-  color: #6f42c1;
+  color: var(--primary-color);
   padding: 12px 40px;
   border-radius: 999px;
   font-weight: 600;
@@ -103,8 +103,8 @@
 }
 
 .auth-form input:focus {
-  border-color: #6f42c1;
-  box-shadow: 0 0 0 2px rgba(111, 66, 193, 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-shadow);
 }
 
 /* Password show/hide wrapper */
@@ -138,7 +138,7 @@
 }
 
 .password-toggle:hover {
-  color: #6f42c1;
+  color: var(--primary-color);
 }
 
 
@@ -157,7 +157,7 @@
 }
 
 .forgot {
-  color: #6f42c1;
+  color: var(--primary-color);
   cursor: pointer;
 }
 
@@ -174,7 +174,7 @@
 }
 
 .auth-btn:hover {
-  background: #5a34a0;
+  background: var(--primary-hover);
 }
 
 .auth-footer {

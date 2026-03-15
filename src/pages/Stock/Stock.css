@@ -14,6 +14,7 @@
     right: 0;
     bottom: 0;
     background: rgba(255, 255, 255, 0.7);
+    /* Specific overlay alpha */
     display: flex;
     justify-content: center;
     align-items: center;
