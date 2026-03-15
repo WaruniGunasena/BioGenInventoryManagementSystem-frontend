@@ -117,6 +117,7 @@ const Products = () => {
         },
         { header: "Category", accessor: "categoryName" },
         { header: "Description", accessor: "description" },
+        { header: "Pack Size", accessor: "packSize" },
         { header: "Min Stock", accessor: "minimumStockLevel" },
         { header: "Reorder Level", accessor: "reorderLevel" },
     ];

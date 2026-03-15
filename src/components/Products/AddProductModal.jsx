@@ -13,7 +13,8 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
         unit: '',
         customUnit: '',
         minimumStockLevel: '',
-        reorderLevel: ''
+        reorderLevel: '',
+        packSize: ''
     });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
@@ -82,6 +83,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
             data.append('categoryId', formData.categoryId);
             data.append('description', formData.description);
             data.append('unit', isCustomUnit ? formData.customUnit : formData.unit);
+            data.append('packSize', formData.packSize);
             data.append('minimumStockLevel', Number(formData.minimumStockLevel || 0));
             data.append('reorderLevel', Number(formData.reorderLevel || 0));
             if (imageFile) {
@@ -98,7 +100,8 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
                 unit: '',
                 customUnit: '',
                 minimumStockLevel: '',
-                reorderLevel: ''
+                reorderLevel: '',
+                packSize: ''
             });
             setImageFile(null);
             setImagePreview(null);
@@ -162,18 +165,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
                     </div>
                     <div className="form-row">
                         <div className="form-col">
-                            <label className="form-label">Product Description</label>
-                            <textarea
-                                name="description"
-                                className="form-input"
-                                placeholder="Enter product description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                style={{ height: '80px', resize: 'none' }}
-                            />
-                        </div>
-                        <div className="form-col">
-                            <label className="form-label">unit</label>
+                            <label className="form-label">Unit</label>
                             {!isCustomUnit ? (
                                 <select
                                     name="unit"
@@ -181,10 +173,10 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
                                     value={formData.unit}
                                     onChange={handleChange}
                                 >
-                                    <option value="">Enter/select</option>
+                                    <option value="">Select</option>
                                     <option value="PCS">PCS</option>
                                     <option value="Bottle">Bottle</option>
-                                    <option value="Other">Other...</option>
+                                    <option value="Other">Enter...</option>
                                 </select>
                             ) : (
                                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -208,6 +200,17 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
                                 </div>
                             )}
                         </div>
+                        <div className="form-col">
+                            <label className="form-label">Pack Size</label>
+                            <input
+                                type="text"
+                                name="packSize"
+                                className="form-input"
+                                placeholder="Enter pack size"
+                                value={formData.packSize}
+                                onChange={handleChange}
+                            />
+                        </div>
                     </div>
                     <div className="form-row">
                         <div className="form-col">
@@ -230,6 +233,19 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
                                 placeholder="0"
                                 value={formData.reorderLevel}
                                 onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+                    <div className="form-row">
+                        <div className="form-col">
+                            <label className="form-label">Product Description</label>
+                            <textarea
+                                name="description"
+                                className="form-input"
+                                placeholder="Enter product description"
+                                value={formData.description}
+                                onChange={handleChange}
+                                style={{ height: '80px', resize: 'none' }}
                             />
                         </div>
                     </div>
