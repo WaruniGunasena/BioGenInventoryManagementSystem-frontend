@@ -166,7 +166,7 @@ const Employees = () => {
                             alt=""
                             className="user-avatar"
                         />
-                        <span style={{ fontWeight: '500', color: '#6366f1' }}>{displayName}</span>
+                        <span style={{ fontWeight: '500', color: 'var(--primary-color)' }}>{displayName}</span>
                     </div>
                 );
             },

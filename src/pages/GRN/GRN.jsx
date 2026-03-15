@@ -246,10 +246,10 @@ const GRN = () => {
     const inputStyle = {
         width: "100%",
         padding: "8px 12px",
-        border: "1px solid #cbd5e1",
+        border: "1px solid var(--border-color)",
         borderRadius: "8px",
         fontSize: "14px",
-        backgroundColor: "#f8fafc",
+        backgroundColor: "var(--input-bg)",
         outline: "none",
         transition: "border-color 0.2s, box-shadow 0.2s",
         boxSizing: "border-box",
@@ -269,7 +269,7 @@ const GRN = () => {
         display: "block",
         fontSize: "14px",
         fontWeight: "500",
-        color: "#475569",
+        color: "var(--text-light)",
         marginBottom: "4px",
     };
     const fieldStyle = { display: "flex", flexDirection: "column", flex: 1, minWidth: "180px" };
@@ -284,16 +284,16 @@ const GRN = () => {
                     toggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
                 />
                 <div className="dashboard-content">
-                    <div style={{ minHeight: "100vh", background: "#f8f9fa" }}>
+                    <div style={{ minHeight: "100vh", background: "var(--background-light)" }}>
 
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                            <h1 style={{ fontSize: "24px", fontWeight: "700", color: "#1e293b", margin: 0 }}>Good Receive Note</h1>
+                            <h1 style={{ fontSize: "24px", fontWeight: "700", color: "var(--text-dark)", margin: 0 }}>Good Receive Note</h1>
                             <button className="see-invoices-btn" onClick={() => navigate("/invoices")}>
                                 <FileText size={18} /> See All Invoices
                             </button>
                         </div>
 
-                        <div ref={formRef} style={{ background: "white", borderRadius: "16px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", border: "1px solid #e2e8f0", padding: "20px" }}>
+                        <div ref={formRef} style={{ background: "var(--white)", borderRadius: "16px", boxShadow: "0 4px 24px var(--primary-shadow)", border: "1px solid var(--border-color)", padding: "20px" }}>
 
                             <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
                                 <div style={fieldStyle}>
@@ -313,7 +313,7 @@ const GRN = () => {
                                     <label style={labelStyle}>Credit Period</label>
                                     <input
                                         type="text"
-                                        style={{ ...inputStyle, backgroundColor: "#f1f5f9", cursor: "not-allowed" }}
+                                        style={{ ...inputStyle, backgroundColor: "var(--background-light)", cursor: "not-allowed" }}
                                         value={formData.creditPeriod ? `${formData.creditPeriod} days` : ""}
                                         placeholder="Auto-filled from supplier"
                                         readOnly
@@ -335,7 +335,7 @@ const GRN = () => {
                                     <label style={labelStyle}>Product ID</label>
                                     <input
                                         type="text"
-                                        style={{ ...inputStyle, backgroundColor: "#f1f5f9", cursor: "not-allowed" }}
+                                        style={{ ...inputStyle, backgroundColor: "var(--background-light)", cursor: "not-allowed" }}
                                         value={formData.productCode}
                                         placeholder="Auto-filled"
                                         readOnly
@@ -343,9 +343,9 @@ const GRN = () => {
                                 </div>
                                 <button
                                     onClick={() => setIsAddProductModalOpen(true)}
-                                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", background: "#6366f1", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(99,102,241,0.3)", transition: "all 0.2s", flexShrink: 0 }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.background = "#4f46e5"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(99,102,241,0.4)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.background = "#6366f1"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(99,102,241,0.3)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", background: "var(--primary-color)", color: "var(--white)", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", whiteSpace: "nowrap", boxShadow: "0 2px 8px var(--primary-shadow)", transition: "all 0.2s", flexShrink: 0 }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-hover)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(99,102,241,0.4)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = "var(--primary-color)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(99,102,241,0.3)"; e.currentTarget.style.transform = "translateY(0)"; }}
                                 >
                                     <Plus size={16} /> Add New Product
                                 </button>
@@ -392,7 +392,7 @@ const GRN = () => {
                                     <label style={labelStyle}>Total Amount</label>
                                     <input
                                         type="text"
-                                        style={{ ...inputStyle, backgroundColor: "#eef2ff", borderColor: "#c7d2fe", color: "#4338ca", fontWeight: "600", cursor: "not-allowed" }}
+                                        style={{ ...inputStyle, backgroundColor: "var(--primary-light)", borderColor: "var(--primary-color)", color: "var(--primary-color)", fontWeight: "600", cursor: "not-allowed" }}
                                         value={formData.totalAmount}
                                         readOnly
                                     />
@@ -416,9 +416,11 @@ const GRN = () => {
                                 )}
                                 <button
                                     onClick={handleAddItem}
-                                    style={{ padding: "10px 40px", background: "#6366f1", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "600", cursor: "pointer", boxShadow: "0 2px 8px rgba(99,102,241,0.35)", transition: "all 0.2s" }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.background = "#4f46e5"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(99,102,241,0.5)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.background = "#6366f1"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(99,102,241,0.35)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                                    style={{
+                                        padding: "10px 40px", background: "var(--primary-color)", color: "var(--white)", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "600", cursor: "pointer", boxShadow: "0 2px 8px var(--primary-shadow)", transition: "all 0.2s"
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-hover)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(99,102,241,0.5)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = "var(--primary-color)"; e.currentTarget.style.boxShadow = "0 2px 8px var(--primary-shadow)"; e.currentTarget.style.transform = "translateY(0)"; }}
                                 >
                                     {editingItemId ? "Update" : "Add"}
                                 </button>

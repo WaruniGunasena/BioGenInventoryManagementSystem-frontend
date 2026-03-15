@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { getAllStock } from "../../api/stockService";
 import { getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
+import { BRANDING } from "../../config/brandingConfig";
 import "./SalesOrder.css";
 
 const SalesOrder = () => {
@@ -26,7 +27,7 @@ const SalesOrder = () => {
 
     const [customers, setCustomers] = useState([]);
     const [products, setProducts] = useState([]);
-    const [stockData, setStockData] = useState([]); 
+    const [stockData, setStockData] = useState([]);
     const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -466,12 +467,12 @@ const SalesOrder = () => {
                         <div className="sales-order-summary-section">
                             <div className="invoice-header">
                                 <div className="company-info">
-                                    <h1 className="company-name">BioGenHoldings Pvt Ltd</h1>
-                                    <p className="company-subtitle">The Future of Healthcare</p>
-                                    <p className="company-web">www.biogenholdings.com</p>
+                                    <h1 className="company-name">{BRANDING.companyName} Pvt Ltd</h1>
+                                    <p className="company-subtitle">{BRANDING.tagline}</p>
+                                    <p className="company-web">www.{BRANDING.companyName.toLowerCase().replace(/\s/g, '')}.com</p>
                                     <p>Tangalle Road, Meddawaththa, Matara</p>
                                     <p>Tel: +94 774 088 839 / +94 413 120 337</p>
-                                    <p>Email: biogenholdings.com</p>
+                                    <p>Email: {BRANDING.companyName.toLowerCase().replace(/\s/g, '')}.com</p>
                                 </div>
                                 <div className="invoice-title">
                                     <h1>Sales Invoice</h1>

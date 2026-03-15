@@ -177,7 +177,7 @@ const Category = () => {
     ];
 
     const columns = [
-        { header: "Category Name", accessor: "name", render: (row) => <span style={{ fontWeight: '500', color: '#6366f1' }}>{row.name}</span> },
+        { header: "Category Name", accessor: "name", render: (row) => <span style={{ fontWeight: '500', color: 'var(--primary-color)' }}>{row.name}</span> },
         { header: "Category ID", accessor: "_id", render: (row) => row.id },
         { header: "Description", accessor: "description" },
         // {

@@ -7,6 +7,7 @@ import { useReactToPrint } from "react-to-print";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { getPaginatedSalesOrders, searchSalesOrder } from "../../api/salesOrderService";
+import { BRANDING } from "../../config/brandingConfig";
 import "./SalesInvoices.css";
 
 const SalesInvoices = () => {
@@ -134,7 +135,7 @@ const SalesInvoices = () => {
     const handleWhatsAppShare = () => {
         if (!selectedInvoice) return;
 
-        const message = `*Invoice from BioGenHoldings*%0A` +
+        const message = `*Invoice from ${BRANDING.companyName}*%0A` +
             `*Invoice No:* ${selectedInvoice.invoiceNumber}%0A` +
             `*Date:* ${selectedInvoice.date}%0A` +
             `*Customer:* ${selectedInvoice.customerName}%0A` +
@@ -227,12 +228,12 @@ const SalesInvoices = () => {
                             <div className="sales-order-summary-section" ref={componentRef}>
                                 <div className="invoice-header">
                                     <div className="company-info">
-                                        <h1 className="company-name">BioGenHoldings Pvt Ltd</h1>
-                                        <p className="company-subtitle">The Future of Healthcare</p>
-                                        <p className="company-web">www.biogenholdings.com</p>
+                                        <h1 className="company-name">{BRANDING.companyName} Pvt Ltd</h1>
+                                        <p className="company-subtitle">{BRANDING.tagline}</p>
+                                        <p className="company-web">www.{BRANDING.companyName.toLowerCase().replace(/\s/g, '')}.com</p>
                                         <p>Tangalle Road, Meddawaththa, Matara</p>
                                         <p>Tel: +94 774 088 839 / +94 413 120 337</p>
-                                        <p>Email: biogenholdings.com</p>
+                                        <p>Email: {BRANDING.companyName.toLowerCase().replace(/\s/g, '')}.com</p>
                                     </div>
                                     <div className="invoice-title">
                                         <h1>Sales Invoice</h1>
