@@ -48,7 +48,6 @@ const LoginPage = () => {
     }
   };
 
-
   return (
     <div className="auth-wrapper">
       <div className="auth-left">
@@ -122,10 +121,7 @@ const LoginPage = () => {
             </button>
           </form>
 
-          <p className="auth-footer">
-            Don't have an account?{" "}
-            <span onClick={() => navigate("/register")}>Register</span>
-          </p>
+         
         </div>
       </div>
 

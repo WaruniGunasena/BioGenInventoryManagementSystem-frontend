@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerUser } from "../api/authService";
 import { Eye, EyeOff } from "lucide-react";
+import { useAdminStatus } from "../context/AdminStatusContext";
 import "./RegisterPage.css";
 
 const RegisterPage = () => {
@@ -12,6 +13,16 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
+  const { adminExists, loading: adminLoading, refreshAdminStatus } = useAdminStatus();
+
+  useEffect(() => {
+    if (!adminLoading && adminExists) {
+      navigate("/login", { replace: true });
+    }
+  }, [adminExists, adminLoading, navigate]);
+
+  // Render nothing while the check is in flight or if admin exists (prevents flicker before redirect)
+  if (adminLoading || adminExists) return null;
 
   const showMessage = (msg) => {
     setMessage(msg);
@@ -25,7 +36,8 @@ const RegisterPage = () => {
       const registerData = { name, email, password };
       await registerUser(registerData);
       showMessage("Registration Successful ✅");
-      navigate("/login");
+      await refreshAdminStatus();
+      navigate("/login", { replace: true });
     } catch (error) {
       const msg = error.response?.data?.message || "Error registering user";
       showMessage(msg);
