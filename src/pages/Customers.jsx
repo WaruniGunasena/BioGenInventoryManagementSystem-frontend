@@ -180,7 +180,7 @@ const Customers = () => {
                         alt=""
                         className="user-avatar"
                     />
-                    <span style={{ fontWeight: '500', color: '#6366f1' }}>{row.name}</span>
+                    <span style={{ fontWeight: '500', color: 'var(--primary-color)' }}>{row.name}</span>
                 </div>
             ),
         },

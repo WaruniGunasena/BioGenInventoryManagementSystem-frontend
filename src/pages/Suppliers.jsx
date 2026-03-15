@@ -122,7 +122,7 @@ const Suppliers = () => {
             header: "Supplier Name / Company Name", accessor: "name", render: (row) => (
                 <div className="user-cell">
                     <img src={`https://ui-avatars.com/api/?name=${row.name}&background=random`} alt="" className="user-avatar" />
-                    <span style={{ fontWeight: '500', color: '#6366f1' }}>{row.name}</span>
+                    <span style={{ fontWeight: '500', color: 'var(--primary-color)' }}>{row.name}</span>
                 </div>
             )
         },

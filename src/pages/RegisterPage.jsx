@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerUser } from "../api/authService";
 import { Eye, EyeOff } from "lucide-react";
+import { BRANDING } from "../config/brandingConfig";
 import "./RegisterPage.css";
 
 const RegisterPage = () => {
@@ -37,14 +38,12 @@ const RegisterPage = () => {
     <div className="auth-wrapper">
       <div className="auth-left">
         <div className="brand-box">
-          <div className="brand-pill">BioGenHoldings</div>
-          <p className="brand-text">
-            Smart inventory control powered by real-time analytics
-          </p>
+          <h1>{BRANDING.companyName}</h1>
+          <p>{BRANDING.tagline}</p>
         </div>
 
         <div className="brand-footer">
-          © BioGenHolding {new Date().getFullYear()}
+          © {BRANDING.companyName} {new Date().getFullYear()}
         </div>
       </div>
       <div className="auth-right">

@@ -4,6 +4,7 @@ import { isTempPassword, clearTempPasswordFlag } from "../auth/tokenService";
 import { resetTempPassword } from "../api/userService";
 import { getUserId } from "../components/common/Utils/userUtils/userUtils";
 import { Eye, EyeOff } from "lucide-react";
+import { BRANDING } from "../config/brandingConfig";
 import "./LoginPage.css";
 
 const ResetPasswordPage = () => {
@@ -65,12 +66,12 @@ const ResetPasswordPage = () => {
             {/* Left decorative panel — reuses existing CSS */}
             <div className="auth-left">
                 <div className="brand-box">
-                    <div className="brand-pill">BioGenHoldings</div>
+                    <div className="brand-pill">{BRANDING.companyName}</div>
                     <p className="brand-text">
                         Please set a new password to secure your account and access the system.
                     </p>
                 </div>
-                <div className="brand-footer">© BioGenHolding {new Date().getFullYear()}</div>
+                <div className="brand-footer">© {BRANDING.companyName} {new Date().getFullYear()}</div>
             </div>
 
             {/* Right form panel */}

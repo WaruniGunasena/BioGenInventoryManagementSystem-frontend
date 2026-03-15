@@ -5,6 +5,7 @@ import { saveTempPasswordFlag, saveForgotPasswordFlow } from "../auth/tokenServi
 import { fetchCurrentUser } from "../components/common/Utils/userUtils/userUtils";
 import { Eye, EyeOff } from "lucide-react";
 import ForgotPasswordModal from "../components/ForgotPassword/ForgotPasswordModal";
+import { BRANDING } from "../config/brandingConfig";
 import "./LoginPage.css";
 
 const LoginPage = () => {
@@ -53,14 +54,14 @@ const LoginPage = () => {
     <div className="auth-wrapper">
       <div className="auth-left">
         <div className="brand-box">
-          <div className="brand-pill">BioGenHoldings</div>
+          <div className="brand-pill">{BRANDING.companyName}</div>
           <p className="brand-text">
-            Smart inventory control powered by real-time analytics
+            {BRANDING.tagline}
           </p>
         </div>
 
         <div className="brand-footer">
-          © BioGenHolding {new Date().getFullYear()}
+          © {BRANDING.companyName} {new Date().getFullYear()}
         </div>
       </div>
       <div className="auth-right">
