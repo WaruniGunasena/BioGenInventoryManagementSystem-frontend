@@ -164,19 +164,20 @@
 }
 
 .grn-table th {
+    background-color: #4a90e2;
+    color: white !important;
     text-align: left;
     font-size: 13px;
-    color: #94a3b8;
-    font-weight: 500;
-    padding: 12px 16px;
-    border-bottom: 1px solid #f1f5f9;
+    padding: 12px 10px;
+    border: 1px solid #357abd;
+    font-weight: 600;
 }
 
 .grn-table td {
-    padding: 18px 16px;
-    font-size: 15px;
-    color: #1e293b;
-    border-bottom: 1px solid #f1f5f9;
+    padding: 14px !important;
+    font-size: 13px !important;
+    color: #1f2937;
+    border-bottom: 1px solid #f3f4f6;
 }
 
 .total-row td {
@@ -189,4 +190,56 @@
 
 .total-row td:last-child {
     text-align: left;
+}
+
+.text-right {
+    text-align: right !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.edit-action-btn,
+.delete-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.edit-action-btn {
+    background-color: #f0f9ff;
+    color: #362dde;
+    border-color: #bae6fd;
+}
+
+.edit-action-btn:hover {
+    background-color: #e0f2fe;
+    border-color: #1b07cd;
+    transform: translateY(-1px);
+}
+
+.delete-action-btn {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.delete-action-btn:hover {
+    background-color: #fee2e2;
+    border-color: #fca5a5;
+    transform: translateY(-1px);
+}
+
+.modal-header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
 }

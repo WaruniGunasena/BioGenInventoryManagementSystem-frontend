@@ -13,3 +13,8 @@ export const searchGRN = (query) => api.get(`/grn/search?searchKey=${query}`);
 
 export const getPaginatedGRNs = (page, size, config = {}) =>
     api.get(`/grn?page=${page}&size=${size}`, config);
+
+export const updateGRN = (id, data) => api.put(`/grn/update/${id}`, data);
+
+export const softDeleteGRN = (id, userId) =>
+    api.put(`/grn/softDelete?id=${id}&userId=${userId}`);

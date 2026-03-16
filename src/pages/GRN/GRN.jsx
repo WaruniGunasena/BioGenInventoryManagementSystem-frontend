@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "../../context/ToastContext";
 import Sidebar from "../../components/Sidebar";
 import Layout from "../../components/Layout";
 import { getAllSuppliers } from "../../api/supplierService";
 import { getAllProducts } from "../../api/productService";
-import { createGRN } from "../../api/grnService";
+import { createGRN, updateGRN } from "../../api/grnService";
 import AddProductModal from "../../components/Products/AddProductModal";
 import { Trash2, Edit3, FileText, Plus } from "lucide-react";
 import { getUserId } from "../../components/common/Utils/userUtils/userUtils";
@@ -13,6 +13,7 @@ import "./GRN.css";
 
 const GRN = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { showToast } = useToast();
     const formRef = useRef(null);
     const today = new Date().toISOString().split("T")[0];
@@ -38,18 +39,67 @@ const GRN = () => {
         totalAmount: "0.00",
         invoiceNumber: "",
         sellingPricePercentage: "",
+        sellingPrice: "",
+        bonus: "",
+        packSize: "",
+        discountPercentage: "",
+        discountedPrice: "",
     });
 
     const [selectedSupplierData, setSelectedSupplierData] = useState(null);
     const [addedItems, setAddedItems] = useState([]);
     const [editingItemId, setEditingItemId] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
+    const hasPopulatedRef = useRef(false);
 
     useEffect(() => {
         fetchSuppliers();
         fetchProducts();
         fetchUserId();
     }, []);
+
+    useEffect(() => {
+        // Handle pre-population for editing - only once
+        if (location.state?.editInvoice && !hasPopulatedRef.current && suppliers.length > 0 && products.length > 0) {
+            const invoice = location.state.editInvoice;
+            setFormData((prev) => ({
+                ...prev,
+                supplierId: invoice.supplierId || invoice.supplier?.id || invoice.supplier?._id || "",
+                date: invoice.date || invoice.grnDate || new Date().toISOString().split("T")[0],
+                invoiceNumber: invoice.invoiceNumber || invoice.grnNumber || "",
+                creditPeriod: invoice.creditPeriod || invoice.supplier?.creditPeriod || "",
+                invoiceId: invoice.id || invoice._id, // Renamed to avoid collision with local item id
+            }));
+
+            // Map invoice items to addedItems
+            const mappedItems = (invoice.items || []).map((item, index) => ({
+                id: Date.now() + index, // Local unique ID for the table
+                originalId: item.id || item._id, // Store backend ID
+                productId: item.productId || item.product?.id || item.product?._id,
+                productName: item.productName || item.product?.name || "N/A",
+                productCode: item.productCode || item.product?.itemCode || "N/A",
+                batchNumber: item.batchNumber || "",
+                mfgDate: item.mfgDate || "",
+                expDate: item.expDate || "",
+                purchasePrice: item.purchasePrice || 0,
+                quantity: item.quantity || 0,
+                bonus: item.bonus || 0,
+                discountPercentage: item.discountPercentage || 0,
+                discountedPrice: item.discountValue || item.discountedPrice || item.purchasePrice,
+                totalAmount: item.totalAmount || 0,
+                sellingPricePercentage: item.sellingPricePercentage || 0,
+                sellingPrice: (parseFloat(item.purchasePrice || 0) + (parseFloat(item.purchasePrice || 0) * parseFloat(item.sellingPricePercentage || 0) / 100)).toFixed(2),
+                packSize: item.packSize || "",
+            }));
+            setAddedItems(mappedItems);
+
+            // Set supplier data for summary section
+            if (invoice.supplier) {
+                setSelectedSupplierData(invoice.supplier);
+            }
+            hasPopulatedRef.current = true;
+        }
+    }, [location.state, suppliers, products]);
 
     const fetchUserId = async () => {
         try {
@@ -102,7 +152,8 @@ const GRN = () => {
             ...prev,
             productId: id,
             productName: product ? product.name : "",
-            productCode: product ? (product.id || product._id) : "",
+            productCode: product ? (product.itemCode || product.id || product._id) : "",
+            packSize: product ? product.packSize : "",
         }));
     };
 
@@ -110,17 +161,39 @@ const GRN = () => {
         const { name, value } = e.target;
         setFormData((prev) => {
             const newData = { ...prev, [name]: value };
-            if (name === "purchasePrice" || name === "quantity") {
+            if (["purchasePrice", "quantity", "discountPercentage"].includes(name)) {
                 const price = parseFloat(newData.purchasePrice) || 0;
                 const qty = parseFloat(newData.quantity) || 0;
-                newData.totalAmount = (price * qty).toFixed(2);
+                const discountPct = parseFloat(newData.discountPercentage) || 0;
+
+                const dPrice = price - (price * discountPct / 100);
+                newData.discountedPrice = dPrice.toFixed(2);
+                newData.totalAmount = (dPrice * qty).toFixed(2);
+            }
+            if (name === "purchasePrice" || name === "sellingPricePercentage") {
+                const price = parseFloat(newData.purchasePrice);
+                const percentage = parseFloat(newData.sellingPricePercentage);
+
+                if (!isNaN(price) && !isNaN(percentage)) {
+                    newData.sellingPrice = (price + (price * percentage / 100)).toFixed(2);
+                } else {
+                    newData.sellingPrice = "";
+                }
             }
             return newData;
         });
     };
 
     const handleEditItem = (item) => {
-        setFormData({ ...item });
+        const pPrice = parseFloat(item.purchasePrice) || 0;
+        const sPercentage = parseFloat(item.sellingPricePercentage) || 0;
+        const calculatedSellingPrice = (pPrice + (pPrice * sPercentage / 100)).toFixed(2);
+
+        setFormData((prev) => ({
+            ...prev,
+            ...item,
+            sellingPrice: calculatedSellingPrice
+        }));
         setEditingItemId(item.id);
         formRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -139,12 +212,52 @@ const GRN = () => {
             quantity: "",
             totalAmount: "0.00",
             sellingPricePercentage: "",
+            sellingPrice: "",
+            bonus: "",
+            packSize: "",
+            discountPercentage: "",
+            discountedPrice: "",
         }));
     };
 
     const handleAddItem = () => {
-        if (!formData.productId || !formData.purchasePrice || !formData.quantity || !formData.sellingPricePercentage) {
-            showToast('error', "Please select a product and enter price, quantity, and selling price percentage");
+        if (!formData.supplierId) {
+            showToast('error', "Please select a supplier first");
+            return;
+        }
+
+        if (!formData.invoiceNumber) {
+            showToast('error', "Please enter an invoice number first");
+            return;
+        }
+
+        if (!formData.date) {
+            showToast('error', "Please select a date first");
+            return;
+        }
+
+        if (!formData.productId) {
+            showToast('error', "Please select a product");
+            return;
+        }
+
+        if (!formData.expDate) {
+            showToast('error', "Please enter expiry date");
+            return;
+        }
+
+        if (!formData.purchasePrice) {
+            showToast('error', "Please enter purchase price");
+            return;
+        }
+
+        if (!formData.quantity) {
+            showToast('error', "Please enter quantity");
+            return;
+        }
+
+        if (!formData.sellingPricePercentage) {
+            showToast('error', "Please enter selling price percentage");
             return;
         }
 
@@ -183,6 +296,11 @@ const GRN = () => {
             quantity: "",
             totalAmount: "0.00",
             sellingPricePercentage: "",
+            sellingPrice: "",
+            bonus: "",
+            packSize: "",
+            discountPercentage: "",
+            discountedPrice: "",
         }));
     };
 
@@ -195,6 +313,11 @@ const GRN = () => {
     };
 
     const handleAddStock = async () => {
+        if (!formData.supplierId) {
+            showToast('error', "Please select a supplier");
+            return;
+        }
+
         if (addedItems.length === 0) {
             showToast('error', "Please add at least one item");
             return;
@@ -205,20 +328,35 @@ const GRN = () => {
             date: formData.date,
             invoiceNumber: formData.invoiceNumber,
             items: addedItems.map((item) => ({
+                id: item.originalId, // Pass back original ID for existing records
                 productId: item.productId,
                 batchNumber: item.batchNumber,
                 mfgDate: item.mfgDate,
                 expDate: item.expDate,
                 purchasePrice: item.purchasePrice,
+                packSize: item.packSize,
                 quantity: item.quantity,
+                bonus: parseFloat(item.bonus || 0),
                 totalAmount: item.totalAmount,
                 sellingPricePercentage: item.sellingPricePercentage,
+                discountPercentage: parseFloat(item.discountPercentage || 0),
+                discountValue: parseFloat(item.discountedPrice || item.purchasePrice),
             })),
             grandTotal: calculateGrandTotal(),
         };
+
+        console.log("GRN Payload to Backend:", grnData);
+
         try {
-            await createGRN(grnData);
-            showToast('success', "Stock added successfully!");
+            if (formData.invoiceId) {
+                // Editing existing invoice
+                await updateGRN(formData.invoiceId, grnData);
+                showToast('success', "Stock updated successfully!");
+            } else {
+                // Creating new invoice
+                await createGRN(grnData);
+                showToast('success', "Stock added successfully!");
+            }
             setAddedItems([]);
             setFormData({
                 supplierId: "",
@@ -235,6 +373,11 @@ const GRN = () => {
                 totalAmount: "0.00",
                 invoiceNumber: "",
                 sellingPricePercentage: "",
+                sellingPrice: "",
+                bonus: "",
+                packSize: "",
+                discountPercentage: "",
+                discountedPrice: "",
             });
             setSelectedSupplierData(null);
         } catch (error) {
@@ -297,7 +440,7 @@ const GRN = () => {
 
                             <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
                                 <div style={fieldStyle}>
-                                    <label style={labelStyle}>Supplier</label>
+                                    <label style={labelStyle}>Supplier <span style={{ color: "red" }}>*</span></label>
                                     <select style={selectStyle} value={formData.supplierId} onChange={handleSupplierChange}>
                                         <option value="">Select Supplier</option>
                                         {suppliers.map((s) => (
@@ -306,24 +449,18 @@ const GRN = () => {
                                     </select>
                                 </div>
                                 <div style={fieldStyle}>
-                                    <label style={labelStyle}>Date</label>
+                                    <label style={labelStyle}>Date <span style={{ color: "red" }}>*</span></label>
                                     <input type="date" name="date" style={inputStyle} value={formData.date} onChange={handleInputChange} />
                                 </div>
                                 <div style={fieldStyle}>
-                                    <label style={labelStyle}>Credit Period</label>
-                                    <input
-                                        type="text"
-                                        style={{ ...inputStyle, backgroundColor: "#f1f5f9", cursor: "not-allowed" }}
-                                        value={formData.creditPeriod ? `${formData.creditPeriod} days` : ""}
-                                        placeholder="Auto-filled from supplier"
-                                        readOnly
-                                    />
+                                    <label style={labelStyle}>Invoice Number <span style={{ color: "red" }}>*</span></label>
+                                    <input type="text" name="invoiceNumber" style={inputStyle} placeholder="INV-00000" value={formData.invoiceNumber} onChange={handleInputChange} />
                                 </div>
                             </div>
 
                             <div style={{ display: "flex", alignItems: "flex-end", gap: "14px", flexWrap: "wrap", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
                                 <div style={{ ...fieldStyle, flex: 2 }}>
-                                    <label style={labelStyle}>Product</label>
+                                    <label style={labelStyle}>Product <span style={{ color: "red" }}>*</span></label>
                                     <select style={selectStyle} value={formData.productId} onChange={handleProductChange}>
                                         <option value="">Select Product</option>
                                         {products.map((p) => (
@@ -332,26 +469,23 @@ const GRN = () => {
                                     </select>
                                 </div>
                                 <div style={{ ...fieldStyle, flex: 1 }}>
-                                    <label style={labelStyle}>Product ID</label>
+                                    <label style={labelStyle}>Product ID<span style={{ color: "red" }}>*</span></label>
                                     <input
                                         type="text"
                                         style={{ ...inputStyle, backgroundColor: "#f1f5f9", cursor: "not-allowed" }}
                                         value={formData.productCode}
-                                        placeholder="Auto-filled"
+                                        placeholder="Not Selected"
                                         readOnly
                                     />
                                 </div>
                                 <button
                                     onClick={() => setIsAddProductModalOpen(true)}
-                                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", background: "#6366f1", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(99,102,241,0.3)", transition: "all 0.2s", flexShrink: 0 }}
+                                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", background: "#6366f1", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(99,102,241,0.3)", transition: "all 0.2s", flexShrink: 0 }}
                                     onMouseEnter={(e) => { e.currentTarget.style.background = "#4f46e5"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(99,102,241,0.4)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
                                     onMouseLeave={(e) => { e.currentTarget.style.background = "#6366f1"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(99,102,241,0.3)"; e.currentTarget.style.transform = "translateY(0)"; }}
                                 >
                                     <Plus size={16} /> Add New Product
                                 </button>
-                            </div>
-
-                            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Batch Number</label>
                                     <input type="text" name="batchNumber" style={inputStyle} placeholder="Enter Batch Number" value={formData.batchNumber} onChange={handleInputChange} />
@@ -361,22 +495,22 @@ const GRN = () => {
                                     <input type="date" name="mfgDate" style={inputStyle} value={formData.mfgDate} max={today} onChange={handleInputChange} />
                                 </div>
                                 <div style={fieldStyle}>
-                                    <label style={labelStyle}>Expiry Date</label>
+                                    <label style={labelStyle}>Expiry Date <span style={{ color: "red" }}>*</span></label>
                                     <input type="date" name="expDate" style={inputStyle} value={formData.expDate} min={today} onChange={handleInputChange} />
                                 </div>
                             </div>
 
-                            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px" }}>
+                            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
                                 <div style={fieldStyle}>
-                                    <label style={labelStyle}>Purchase Price</label>
+                                    <label style={labelStyle}>Purchase Price <span style={{ color: "red" }}>*</span></label>
                                     <input type="number" name="purchasePrice" style={inputStyle} placeholder="0.00" value={formData.purchasePrice} onChange={handleInputChange} />
                                 </div>
                                 <div style={fieldStyle}>
-                                    <label style={labelStyle}>Quantity</label>
+                                    <label style={labelStyle}>Quantity <span style={{ color: "red" }}>*</span></label>
                                     <input type="number" name="quantity" style={inputStyle} placeholder="0" value={formData.quantity} onChange={handleInputChange} />
                                 </div>
                                 <div style={fieldStyle}>
-                                    <label style={labelStyle}>Selling Price %</label>
+                                    <label style={labelStyle}>Selling Price % <span style={{ color: "red" }}>*</span></label>
                                     <input
                                         type="number"
                                         name="sellingPricePercentage"
@@ -389,20 +523,49 @@ const GRN = () => {
                                     />
                                 </div>
                                 <div style={fieldStyle}>
+                                    <label style={labelStyle}>Selling Price <span style={{ color: "red" }}>*</span></label>
+                                    <input
+                                        type="text"
+                                        style={{ ...inputStyle, backgroundColor: "#f1f5f9", cursor: "not-allowed" }}
+                                        value={formData.sellingPrice ? `${formData.sellingPrice}` : ""}
+                                        placeholder="Not Calculated"
+                                        readOnly
+                                    />
+                                </div>
+                            </div>
+                            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px" }}>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Bonus</label>
+                                    <input type="text" name="bonus" style={inputStyle} placeholder="Enter Bonus" value={formData.bonus} onChange={handleInputChange} />
+                                </div>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Discount %</label>
+                                    <input type="number" name="discountPercentage" style={inputStyle} placeholder="0" min="0" max="100" value={formData.discountPercentage} onChange={handleInputChange} />
+                                </div>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>Discounted Price</label>
+                                    <input type="text" style={{ ...inputStyle, backgroundColor: "#f1f5f9", cursor: "not-allowed" }} value={formData.discountedPrice || ""} placeholder="Calculated" readOnly />
+                                </div>
+                                <div style={fieldStyle}>
                                     <label style={labelStyle}>Total Amount</label>
                                     <input
                                         type="text"
-                                        style={{ ...inputStyle, backgroundColor: "#eef2ff", borderColor: "#c7d2fe", color: "#4338ca", fontWeight: "600", cursor: "not-allowed" }}
+                                        style={{ ...inputStyle, backgroundColor: "#eef2ff", borderColor: "#c7d2fe", color: "#252429ff", fontWeight: "600", cursor: "not-allowed" }}
                                         value={formData.totalAmount}
                                         readOnly
                                     />
                                 </div>
                                 <div style={fieldStyle}>
-                                    <label style={labelStyle}>Invoice Number</label>
-                                    <input type="text" name="invoiceNumber" style={inputStyle} placeholder="INV-00000" value={formData.invoiceNumber} onChange={handleInputChange} />
+                                    <label style={labelStyle}>Credit Period <span style={{ color: "red" }}>*</span></label>
+                                    <input
+                                        type="text"
+                                        style={{ ...inputStyle, backgroundColor: "#f1f5f9", cursor: "not-allowed" }}
+                                        value={formData.creditPeriod ? `${formData.creditPeriod}` : ""}
+                                        placeholder="Not Selected"
+                                        readOnly
+                                    />
                                 </div>
                             </div>
-
                             <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", paddingTop: "14px", borderTop: "1px solid #f1f5f9" }}>
                                 {editingItemId && (
                                     <button
@@ -447,33 +610,56 @@ const GRN = () => {
                                     <thead>
                                         <tr>
                                             <th>Product Description</th>
-                                            <th>Purchase Price</th>
-                                            <th>Quantity</th>
-                                            <th>Total Amount RS.</th>
-                                            <th>Action</th>
+                                            <th>Pack Size</th>
+                                            <th className="text-right">Purchase Price</th>
+                                            <th className="text-center">Quantity</th>
+                                            <th className="text-right">Discount %</th>
+                                            <th className="text-right">Discounted Price</th>
+                                            <th className="text-right">Total Amount (LKR)</th>
+                                            <th className="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {addedItems.map((item) => (
-                                            <tr key={item.id}>
-                                                <td>{item.productName}</td>
-                                                <td>{parseFloat(item.purchasePrice).toFixed(2)}</td>
-                                                <td>{item.quantity}</td>
-                                                <td>{item.totalAmount}</td>
-                                                <td>
-                                                    <div className="action-btns">
-                                                        <Edit3 size={18} className="edit-icon" onClick={() => handleEditItem(item)} />
-                                                        <Trash2 size={18} className="delete-icon" onClick={() => handleRemoveItem(item.id)} />
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                            <React.Fragment key={item.id}>
+                                                <tr>
+                                                    <td>{item.productName}</td>
+                                                    <td>{item.packSize || "-"}</td>
+                                                    <td className="text-right">{parseFloat(item.purchasePrice).toFixed(2)}</td>
+                                                    <td className="text-center">{item.quantity}</td>
+                                                    <td className="text-right">{parseFloat(item.discountPercentage || 0).toFixed(2)}%</td>
+                                                    <td className="text-right">{parseFloat(item.discountedPrice || item.purchasePrice).toFixed(2)}</td>
+                                                    <td className="text-right">{parseFloat(item.totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                    <td className="text-center">
+                                                        <div className="action-btns" style={{ justifyContent: "center" }}>
+                                                            <Edit3 size={18} className="edit-icon" onClick={() => handleEditItem(item)} />
+                                                            <Trash2 size={18} className="delete-icon" onClick={() => handleRemoveItem(item.id)} />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {parseFloat(item.bonus || 0) > 0 && (
+                                                    <tr className="bonus-row">
+                                                        <td>{item.productName}</td>
+                                                        <td>{item.packSize || "-"}</td>
+                                                        <td className="text-right">0.00</td>
+                                                        <td className="text-center">{item.bonus}</td>
+                                                        <td className="text-right">0.00%</td>
+                                                        <td className="text-right">0.00</td>
+                                                        <td className="text-right">0.00</td>
+                                                        <td></td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
                                         ))}
                                         {addedItems.length > 0 && (
                                             <tr className="total-row">
                                                 <td>Total</td>
                                                 <td></td>
                                                 <td></td>
-                                                <td>{calculateGrandTotal()}</td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td className="text-right">{parseFloat(calculateGrandTotal()).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                 <td></td>
                                             </tr>
                                         )}
