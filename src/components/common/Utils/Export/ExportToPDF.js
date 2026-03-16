@@ -161,8 +161,10 @@ export const exportToPDF = async ({
             );
         }
 
-        // 4. Trigger download
-        doc.save(`${filenamePrefix}_${dateStr}.pdf`);
+        // 4. Open in new tab for preview/download
+        const pdfBlob = doc.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl, '_blank');
     } catch (error) {
         console.error('ExportToPDF: export failed:', error);
     } finally {
