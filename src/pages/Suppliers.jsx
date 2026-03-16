@@ -5,9 +5,11 @@ import MetricCard from '../components/common/MetricCard';
 import DataTable from '../components/common/DataTable';
 import ConfirmationModal from '../components/common/ConfirmationModal';
 
-import { softDeleteSupplier, searchSupplier, getPaginatedSupplierResults } from "../api/supplierService"
+import { softDeleteSupplier, searchSupplier, getPaginatedSupplierResults, getAllSuppliers } from "../api/supplierService"
 import { getUserId } from '../components/common/Utils/userUtils/userUtils';
 import FilterType from '../enums/FilterType';
+import { exportToCSV } from '../components/common/Utils/Export/ExportToCSV';
+import { exportToPDF } from '../components/common/Utils/Export/ExportToPDF';
 import '../components/Dashboard/Dashboard.css';
 import Layout from '../components/Layout';
 import usePermissions from '../hooks/usePermissions';
@@ -26,6 +28,7 @@ const Suppliers = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
     const [totalPages, setTotalPages] = useState(0);
     const [filter, setFilter] = useState(FilterType.ASC);
     const [currentPage, setCurrentPage] = useState(0);
@@ -69,6 +72,45 @@ const Suppliers = () => {
         showToast('success', 'Supplier updated successfully!');
         setIsEditModalOpen(false);
         fetchSuppliers();
+    };
+
+    const handleExportToCsv = () => {
+        exportToCSV({
+            fetchData: async () => { const res = await getAllSuppliers(); return res.data; },
+            extractRows: (data) => Array.isArray(data) ? data : (data?.suppliers ?? []),
+            columnMap: [
+                { key: 'id', label: 'Supplier ID' },
+                { key: 'name', label: 'Supplier/Company' },
+                { key: 'contactPerson', label: 'Contact Person' },
+                { key: 'phoneNumber', label: 'Phone Number' },
+                { key: 'email', label: 'Email' },
+                { key: 'address', label: 'Address' },
+                { key: 'creditPeriod', label: 'Credit Period' }
+            ],
+            filenamePrefix: 'suppliers',
+            onStart: () => setIsExporting(true),
+            onEnd: () => setIsExporting(false),
+        });
+    };
+
+    const handleExportToPdf = () => {
+        exportToPDF({
+            fetchData: async () => { const res = await getAllSuppliers(); return res.data; },
+            extractRows: (data) => Array.isArray(data) ? data : (data?.suppliers ?? []),
+            columnMap: [
+                { key: 'id', label: 'Supplier ID' },
+                { key: 'name', label: 'Supplier/Company' },
+                { key: 'contactPerson', label: 'Contact Person' },
+                { key: 'phoneNumber', label: 'Phone Number' },
+                { key: 'email', label: 'Email' },
+                { key: 'address', label: 'Address' },
+                { key: 'creditPeriod', label: 'Credit Period' }
+            ],
+            title: 'Supplier List',
+            filenamePrefix: 'suppliers',
+            onStart: () => setIsExporting(true),
+            onEnd: () => setIsExporting(false),
+        });
     };
 
     const handleDeleteClick = (row) => {
@@ -177,6 +219,8 @@ const Suppliers = () => {
                             setFilter(value ?? FilterType.ASC);
                             setCurrentPage(0);
                         }}
+                        onExportCSV={isExporting ? undefined : handleExportToCsv}
+                        onExportPDF={isExporting ? undefined : handleExportToPdf}
                     />
                     <AddSupplierModal
                         isOpen={isAddModalOpen}

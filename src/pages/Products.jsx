@@ -5,11 +5,13 @@ import DataTable from '../components/common/DataTable';
 import ConfirmationModal from '../components/common/ConfirmationModal';
 import '../components/Dashboard/Dashboard.css';
 import Layout from '../components/Layout';
-import { softDeleteProduct, searchProduct, getPaginatedProductResults } from '../api/productService';
+import { softDeleteProduct, searchProduct, getPaginatedProductResults, getAllProducts } from '../api/productService';
 import { getUserId } from '../components/common/Utils/userUtils/userUtils';
 import AddProductModal from '../components/Products/AddProductModal';
 import EditProductModal from '../components/Products/EditProductModal';
 import FilterType from '../enums/FilterType';
+import { exportToCSV } from '../components/common/Utils/Export/ExportToCSV';
+import { exportToPDF } from '../components/common/Utils/Export/ExportToPDF';
 import usePermissions from '../hooks/usePermissions';
 
 const Products = () => {
@@ -25,6 +27,7 @@ const Products = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
     const [totalPages, setTotalPages] = useState(0);
     const [filter, setFilter] = useState(FilterType.ASC);
     const [currentPage, setCurrentPage] = useState(0);
@@ -68,6 +71,45 @@ const Products = () => {
         showToast('success', 'Product updated successfully!');
         setIsEditModalOpen(false);
         fetchProducts();
+    };
+
+    const handleExportToCsv = () => {
+        exportToCSV({
+            fetchData: async () => { const res = await getAllProducts(); return res.data; },
+            extractRows: (data) => Array.isArray(data) ? data : (data?.products ?? []),
+            columnMap: [
+                { key: 'id', label: 'Product ID' },
+                { key: 'name', label: 'Product Name' },
+                { key: 'categoryName', label: 'Category' },
+                { key: 'description', label: 'Description' },
+                { key: 'packSize', label: 'Pack Size' },
+                { key: 'minimumStockLevel', label: 'Min Stock' },
+                { key: 'reorderLevel', label: 'Reorder Level' }
+            ],
+            filenamePrefix: 'products',
+            onStart: () => setIsExporting(true),
+            onEnd: () => setIsExporting(false),
+        });
+    };
+
+    const handleExportToPdf = () => {
+        exportToPDF({
+            fetchData: async () => { const res = await getAllProducts(); return res.data; },
+            extractRows: (data) => Array.isArray(data) ? data : (data?.products ?? []),
+            columnMap: [
+                { key: 'id', label: 'Product ID' },
+                { key: 'name', label: 'Product Name' },
+                { key: 'categoryName', label: 'Category' },
+                { key: 'description', label: 'Description' },
+                { key: 'packSize', label: 'Pack Size' },
+                { key: 'minimumStockLevel', label: 'Min Stock' },
+                { key: 'reorderLevel', label: 'Reorder Level' }
+            ],
+            title: 'Product List',
+            filenamePrefix: 'products',
+            onStart: () => setIsExporting(true),
+            onEnd: () => setIsExporting(false),
+        });
     };
 
     const handleDeleteClick = (row) => {
@@ -160,6 +202,8 @@ const Products = () => {
                             setFilter(value ?? FilterType.ASC);
                             setCurrentPage(0);
                         }}
+                        onExportCSV={isExporting ? undefined : handleExportToCsv}
+                        onExportPDF={isExporting ? undefined : handleExportToPdf}
                     />
 
                     <AddProductModal
