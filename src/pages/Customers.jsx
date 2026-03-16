@@ -15,6 +15,9 @@ import ViewCustomerModal from '../components/Customers/ViewCustomerModal';
 import FilterType from '../enums/FilterType';
 import { getUserId } from '../components/common/Utils/userUtils/userUtils';
 import { useToast } from '../context/ToastContext';
+import { exportToCSV } from '../components/common/Utils/Export/ExportToCSV';
+import { exportToPDF } from '../components/common/Utils/Export/ExportToPDF';
+import { getAllCustomers } from '../api/customerService';
 import usePermissions from '../hooks/usePermissions';
 import '../components/Dashboard/Dashboard.css';
 
@@ -27,6 +30,7 @@ const Customers = () => {
 
     const [customers, setCustomers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
@@ -147,6 +151,43 @@ const Customers = () => {
         setIsEditModalOpen(false);
     };
 
+    const handleExportToCsv = () => {
+        exportToCSV({
+            fetchData: async () => { const res = await getAllCustomers(); return res.data; },
+            extractRows: (data) => Array.isArray(data) ? data : (data?.customers ?? []),
+            columnMap: [
+                { key: 'id', label: 'Customer ID' },
+                { key: 'name', label: 'Name' },
+                { key: 'email', label: 'Email' },
+                { key: 'contact_No', label: 'Contact No' },
+                { key: 'address', label: 'Address' },
+                { key: 'status', label: 'Status' }
+            ],
+            filenamePrefix: 'customers',
+            onStart: () => setIsExporting(true),
+            onEnd: () => setIsExporting(false),
+        });
+    };
+
+    const handleExportToPdf = () => {
+        exportToPDF({
+            fetchData: async () => { const res = await getAllCustomers(); return res.data; },
+            extractRows: (data) => Array.isArray(data) ? data : (data?.customers ?? []),
+            columnMap: [
+                { key: 'id', label: 'Customer ID' },
+                { key: 'name', label: 'Name' },
+                { key: 'email', label: 'Email' },
+                { key: 'contact_No', label: 'Contact No' },
+                { key: 'address', label: 'Address' },
+                { key: 'status', label: 'Status' }
+            ],
+            title: 'Customer List',
+            filenamePrefix: 'customers',
+            onStart: () => setIsExporting(true),
+            onEnd: () => setIsExporting(false),
+        });
+    };
+
     const metrics = [
         {
             title: 'Total Customers',
@@ -239,6 +280,8 @@ const Customers = () => {
                         { label: 'Name: Z → A', value: FilterType.DESC },
                     ]}
                     onFilter={handleFilter}
+                    onExportCSV={isExporting ? undefined : handleExportToCsv}
+                    onExportPDF={isExporting ? undefined : handleExportToPdf}
                     showStatusToggle={false}
                 />
 
