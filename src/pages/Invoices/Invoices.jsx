@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout";
 import Sidebar from "../../components/Sidebar";
@@ -29,16 +29,7 @@ const Invoices = () => {
     const [pageSize] = useState(8);
     const [searchQuery, setSearchQuery] = useState("");
 
-    useEffect(() => {
-        if (searchQuery) {
-            handleSearch(searchQuery);
-        } else {
-            fetchInvoices(currentPage);
-        }
-    
-    }, [currentPage, searchQuery]);
-
-    const fetchInvoices = async (page) => {
+    const fetchInvoices = useCallback(async (page) => {
         setLoading(true);
         try {
             const res = await getPaginatedGRNs(page, pageSize);
@@ -64,9 +55,9 @@ const Invoices = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [pageSize]);
 
-    const handleSearch = async (query) => {
+    const handleSearch = useCallback(async (query) => {
         if (!query) {
             fetchInvoices(0);
             return;
@@ -93,7 +84,15 @@ const Invoices = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [fetchInvoices]);
+
+    useEffect(() => {
+        if (searchQuery) {
+            handleSearch(searchQuery);
+        } else {
+            fetchInvoices(currentPage);
+        }
+    }, [currentPage, searchQuery, fetchInvoices, handleSearch]);
 
     const handleViewDetails = (invoice) => {
         setSelectedInvoice(invoice);
@@ -167,6 +166,8 @@ const Invoices = () => {
                                 <h2>Stock Invoices</h2>
                             </div>
                         </header>
+
+                        {loading && <div className="loading-overlay">Loading...</div>}
 
                         <div className="invoices-table-section">
                             <DataTable
