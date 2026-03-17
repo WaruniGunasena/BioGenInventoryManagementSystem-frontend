@@ -22,7 +22,7 @@ const Invoices = () => {
     const { canEdit, canDelete } = usePermissions("grn");
 
     const [invoices, setInvoices] = useState([]);
-    // eslint-disable-next-line no-unused-vars
+
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
@@ -35,7 +35,7 @@ const Invoices = () => {
         } else {
             fetchInvoices(currentPage);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    
     }, [currentPage, searchQuery]);
 
     const fetchInvoices = async (page) => {
@@ -107,12 +107,14 @@ const Invoices = () => {
             data: invoice,
             message: `Are you sure you want to delete invoice ${invoice.invoiceNumber}? This action cannot be undone.`
         });
+        setIsModalOpen(false);
     };
 
     const handleConfirmDelete = async () => {
         try {
             const userId = await getUserId();
             const invoiceId = confirmModal.data.id || confirmModal.data._id;
+            console.log("invoiceId, userid", invoiceId, userId);
             await softDeleteGRN(invoiceId, userId);
             showToast("success", "Invoice deleted successfully");
             fetchInvoices(currentPage);
@@ -185,7 +187,6 @@ const Invoices = () => {
                 </div>
             </div>
 
-            {/* Invoice Details Modal */}
             {isModalOpen && selectedInvoice && (
                 <div className="invoice-modal-overlay">
                     <div className="invoice-modal-content">
@@ -224,6 +225,7 @@ const Invoices = () => {
                                                 <th>Product Description</th>
                                                 <th>Pack Size</th>
                                                 <th className="text-right">Purchase Price</th>
+                                                <th className="text-right">MRP Value</th>
                                                 <th className="text-center">Quantity</th>
                                                 <th className="text-right">Discount %</th>
                                                 <th className="text-right">Discounted Price</th>
@@ -237,6 +239,7 @@ const Invoices = () => {
                                                         <td>{item.productName || item.product?.name || "Product N/A"}</td>
                                                         <td>{item.packSize || "-"}</td>
                                                         <td className="text-right">{parseFloat(item.purchasePrice).toFixed(2)}</td>
+                                                        <td className="text-right">{parseFloat(item.mrpValue || 0).toFixed(2)}</td>
                                                         <td className="text-center">{item.quantity}</td>
                                                         <td className="text-right">{parseFloat(item.discountPercentage || 0).toFixed(2)}%</td>
                                                         <td className="text-right">{parseFloat(item.discountValue || item.discountedPrice || item.purchasePrice).toFixed(2)}</td>
@@ -246,6 +249,7 @@ const Invoices = () => {
                                                         <tr className="bonus-row">
                                                             <td>{item.productName || item.product?.name || "Product N/A"}</td>
                                                             <td>{item.packSize || "-"}</td>
+                                                            <td className="text-right">0.00</td>
                                                             <td className="text-right">0.00</td>
                                                             <td className="text-center">{item.bonus}</td>
                                                             <td className="text-right">0.00%</td>

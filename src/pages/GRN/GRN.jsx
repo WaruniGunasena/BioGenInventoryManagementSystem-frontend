@@ -40,6 +40,7 @@ const GRN = () => {
         invoiceNumber: "",
         sellingPricePercentage: "",
         sellingPrice: "",
+        mrpValue: "",
         bonus: "",
         packSize: "",
         discountPercentage: "",
@@ -59,7 +60,7 @@ const GRN = () => {
     }, []);
 
     useEffect(() => {
-        // Handle pre-population for editing - only once
+        
         if (location.state?.editInvoice && !hasPopulatedRef.current && suppliers.length > 0 && products.length > 0) {
             const invoice = location.state.editInvoice;
             setFormData((prev) => ({
@@ -68,13 +69,12 @@ const GRN = () => {
                 date: invoice.date || invoice.grnDate || new Date().toISOString().split("T")[0],
                 invoiceNumber: invoice.invoiceNumber || invoice.grnNumber || "",
                 creditPeriod: invoice.creditPeriod || invoice.supplier?.creditPeriod || "",
-                invoiceId: invoice.id || invoice._id, // Renamed to avoid collision with local item id
+                invoiceId: invoice.id || invoice._id, 
             }));
 
-            // Map invoice items to addedItems
             const mappedItems = (invoice.items || []).map((item, index) => ({
-                id: Date.now() + index, // Local unique ID for the table
-                originalId: item.id || item._id, // Store backend ID
+                id: Date.now() + index, 
+                originalId: item.id || item._id, 
                 productId: item.productId || item.product?.id || item.product?._id,
                 productName: item.productName || item.product?.name || "N/A",
                 productCode: item.productCode || item.product?.itemCode || "N/A",
@@ -89,11 +89,11 @@ const GRN = () => {
                 totalAmount: item.totalAmount || 0,
                 sellingPricePercentage: item.sellingPricePercentage || 0,
                 sellingPrice: (parseFloat(item.purchasePrice || 0) + (parseFloat(item.purchasePrice || 0) * parseFloat(item.sellingPricePercentage || 0) / 100)).toFixed(2),
+                mrpValue: item.mrpValue || item.mrp || "",
                 packSize: item.packSize || "",
             }));
             setAddedItems(mappedItems);
 
-            // Set supplier data for summary section
             if (invoice.supplier) {
                 setSelectedSupplierData(invoice.supplier);
             }
@@ -213,6 +213,7 @@ const GRN = () => {
             totalAmount: "0.00",
             sellingPricePercentage: "",
             sellingPrice: "",
+            mrpValue: "",
             bonus: "",
             packSize: "",
             discountPercentage: "",
@@ -261,6 +262,11 @@ const GRN = () => {
             return;
         }
 
+        if (!formData.mrpValue) {
+            showToast('error', "Please enter MRP value");
+            return;
+        }
+
         const percentage = parseFloat(formData.sellingPricePercentage);
         if (isNaN(percentage) || percentage < 0 || percentage > 100) {
             showToast('error', "Selling price percentage must be between 0 and 100");
@@ -268,7 +274,7 @@ const GRN = () => {
         }
 
         const isDuplicate = addedItems.some((item) =>
-            (item.productId || item._id) === (formData.productId || formData._id) &&
+            (item.productId || item._id)?.toString() === (formData.productId || formData._id)?.toString() &&
             item.id !== editingItemId
         );
 
@@ -297,6 +303,7 @@ const GRN = () => {
             totalAmount: "0.00",
             sellingPricePercentage: "",
             sellingPrice: "",
+            mrpValue: "",
             bonus: "",
             packSize: "",
             discountPercentage: "",
@@ -328,7 +335,7 @@ const GRN = () => {
             date: formData.date,
             invoiceNumber: formData.invoiceNumber,
             items: addedItems.map((item) => ({
-                id: item.originalId, // Pass back original ID for existing records
+                id: item.originalId, 
                 productId: item.productId,
                 batchNumber: item.batchNumber,
                 mfgDate: item.mfgDate,
@@ -338,6 +345,7 @@ const GRN = () => {
                 quantity: item.quantity,
                 bonus: parseFloat(item.bonus || 0),
                 totalAmount: item.totalAmount,
+                mrpValue: item.mrpValue,
                 sellingPricePercentage: item.sellingPricePercentage,
                 discountPercentage: parseFloat(item.discountPercentage || 0),
                 discountValue: parseFloat(item.discountedPrice || item.purchasePrice),
@@ -349,11 +357,9 @@ const GRN = () => {
 
         try {
             if (formData.invoiceId) {
-                // Editing existing invoice
                 await updateGRN(formData.invoiceId, grnData);
                 showToast('success', "Stock updated successfully!");
             } else {
-                // Creating new invoice
                 await createGRN(grnData);
                 showToast('success', "Stock added successfully!");
             }
@@ -532,6 +538,18 @@ const GRN = () => {
                                         readOnly
                                     />
                                 </div>
+                                <div style={fieldStyle}>
+                                    <label style={labelStyle}>MRP Value <span style={{ color: "red" }}>*</span></label>
+                                    <input
+                                        type="number"
+                                        name="mrpValue"
+                                        style={inputStyle}
+                                        placeholder="0.00"
+                                        value={formData.mrpValue}
+                                        onChange={handleInputChange}
+                                        required
+                                    />
+                                </div>
                             </div>
                             <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px" }}>
                                 <div style={fieldStyle}>
@@ -612,6 +630,7 @@ const GRN = () => {
                                             <th>Product Description</th>
                                             <th>Pack Size</th>
                                             <th className="text-right">Purchase Price</th>
+                                            <th className="text-right">MRP Value</th>
                                             <th className="text-center">Quantity</th>
                                             <th className="text-right">Discount %</th>
                                             <th className="text-right">Discounted Price</th>
@@ -626,6 +645,7 @@ const GRN = () => {
                                                     <td>{item.productName}</td>
                                                     <td>{item.packSize || "-"}</td>
                                                     <td className="text-right">{parseFloat(item.purchasePrice).toFixed(2)}</td>
+                                                    <td className="text-right">{parseFloat(item.mrpValue || 0).toFixed(2)}</td>
                                                     <td className="text-center">{item.quantity}</td>
                                                     <td className="text-right">{parseFloat(item.discountPercentage || 0).toFixed(2)}%</td>
                                                     <td className="text-right">{parseFloat(item.discountedPrice || item.purchasePrice).toFixed(2)}</td>
@@ -641,6 +661,7 @@ const GRN = () => {
                                                     <tr className="bonus-row">
                                                         <td>{item.productName}</td>
                                                         <td>{item.packSize || "-"}</td>
+                                                        <td className="text-right">0.00</td>
                                                         <td className="text-right">0.00</td>
                                                         <td className="text-center">{item.bonus}</td>
                                                         <td className="text-right">0.00%</td>
@@ -666,7 +687,7 @@ const GRN = () => {
                                     </tbody>
                                 </table>
                                 <div className="add-stock-footer">
-                                    <button className="add-stock-btn" onClick={handleAddStock}>Add Stock</button>
+                                    <button className="add-stock-btn" onClick={handleAddStock}>{formData.invoiceId ? "Update Stock" : "Add Stock"}</button>
                                 </div>
                             </div>
                         </div>
