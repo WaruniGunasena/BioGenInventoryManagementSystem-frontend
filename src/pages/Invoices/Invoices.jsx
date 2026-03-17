@@ -1,19 +1,28 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout";
 import Sidebar from "../../components/Sidebar";
 import DataTable from "../../components/common/DataTable";
-import { X, FileText } from "lucide-react";
-import { getPaginatedGRNs, searchGRN } from "../../api/grnService";
+import { X, FileText, Edit, Trash2 } from "lucide-react";
+import { getPaginatedGRNs, searchGRN, softDeleteGRN } from "../../api/grnService";
+import { getUserId } from "../../components/common/Utils/userUtils/userUtils";
+import { useToast } from "../../context/ToastContext";
+import ConfirmationModal from "../../components/common/ConfirmationModal";
+import usePermissions from "../../hooks/usePermissions";
 import "./Invoices.css";
 
 const Invoices = () => {
+    const navigate = useNavigate();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, data: null, message: "" });
+    const { showToast } = useToast();
+    const { canEdit, canDelete } = usePermissions("grn");
 
     const [invoices, setInvoices] = useState([]);
-    // eslint-disable-next-line no-unused-vars
+
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
@@ -26,7 +35,7 @@ const Invoices = () => {
         } else {
             fetchInvoices(currentPage);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    
     }, [currentPage, searchQuery]);
 
     const fetchInvoices = async (page) => {
@@ -91,6 +100,36 @@ const Invoices = () => {
         setIsModalOpen(true);
     };
 
+    const handleDeleteClick = (invoice) => {
+        setConfirmModal({
+            isOpen: true,
+            data: invoice,
+            message: `Are you sure you want to delete invoice ${invoice.invoiceNumber}? This action cannot be undone.`
+        });
+        setIsModalOpen(false);
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            const userId = await getUserId();
+            const invoiceId = confirmModal.data.id || confirmModal.data._id;
+            await softDeleteGRN(invoiceId, userId);
+            showToast("success", "Invoice deleted successfully");
+            fetchInvoices(currentPage);
+        } catch (error) {
+            console.error("Error deleting invoice:", error);
+            showToast("error", "Failed to delete invoice");
+        } finally {
+            setConfirmModal({ isOpen: false, data: null, message: "" });
+            setIsModalOpen(false);
+        }
+    };
+
+    const handleEditClick = (invoice) => {
+        navigate("/grn-window", { state: { editInvoice: invoice } });
+    };
+
+
     const columns = [
         { header: "Invoice Number", accessor: "invoiceNumber" },
         { header: "Supplier", accessor: "supplierName" },
@@ -146,15 +185,28 @@ const Invoices = () => {
                 </div>
             </div>
 
-            {/* Invoice Details Modal */}
             {isModalOpen && selectedInvoice && (
                 <div className="invoice-modal-overlay">
                     <div className="invoice-modal-content">
                         <div className="modal-header">
                             <h3>Invoice Details - {selectedInvoice.invoiceNumber}</h3>
-                            <button className="close-modal-btn" onClick={() => setIsModalOpen(false)}>
-                                <X size={24} />
-                            </button>
+                            <div className="modal-header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                {canEdit && (
+                                    <button className="edit-action-btn" onClick={() => handleEditClick(selectedInvoice)}>
+                                        <Edit size={20} />
+                                        <span>Edit</span>
+                                    </button>
+                                )}
+                                {canDelete && (
+                                    <button className="delete-action-btn" onClick={() => handleDeleteClick(selectedInvoice)}>
+                                        <Trash2 size={20} />
+                                        <span>Delete</span>
+                                    </button>
+                                )}
+                                <button className="close-modal-btn" onClick={() => setIsModalOpen(false)}>
+                                    <X size={24} />
+                                </button>
+                            </div>
                         </div>
                         <div className="modal-body-scroll">
                             <div className="grn-summary-section">
@@ -169,23 +221,50 @@ const Invoices = () => {
                                         <thead>
                                             <tr>
                                                 <th>Product Description</th>
-                                                <th>Purchase Price</th>
-                                                <th>Quantity</th>
-                                                <th>Total Amount RS.</th>
+                                                <th>Pack Size</th>
+                                                <th className="text-right">Purchase Price</th>
+                                                <th className="text-right">MRP Value</th>
+                                                <th className="text-center">Quantity</th>
+                                                <th className="text-right">Discount %</th>
+                                                <th className="text-right">Discounted Price</th>
+                                                <th className="text-right">Total Amount (LKR)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {(selectedInvoice.items || []).map((item, idx) => (
-                                                <tr key={idx}>
-                                                    <td>{item.productName || item.product?.name || "Product N/A"}</td>
-                                                    <td>{parseFloat(item.purchasePrice).toFixed(2)}</td>
-                                                    <td>{item.quantity}</td>
-                                                    <td>{parseFloat(item.totalAmount).toFixed(2)}</td>
-                                                </tr>
+                                                <React.Fragment key={idx}>
+                                                    <tr>
+                                                        <td>{item.productName || item.product?.name || "Product N/A"}</td>
+                                                        <td>{item.packSize || "-"}</td>
+                                                        <td className="text-right">{parseFloat(item.purchasePrice).toFixed(2)}</td>
+                                                        <td className="text-right">{parseFloat(item.mrpValue || 0).toFixed(2)}</td>
+                                                        <td className="text-center">{item.quantity}</td>
+                                                        <td className="text-right">{parseFloat(item.discountPercentage || 0).toFixed(2)}%</td>
+                                                        <td className="text-right">{parseFloat(item.discountValue || item.discountedPrice || item.purchasePrice).toFixed(2)}</td>
+                                                        <td className="text-right">{parseFloat(item.totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                    </tr>
+                                                    {parseFloat(item.bonus || 0) > 0 && (
+                                                        <tr className="bonus-row">
+                                                            <td>{item.productName || item.product?.name || "Product N/A"}</td>
+                                                            <td>{item.packSize || "-"}</td>
+                                                            <td className="text-right">0.00</td>
+                                                            <td className="text-right">0.00</td>
+                                                            <td className="text-center">{item.bonus}</td>
+                                                            <td className="text-right">0.00%</td>
+                                                            <td className="text-right">0.00</td>
+                                                            <td className="text-right">0.00</td>
+                                                        </tr>
+                                                    )}
+                                                </React.Fragment>
                                             ))}
                                             <tr className="total-row">
-                                                <td colSpan="3">Total</td>
-                                                <td>{parseFloat(selectedInvoice.grandTotal).toFixed(2)}</td>
+                                                <td>Total</td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td className="text-right">{parseFloat(selectedInvoice.grandTotal).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -195,6 +274,14 @@ const Invoices = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={handleConfirmDelete}
+                message={confirmModal.message}
+                confirmLabel="Yes, Delete"
+            />
         </Layout>
     );
 };

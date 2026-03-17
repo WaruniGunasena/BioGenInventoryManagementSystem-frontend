@@ -47,7 +47,6 @@ const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
                 ...formData,
                 creditPeriod: parseInt(formData.creditPeriod, 10)
             };
-            console.log('Creating customer with data (stringified):', JSON.stringify(dataToSubmit, null, 2));
             await createCustomer(dataToSubmit);
             setFormData(EMPTY_FORM);
             setEmailError(false);

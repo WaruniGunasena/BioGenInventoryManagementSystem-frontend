@@ -26,7 +26,6 @@ const Stock = () => {
         const fetchStock = async () => {
             setIsLoading(true);
             try {
-                // Use dedicated search endpoint when a query is present
                 const response = searchQuery.trim()
                     ? await searchStock(searchQuery, currentPage, 5, filter, { signal: controller.signal })
                     : await getPaginatedStock(currentPage, 5, filter, { signal: controller.signal });
@@ -63,7 +62,7 @@ const Stock = () => {
     const columns = [
         { header: "Product Name", accessor: "productName" },
         { header: "Product ID", accessor: "productId" },
-        { header: "Quantity", accessor: "quantity" },
+        { header: "Quantity", accessor: "totalQuantity" },
         { header: "Selling Price", accessor: "sellingPrice" },
         { header: "Minimum Stock", accessor: "minimumStockLevel" },
         { header: "Reorder Level", accessor: "reorderLevel" },

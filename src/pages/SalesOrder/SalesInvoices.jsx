@@ -95,7 +95,6 @@ const SalesInvoices = () => {
     };
 
     const handleViewDetails = (invoice) => {
-        console.log(invoice);
         setSelectedInvoice(invoice);
         setIsModalOpen(true);
     };
