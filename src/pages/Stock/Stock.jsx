@@ -31,7 +31,6 @@ const Stock = () => {
                     : await getPaginatedStock(currentPage, 5, filter, { signal: controller.signal });
 
                 if (controller.signal.aborted) return;
-                console.log(response);
 
                 if (response.data?.productStocks && Array.isArray(response.data.productStocks)) {
                     setStockItems(response.data.productStocks);

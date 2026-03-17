@@ -40,7 +40,6 @@ const Products = () => {
         setIsLoading(true);
         try {
             const response = await getPaginatedProductResults(currentPage, 5, filter);
-            console.log(response);
             if (response.data && response.data.products && Array.isArray(response.data.products)) {
                 setProducts(response.data.products);
                 setTotalPages(response.data.totalPages);

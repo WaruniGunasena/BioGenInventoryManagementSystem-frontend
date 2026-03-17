@@ -42,7 +42,6 @@ const Invoices = () => {
         setLoading(true);
         try {
             const res = await getPaginatedGRNs(page, pageSize);
-            console.log("invoice data", res);
             if (res.data) {
                 const data = res.data.grnList || [];
                 const total = res.data.totalPages || 1;
@@ -114,7 +113,6 @@ const Invoices = () => {
         try {
             const userId = await getUserId();
             const invoiceId = confirmModal.data.id || confirmModal.data._id;
-            console.log("invoiceId, userid", invoiceId, userId);
             await softDeleteGRN(invoiceId, userId);
             showToast("success", "Invoice deleted successfully");
             fetchInvoices(currentPage);

@@ -353,8 +353,6 @@ const GRN = () => {
             grandTotal: calculateGrandTotal(),
         };
 
-        console.log("GRN Payload to Backend:", grnData);
-
         try {
             if (formData.invoiceId) {
                 await updateGRN(formData.invoiceId, grnData);
