@@ -26,7 +26,7 @@ const SalesOrder = () => {
 
     const [customers, setCustomers] = useState([]);
     const [products, setProducts] = useState([]);
-    const [stockData, setStockData] = useState([]); 
+    const [stockData, setStockData] = useState([]);
     const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
 
     const [formData, setFormData] = useState({
