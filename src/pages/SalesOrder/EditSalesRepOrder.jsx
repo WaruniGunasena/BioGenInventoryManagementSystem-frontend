@@ -10,9 +10,9 @@ import { getAllStock } from "../../api/stockService";
 import { updateSalesOrder } from "../../api/salesOrderService";
 import { useToast } from "../../context/ToastContext";
 import { getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
-import "./AddSalesInvoice.css";
+import "./SalesRepOrder.css";
 
-const EditSalesInvoice = () => {
+const EditSalesRepOrder = () => {
     const { showToast } = useToast();
     const location = useLocation();
     const navigate = useNavigate();
@@ -44,6 +44,8 @@ const EditSalesInvoice = () => {
 
     // Invoice/order state
     const [addedItems, setAddedItems] = useState([]);
+    const addedItemsRef = useRef([]);
+    useEffect(() => { addedItemsRef.current = addedItems; }, [addedItems]);
     const [stockData, setStockData] = useState([]);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [currentUserName, setCurrentUserName] = useState("");
@@ -82,9 +84,12 @@ const EditSalesInvoice = () => {
     const fetchCategories = useCallback(async () => {
         try {
             const res = await getAllCategory();
-            const data = res.data || [];
-            setCategories(Array.isArray(data) && data.length > 0 ? data : dummyCategories);
-        } catch { setCategories(dummyCategories); }
+            const data = res.data?.categories || res.data?.content || res.data || [];
+            setCategories(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("Failed to fetch categories:", error);
+            setCategories([]);
+        }
     }, []);
 
     const fetchProducts = useCallback(async (page, categoryId, search, append = false, resolvedStock = null) => {
@@ -97,7 +102,9 @@ const EditSalesInvoice = () => {
                 data = res.data?.products || res.data || [];
                 total = 1;
             } else {
-                res = await getPaginatedProductResults(page, pageSize, filter);
+                const sortFilter = "ASC";
+                const catIdParam = categoryId !== "all" ? categoryId : null;
+                res = await getPaginatedProductResults(page, pageSize, sortFilter, catIdParam);
                 data = res.data?.products || res.data?.content || [];
                 total = res.data?.totalPages || 1;
             }
@@ -111,11 +118,27 @@ const EditSalesInvoice = () => {
                 } else { data = []; }
             }
             const stock = resolvedStock !== null ? resolvedStock : stockData;
+
+            const getInitialQtyBonus = (pid) => {
+                const fromAdded = addedItemsRef.current.find(a => String(a.productId) === String(pid));
+                if (fromAdded) return { q: fromAdded.quantity, b: fromAdded.bonus };
+
+                if (addedItemsRef.current.length === 0 && invoice?.items) {
+                    const saleLine = invoice.items.find(i => String(i.productId || i.product?.id) === String(pid) && parseFloat(i.sellingPrice) > 0);
+                    const bonusLine = invoice.items.find(i => String(i.productId || i.product?.id) === String(pid) && parseFloat(i.sellingPrice) === 0);
+                    if (saleLine || bonusLine) {
+                        return { q: saleLine?.quantity || 0, b: bonusLine?.quantity || 0 };
+                    }
+                }
+                return { q: "", b: "" };
+            };
+
             const productsWithInputs = data.map(p => {
                 const pid = (p.id || p._id)?.toString();
                 const stockItem = stock.find(s => s.productId?.toString() === pid);
                 const resolvedPrice = stockItem?.sellingPrice ?? p.sellingPrice ?? 0;
-                return { ...p, sellingPrice: resolvedPrice, inputQty: "", inputBonus: "" };
+                const { q, b } = getInitialQtyBonus(pid);
+                return { ...p, sellingPrice: resolvedPrice, inputQty: q, inputBonus: b };
             });
             setProducts(prev => append ? [...prev, ...productsWithInputs] : productsWithInputs);
             setTotalPages(total);
@@ -131,7 +154,7 @@ const EditSalesInvoice = () => {
     // ── Init: load master data then pre-populate invoice ─────────────────────
     useEffect(() => {
         if (!invoice) {
-            showToast("error", "No invoice data found. Redirecting back.");
+            showToast("error", "No Order data found. Redirecting back.");
             navigate("/sales-invoices");
             return;
         }
@@ -152,8 +175,15 @@ const EditSalesInvoice = () => {
     // Pre-populate customer and addedItems from the invoice
     useEffect(() => {
         if (!invoice) return;
-        // Set customer
-        if (invoice.customer) {
+
+        // Match the invoice's customerId with the full customers list to get the creditLimit
+        const customerId = invoice.customer?.id || invoice.customer?._id || invoice.customerId;
+        const fullCustomer = customers.find(c => (c.id || c._id) === customerId);
+
+        if (fullCustomer) {
+            setSelectedCustomer(fullCustomer);
+            setCustomerSearch(fullCustomer.name);
+        } else if (invoice.customer) {
             setSelectedCustomer(invoice.customer);
             setCustomerSearch(invoice.customer.name || invoice.customerName || "");
         } else if (invoice.customerName) {
@@ -179,7 +209,7 @@ const EditSalesInvoice = () => {
             };
         });
         setAddedItems(preloadedItems);
-    }, [invoice]);
+    }, [invoice, customers]);
 
     // Re-fetch when category/search changes
     useEffect(() => {
@@ -188,6 +218,7 @@ const EditSalesInvoice = () => {
 
     // Click-outside handler for customer dropdown
     useEffect(() => {
+        console.log("selected CUstomer", selectedCustomer)
         const handler = (e) => {
             if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target))
                 setShowCustomerDropdown(false);
@@ -241,7 +272,7 @@ const EditSalesInvoice = () => {
         const bonus = parseFloat(product.inputBonus) || 0;
         if (qty <= 0 && bonus <= 0) { showToast("warning", "Please enter a valid quantity or bonus"); return; }
         addToOrder(product, qty, bonus);
-        showToast("success", `Added ${product.name} to invoice`);
+        showToast("success", `Added ${product.name} to Order`);
     };
 
     const handleEditItem = () => {
@@ -310,10 +341,10 @@ const EditSalesInvoice = () => {
         setIsSubmitting(true);
         try {
             await updateSalesOrder(invoiceId, currentUserId, payload);
-            showToast("success", `Invoice ${invoice?.invoiceNumber} updated successfully!`);
+            showToast("success", `Order ${invoice?.invoiceNumber} updated successfully!`);
             navigate("/sales-invoices");
         } catch (error) {
-            showToast("error", error?.response?.data?.message || "Failed to update Sales Invoice");
+            showToast("error", error?.response?.data?.message || "Failed to update Sales Order");
         } finally {
             setIsSubmitting(false);
         }
@@ -339,8 +370,8 @@ const EditSalesInvoice = () => {
                                     <FileText size={22} />
                                 </div>
                                 <div>
-                                    <h1 className="asi-header-title">Edit Invoice — {invoice?.invoiceNumber}</h1>
-                                    <p className="asi-header-sub">Modify items and quantities for this invoice</p>
+                                    <h1 className="asi-header-title">Edit Order — {invoice?.invoiceNumber}</h1>
+                                    <p className="asi-header-sub">Modify items and quantities for this order</p>
                                 </div>
                             </div>
                             <div className="asi-header-actions">
@@ -357,154 +388,154 @@ const EditSalesInvoice = () => {
 
                         {/* ── Top Section: Customer + Product ── */}
                         <div className="asi-top-section" ref={topSelectionRef}>
-                        <div className="asi-card asi-combined-card">
+                            <div className="asi-card asi-combined-card">
 
-                            {/* Customer Info */}
-                            <div className="asi-combined-section">
-                                <div className="asi-card-header">
-                                    <ShoppingCart size={18} className="asi-icon-purple" />
-                                    <h3>Customer Information</h3>
-                                </div>
-                                <div className="asi-search-wrap" ref={customerDropdownRef}>
-                                    <div className="asi-search-field">
-                                        <Search size={16} className="asi-search-icon" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search Customer..."
-                                            value={customerSearch}
-                                            onChange={handleCustomerSearch}
-                                            onFocus={() => setShowCustomerDropdown(true)}
-                                        />
+                                {/* Customer Info */}
+                                <div className="asi-combined-section">
+                                    <div className="asi-card-header">
+                                        <ShoppingCart size={18} className="asi-icon-purple" />
+                                        <h3>Customer Information</h3>
                                     </div>
-                                    {showCustomerDropdown && customerSearch && (
-                                        <div className="asi-dropdown">
-                                            {filteredCustomers.length > 0 ? (
-                                                filteredCustomers.map(c => (
-                                                    <div key={c.id || c._id} className="asi-dropdown-item" onClick={() => selectCustomer(c)}>
-                                                        <span className="asi-drop-name">{c.name}</span>
-                                                        <span className="asi-drop-sub">{c.contact_No}</span>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="asi-dropdown-empty">No customers found</div>
+                                    <div className="asi-search-wrap" ref={customerDropdownRef}>
+                                        <div className="asi-search-field">
+                                            <Search size={16} className="asi-search-icon" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search Customer..."
+                                                value={customerSearch}
+                                                onChange={handleCustomerSearch}
+                                                onFocus={() => setShowCustomerDropdown(true)}
+                                            />
+                                        </div>
+                                        {showCustomerDropdown && customerSearch && (
+                                            <div className="asi-dropdown">
+                                                {filteredCustomers.length > 0 ? (
+                                                    filteredCustomers.map(c => (
+                                                        <div key={c.id || c._id} className="asi-dropdown-item" onClick={() => selectCustomer(c)}>
+                                                            <span className="asi-drop-name">{c.name}</span>
+                                                            <span className="asi-drop-sub">{c.contact_No}</span>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="asi-dropdown-empty">No customers found</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {selectedCustomer && (
+                                        <div className="asi-credit-info">
+                                            <div className="asi-credit-row">
+                                                <span>Credit Limit</span>
+                                                <strong>LKR {selectedCustomer.creditLimit?.toLocaleString()}</strong>
+                                            </div>
+                                            <div className="asi-credit-row">
+                                                <span>Due Amount</span>
+                                                <strong className="asi-text-warning">LKR {(selectedCustomer.dueAmount || 0).toLocaleString()}</strong>
+                                            </div>
+                                            <div className={`asi-credit-row asi-credit-available ${isOverCredit ? "over" : "ok"}`}>
+                                                <span>Available Credit</span>
+                                                <strong>LKR {availableCredit.toLocaleString()}</strong>
+                                            </div>
+                                            {isOverCredit && (
+                                                <div className="asi-over-limit">
+                                                    <AlertCircle size={14} /> Order exceeds credit limit!
+                                                </div>
                                             )}
                                         </div>
                                     )}
                                 </div>
-                                {selectedCustomer && (
-                                    <div className="asi-credit-info">
-                                        <div className="asi-credit-row">
-                                            <span>Credit Limit</span>
-                                            <strong>LKR {selectedCustomer.creditLimit?.toLocaleString()}</strong>
+
+                                <hr className="asi-section-divider" />
+
+                                {/* Product Selection */}
+                                <div className="asi-combined-section">
+                                    <div className="asi-card-header">
+                                        <ShoppingCart size={18} className="asi-icon-purple" />
+                                        <h3>Product Selection</h3>
+                                        <div className="asi-product-controls">
+                                            <select
+                                                value={selectedCategory}
+                                                onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(0); }}
+                                                className="asi-category-select"
+                                            >
+                                                <option value="all">All Categories</option>
+                                                {categories.map(cat => (
+                                                    <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name}</option>
+                                                ))}
+                                            </select>
+                                            <button className="asi-search-toggle" onClick={() => setShowProductSearch(s => !s)}>
+                                                <Search size={16} />
+                                            </button>
                                         </div>
-                                        <div className="asi-credit-row">
-                                            <span>Due Amount</span>
-                                            <strong className="asi-text-warning">LKR {(selectedCustomer.dueAmount || 0).toLocaleString()}</strong>
+                                    </div>
+
+                                    {showProductSearch && (
+                                        <div className="asi-product-search-bar">
+                                            <Search size={15} className="asi-search-icon" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search product..."
+                                                value={productSearch}
+                                                onChange={e => handleProductSearch(e.target.value)}
+                                                autoFocus
+                                            />
                                         </div>
-                                        <div className={`asi-credit-row asi-credit-available ${isOverCredit ? "over" : "ok"}`}>
-                                            <span>Available Credit</span>
-                                            <strong>LKR {availableCredit.toLocaleString()}</strong>
-                                        </div>
-                                        {isOverCredit && (
-                                            <div className="asi-over-limit">
-                                                <AlertCircle size={14} /> Invoice exceeds credit limit!
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                                    )}
 
-                            <hr className="asi-section-divider" />
-
-                            {/* Product Selection */}
-                            <div className="asi-combined-section">
-                                <div className="asi-card-header">
-                                    <ShoppingCart size={18} className="asi-icon-purple" />
-                                    <h3>Product Selection</h3>
-                                    <div className="asi-product-controls">
-                                        <select
-                                            value={selectedCategory}
-                                            onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(0); }}
-                                            className="asi-category-select"
-                                        >
-                                            <option value="all">All Categories</option>
-                                            {categories.map(cat => (
-                                                <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name}</option>
-                                            ))}
-                                        </select>
-                                        <button className="asi-search-toggle" onClick={() => setShowProductSearch(s => !s)}>
-                                            <Search size={16} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {showProductSearch && (
-                                    <div className="asi-product-search-bar">
-                                        <Search size={15} className="asi-search-icon" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search product..."
-                                            value={productSearch}
-                                            onChange={e => handleProductSearch(e.target.value)}
-                                            autoFocus
-                                        />
-                                    </div>
-                                )}
-
-                                <div className="asi-product-table-wrap" onScroll={handleScroll}>
-                                    <table className="asi-product-table">
-                                        <thead>
-                                            <tr>
-                                                <th>PRODUCT</th>
-                                                <th>PRICE</th>
-                                                <th>QTY</th>
-                                                <th>BONUS</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {products.map(p => (
-                                                <tr key={p.id || p._id}>
-                                                    <td className="asi-product-name-cell">
-                                                        <div className="asi-prod-name">{p.name}</div>
-                                                        <div className="asi-prod-unit">{p.unit}</div>
-                                                    </td>
-                                                    <td className="asi-price-cell">{p.sellingPrice?.toFixed(2)}</td>
-                                                    <td>
-                                                        <input
-                                                            type="number" min="0"
-                                                            className="asi-num-input"
-                                                            value={p.inputQty}
-                                                            placeholder="0"
-                                                            onChange={e => handleProductInputChange(p.id || p._id, "inputQty", e.target.value)}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input
-                                                            type="number" min="0"
-                                                            className="asi-num-input"
-                                                            value={p.inputBonus}
-                                                            placeholder="0"
-                                                            onChange={e => handleProductInputChange(p.id || p._id, "inputBonus", e.target.value)}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <button
-                                                            className={`asi-add-btn ${addedItems.some(i => i.productId === (p.id || p._id)) ? "asi-added" : ""}`}
-                                                            onClick={() => handleAddClick(p)}
-                                                        >
-                                                            {addedItems.some(i => i.productId === (p.id || p._id)) ? "✓" : "+"}
-                                                        </button>
-                                                    </td>
+                                    <div className="asi-product-table-wrap" onScroll={handleScroll}>
+                                        <table className="asi-product-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>PRODUCT</th>
+                                                    <th>PRICE</th>
+                                                    <th>QTY</th>
+                                                    <th>BONUS</th>
+                                                    <th></th>
                                                 </tr>
-                                            ))}
-                                            {loadingProducts && <tr><td colSpan="5" className="asi-loading">Loading more...</td></tr>}
-                                            {!loadingProducts && products.length === 0 && <tr><td colSpan="5" className="asi-loading">No products found</td></tr>}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                {products.map(p => (
+                                                    <tr key={p.id || p._id}>
+                                                        <td className="asi-product-name-cell" data-label="Product">
+                                                            <div className="asi-prod-name">{p.name}</div>
+                                                            <div className="asi-prod-unit">{p.unit}</div>
+                                                        </td>
+                                                        <td className="asi-price-cell" data-label="Price">{p.sellingPrice?.toFixed(2)}</td>
+                                                        <td data-label="Qty">
+                                                            <input
+                                                                type="number" min="0"
+                                                                className="asi-num-input"
+                                                                value={p.inputQty}
+                                                                placeholder="0"
+                                                                onChange={e => handleProductInputChange(p.id || p._id, "inputQty", e.target.value)}
+                                                            />
+                                                        </td>
+                                                        <td data-label="Bonus">
+                                                            <input
+                                                                type="number" min="0"
+                                                                className="asi-num-input"
+                                                                value={p.inputBonus}
+                                                                placeholder="0"
+                                                                onChange={e => handleProductInputChange(p.id || p._id, "inputBonus", e.target.value)}
+                                                            />
+                                                        </td>
+                                                        <td data-label="Action">
+                                                            <button
+                                                                className={`asi-add-btn ${addedItems.some(i => i.productId === (p.id || p._id)) ? "asi-added" : ""}`}
+                                                                onClick={() => handleAddClick(p)}
+                                                            >
+                                                                {addedItems.some(i => i.productId === (p.id || p._id)) ? "✓" : "+"}
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {loadingProducts && <tr><td colSpan="5" className="asi-loading">Loading more...</td></tr>}
+                                                {!loadingProducts && products.length === 0 && <tr><td colSpan="5" className="asi-loading">No products found</td></tr>}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         </div>
 
                         {/* ── Invoice Preview ── */}
@@ -518,7 +549,7 @@ const EditSalesInvoice = () => {
                                     <p>Tel: +94 774 088 839</p>
                                 </div>
                                 <div className="asi-inv-title-block">
-                                    <div className="asi-inv-title">INVOICE</div>
+                                    <div className="asi-inv-title">ORDER</div>
                                     <p className="asi-inv-date">{invoice?.date || formattedDate}</p>
                                 </div>
                             </div>
@@ -527,11 +558,11 @@ const EditSalesInvoice = () => {
 
                             <div className="asi-inv-info-bar">
                                 <div className="asi-inv-info-item">
-                                    <span className="asi-inv-info-label">Invoice No. :</span>
+                                    <span className="asi-inv-info-label">Order No. :</span>
                                     <span className="asi-inv-info-value">{invoice?.invoiceNumber || "—"}</span>
                                 </div>
                                 <div className="asi-inv-info-item">
-                                    <span className="asi-inv-info-label">Invoice Date :</span>
+                                    <span className="asi-inv-info-label">Order Date :</span>
                                     <span className="asi-inv-info-value">{invoice?.date || formattedDate}</span>
                                 </div>
                                 <div className="asi-inv-info-item">
@@ -578,63 +609,65 @@ const EditSalesInvoice = () => {
                             </div>
 
                             <div className="asi-inv-table-scroll">
-                            <table className="asi-inv-table">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Product</th>
-                                        <th>Unit</th>
-                                        <th>Qty</th>
-                                        <th>Bonus</th>
-                                        <th>MRP</th>
-                                        <th>Price</th>
-                                        <th>Amount</th>
-                                        <th>BCI</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {addedItems.length === 0 ? (
+                                <table className="asi-inv-table">
+                                    <thead>
                                         <tr>
-                                            <td colSpan="10" className="asi-inv-empty">
-                                                No items added yet. Add products from the section above.
-                                            </td>
+                                            <th>#</th>
+                                            <th>Product</th>
+                                            <th>Unit</th>
+                                            <th>Qty</th>
+                                            <th>Bonus</th>
+                                            <th>MRP</th>
+                                            <th>Price</th>
+                                            <th>Amount</th>
+                                            <th>BCI</th>
+                                            <th>Action</th>
                                         </tr>
-                                    ) : (
-                                        addedItems.map((item, idx) => (
-                                            <tr key={item.productId}
-                                                data-label={idx + 1}
-                                            >
-                                                <td data-label="#">{idx + 1}</td>
-                                                <td data-label="Product">
-                                                    <div className="asi-inv-prod-name">{item.productName}</div>
-                                                    <div className="asi-inv-prod-sub">* B/N &amp; Exp: Default (30/11/2027)</div>
-                                                </td>
-                                                <td data-label="Unit">{item.unit || "-"}</td>
-                                                <td data-label="Qty">{item.quantity}</td>
-                                                <td data-label="Bonus">{item.bonus > 0 ? item.bonus : "-"}</td>
-                                                <td className="asi-mrp-inv-cell" data-label="MRP">
-                                                    {item.mrp > 0 ? parseFloat(item.mrp).toFixed(2) : <span className="asi-no-mrp">—</span>}
-                                                </td>
-                                                <td data-label="Price">{parseFloat(item.sellingPrice).toFixed(2)}</td>
-                                                <td data-label="Amount">{parseFloat(item.totalAmount).toFixed(2)}</td>
-                                                <td className="asi-bci-cell" data-label="BCI">
-                                                    {(() => {
-                                                        const divisor = (item.quantity || 0) + (item.bonus || 0);
-                                                        return divisor > 0 ? (item.totalAmount / divisor).toFixed(2) : "-";
-                                                    })()}
-                                                </td>
-                                                <td data-label="Action">
-                                                    <div className="asi-inv-actions">
-                                                        <Edit3 size={15} className="asi-edit-icon" onClick={() => handleEditItem(item.productId)} />
-                                                        <Trash2 size={15} className="asi-delete-icon" onClick={() => removeItem(item.productId)} />
-                                                    </div>
+                                    </thead>
+                                    <tbody>
+                                        {addedItems.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="10" className="asi-inv-empty">
+                                                    No items added yet. Add products from the section above.
                                                 </td>
                                             </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                                        ) : (
+                                            addedItems.map((item, idx) => (
+                                                <tr key={item.productId}
+                                                    data-label={idx + 1}
+                                                >
+                                                    <td data-label="#">{idx + 1}</td>
+                                                    <td data-label="Product">
+                                                        <div>
+                                                            <div className="asi-inv-prod-name">{item.productName}</div>
+                                                            <div className="asi-inv-prod-sub">* B/N &amp; Exp: Default (30/11/2027)</div>
+                                                        </div>
+                                                    </td>
+                                                    <td data-label="Unit">{item.unit || "-"}</td>
+                                                    <td data-label="Qty">{item.quantity}</td>
+                                                    <td data-label="Bonus">{item.bonus > 0 ? item.bonus : "-"}</td>
+                                                    <td className="asi-mrp-inv-cell" data-label="MRP">
+                                                        {item.mrp > 0 ? parseFloat(item.mrp).toFixed(2) : <span className="asi-no-mrp">—</span>}
+                                                    </td>
+                                                    <td data-label="Price">{parseFloat(item.sellingPrice).toFixed(2)}</td>
+                                                    <td data-label="Amount">{parseFloat(item.totalAmount).toFixed(2)}</td>
+                                                    <td className="asi-bci-cell" data-label="BCI">
+                                                        {(() => {
+                                                            const divisor = (item.quantity || 0) + (item.bonus || 0);
+                                                            return divisor > 0 ? (item.totalAmount / divisor).toFixed(2) : "-";
+                                                        })()}
+                                                    </td>
+                                                    <td data-label="Action">
+                                                        <div className="asi-inv-actions">
+                                                            <Edit3 size={15} className="asi-edit-icon" onClick={() => handleEditItem(item.productId)} />
+                                                            <Trash2 size={15} className="asi-delete-icon" onClick={() => removeItem(item.productId)} />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>
 
                             {addedItems.length > 0 && (
@@ -666,4 +699,4 @@ const EditSalesInvoice = () => {
     );
 };
 
-export default EditSalesInvoice;
+export default EditSalesRepOrder;

@@ -24,3 +24,5 @@ export const updateSalesOrder = (salesOrderID, userID, body) =>
 
 export const approveSalesOrder = (salesOrderStatus, userId, salesOrderId) =>
     api.post(`/sales-orders/Approval?userId=${userId}&salesOrderStatus=${salesOrderStatus}&salesOrderId=${salesOrderId}`);
+
+export const getPendingOrderCount = () => api.get("/sales-orders/getPendingOrderCount");

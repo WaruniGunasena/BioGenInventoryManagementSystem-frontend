@@ -9,9 +9,9 @@ import { getAllStock } from "../../api/stockService";
 import { createSalesOrder } from "../../api/salesOrderService";
 import { useToast } from "../../context/ToastContext";
 import { getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
-import "./AddSalesInvoice.css";
+import "./SalesRepOrder.css";
 
-const AddSalesInvoice = () => {
+const SalesRepOrder = () => {
     const { showToast } = useToast();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -88,10 +88,11 @@ const AddSalesInvoice = () => {
     const fetchCategories = useCallback(async () => {
         try {
             const res = await getAllCategory();
-            const data = res.data || [];
-            setCategories(Array.isArray(data) && data.length > 0 ? data : dummyCategories);
+            const data = res.data?.categories || res.data?.content || res.data || [];
+            setCategories(Array.isArray(data) ? data : []);
         } catch (error) {
-            setCategories(dummyCategories);
+            console.error("Failed to fetch categories:", error);
+            setCategories([]);
         }
     }, []);
 
@@ -110,7 +111,9 @@ const AddSalesInvoice = () => {
                 data = res.data?.products || res.data || [];
                 total = 1;
             } else {
-                res = await getPaginatedProductResults(page, pageSize, filter);
+                const sortFilter = "ASC";
+                const catIdParam = categoryId !== "all" ? categoryId : null;
+                res = await getPaginatedProductResults(page, pageSize, sortFilter, catIdParam);
                 data = res.data?.products || res.data?.content || [];
                 total = res.data?.totalPages || 1;
             }
@@ -253,7 +256,7 @@ const AddSalesInvoice = () => {
             return;
         }
         addToOrder(product, qty, bonus);
-        showToast("success", `Added ${product.name} to invoice`);
+        showToast("success", `Added ${product.name} to Order`);
     };
 
     const handleEditItem = (productId) => {
@@ -321,13 +324,13 @@ const AddSalesInvoice = () => {
         try {
             const res = await createSalesOrder(payload);
             const invoiceNo = res.data?.invoiceNumber || res.data?.data?.invoiceNumber;
-            showToast("success", `Sales Invoice created! ${invoiceNo ? `Invoice No: ${invoiceNo}` : ""}`);
+            showToast("success", `Sales Order created! ${invoiceNo ? `Order No: ${invoiceNo}` : ""}`);
             setAddedItems([]);
             setSelectedCustomer(null);
             setCustomerSearch("");
             setProducts(prev => prev.map(p => ({ ...p, inputQty: "", inputBonus: "" })));
         } catch (error) {
-            const msg = error?.response?.data?.message || "Failed to create Sales Invoice";
+            const msg = error?.response?.data?.message || "Failed to create Sales Order";
             showToast("error", msg);
         }
     };
@@ -358,168 +361,168 @@ const AddSalesInvoice = () => {
                                     <FileText size={22} />
                                 </div>
                                 <div>
-                                    <h1 className="asi-header-title">Create Sales Invoice</h1>
-                                    <p className="asi-header-sub">Generate new invoices for customers</p>
+                                    <h1 className="asi-header-title">Create Sales Order</h1>
+                                    <p className="asi-header-sub">Generate new orders for customers</p>
                                 </div>
                             </div>
                             <div className="asi-header-actions">
                                 <button className="asi-btn-back" onClick={() => window.history.back()}>Back</button>
-                                <button className="asi-btn-confirm" onClick={handleSubmitInvoice}>Confirm Invoice</button>
+                                <button className="asi-btn-confirm" onClick={handleSubmitInvoice}>Confirm Order</button>
                             </div>
                         </header>
 
                         {/* ── Top Section: Customer (top) + Product (below) in one card ── */}
                         <div className="asi-top-section" ref={topSelectionRef}>
-                        <div className="asi-card asi-combined-card">
+                            <div className="asi-card asi-combined-card">
 
-                            {/* Customer Info (top) */}
-                            <div className="asi-combined-section">
-                                <div className="asi-card-header">
-                                    <ShoppingCart size={18} className="asi-icon-purple" />
-                                    <h3>Customer Information</h3>
-                                </div>
-
-                                <div className="asi-search-wrap" ref={customerDropdownRef}>
-                                    <div className="asi-search-field">
-                                        <Search size={16} className="asi-search-icon" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search Customer..."
-                                            value={customerSearch}
-                                            onChange={handleCustomerSearch}
-                                            onFocus={() => setShowCustomerDropdown(true)}
-                                        />
+                                {/* Customer Info (top) */}
+                                <div className="asi-combined-section">
+                                    <div className="asi-card-header">
+                                        <ShoppingCart size={18} className="asi-icon-purple" />
+                                        <h3>Customer Information</h3>
                                     </div>
-                                    {showCustomerDropdown && customerSearch && (
-                                        <div className="asi-dropdown">
-                                            {filteredCustomers.length > 0 ? (
-                                                filteredCustomers.map(c => (
-                                                    <div key={c.id || c._id} className="asi-dropdown-item" onClick={() => selectCustomer(c)}>
-                                                        <span className="asi-drop-name">{c.name}</span>
-                                                        <span className="asi-drop-sub">{c.contact_No}</span>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="asi-dropdown-empty">No customers found</div>
+
+                                    <div className="asi-search-wrap" ref={customerDropdownRef}>
+                                        <div className="asi-search-field">
+                                            <Search size={16} className="asi-search-icon" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search Customer..."
+                                                value={customerSearch}
+                                                onChange={handleCustomerSearch}
+                                                onFocus={() => setShowCustomerDropdown(true)}
+                                            />
+                                        </div>
+                                        {showCustomerDropdown && customerSearch && (
+                                            <div className="asi-dropdown">
+                                                {filteredCustomers.length > 0 ? (
+                                                    filteredCustomers.map(c => (
+                                                        <div key={c.id || c._id} className="asi-dropdown-item" onClick={() => selectCustomer(c)}>
+                                                            <span className="asi-drop-name">{c.name}</span>
+                                                            <span className="asi-drop-sub">{c.contact_No}</span>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="asi-dropdown-empty">No customers found</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {selectedCustomer && (
+                                        <div className="asi-credit-info">
+                                            <div className="asi-credit-row">
+                                                <span>Credit Limit</span>
+                                                <strong>LKR {selectedCustomer.creditLimit?.toLocaleString()}</strong>
+                                            </div>
+                                            <div className="asi-credit-row">
+                                                <span>Due Amount</span>
+                                                <strong className="asi-text-warning">LKR {(selectedCustomer.dueAmount || 0).toLocaleString()}</strong>
+                                            </div>
+                                            <div className={`asi-credit-row asi-credit-available ${isOverCredit ? "over" : "ok"}`}>
+                                                <span>Available Credit</span>
+                                                <strong>LKR {availableCredit.toLocaleString()}</strong>
+                                            </div>
+                                            {isOverCredit && (
+                                                <div className="asi-over-limit">
+                                                    <AlertCircle size={14} /> Order exceeds credit limit!
+                                                </div>
                                             )}
                                         </div>
                                     )}
                                 </div>
 
-                                {selectedCustomer && (
-                                    <div className="asi-credit-info">
-                                        <div className="asi-credit-row">
-                                            <span>Credit Limit</span>
-                                            <strong>LKR {selectedCustomer.creditLimit?.toLocaleString()}</strong>
+                                <hr className="asi-section-divider" />
+
+                                {/* Product Selection (below) */}
+                                <div className="asi-combined-section">
+                                    <div className="asi-card-header">
+                                        <ShoppingCart size={18} className="asi-icon-purple" />
+                                        <h3>Product Selection</h3>
+                                        <div className="asi-product-controls">
+                                            <select
+                                                value={selectedCategory}
+                                                onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(0); }}
+                                                className="asi-category-select"
+                                            >
+                                                <option value="all">All Categories</option>
+                                                {categories.map(cat => (
+                                                    <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name}</option>
+                                                ))}
+                                            </select>
+                                            <button className="asi-search-toggle" onClick={() => setShowProductSearch(s => !s)}>
+                                                <Search size={16} />
+                                            </button>
                                         </div>
-                                        <div className="asi-credit-row">
-                                            <span>Due Amount</span>
-                                            <strong className="asi-text-warning">LKR {(selectedCustomer.dueAmount || 0).toLocaleString()}</strong>
+                                    </div>
+
+                                    {showProductSearch && (
+                                        <div className="asi-product-search-bar">
+                                            <Search size={15} className="asi-search-icon" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search product..."
+                                                value={productSearch}
+                                                onChange={e => handleProductSearch(e.target.value)}
+                                                autoFocus
+                                            />
                                         </div>
-                                        <div className={`asi-credit-row asi-credit-available ${isOverCredit ? "over" : "ok"}`}>
-                                            <span>Available Credit</span>
-                                            <strong>LKR {availableCredit.toLocaleString()}</strong>
-                                        </div>
-                                        {isOverCredit && (
-                                            <div className="asi-over-limit">
-                                                <AlertCircle size={14} /> Invoice exceeds credit limit!
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                                    )}
 
-                            <hr className="asi-section-divider" />
-
-                            {/* Product Selection (below) */}
-                            <div className="asi-combined-section">
-                                <div className="asi-card-header">
-                                    <ShoppingCart size={18} className="asi-icon-purple" />
-                                    <h3>Product Selection</h3>
-                                    <div className="asi-product-controls">
-                                        <select
-                                            value={selectedCategory}
-                                            onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(0); }}
-                                            className="asi-category-select"
-                                        >
-                                            <option value="all">All Categories</option>
-                                            {categories.map(cat => (
-                                                <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name}</option>
-                                            ))}
-                                        </select>
-                                        <button className="asi-search-toggle" onClick={() => setShowProductSearch(s => !s)}>
-                                            <Search size={16} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {showProductSearch && (
-                                    <div className="asi-product-search-bar">
-                                        <Search size={15} className="asi-search-icon" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search product..."
-                                            value={productSearch}
-                                            onChange={e => handleProductSearch(e.target.value)}
-                                            autoFocus
-                                        />
-                                    </div>
-                                )}
-
-                                <div className="asi-product-table-wrap" onScroll={handleScroll}>
-                                    <table className="asi-product-table">
-                                        <thead>
-                                            <tr>
-                                                <th>PRODUCT</th>
-                                                <th>PRICE</th>
-                                                <th>QTY</th>
-                                                <th>BONUS</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {products.map(p => (
-                                                <tr key={p.id || p._id}>
-                                                    <td className="asi-product-name-cell">
-                                                        <div className="asi-prod-name">{p.name}</div>
-                                                        <div className="asi-prod-unit">{p.unit}</div>
-                                                    </td>
-                                                    <td className="asi-price-cell">{p.sellingPrice?.toFixed(2)}</td>
-                                                    <td>
-                                                        <input
-                                                            type="number" min="0"
-                                                            className="asi-num-input"
-                                                            value={p.inputQty}
-                                                            placeholder="0"
-                                                            onChange={e => handleProductInputChange(p.id || p._id, "inputQty", e.target.value)}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input
-                                                            type="number" min="0"
-                                                            className="asi-num-input"
-                                                            value={p.inputBonus}
-                                                            placeholder="0"
-                                                            onChange={e => handleProductInputChange(p.id || p._id, "inputBonus", e.target.value)}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <button
-                                                            className={`asi-add-btn ${addedItems.some(i => i.productId === (p.id || p._id)) ? "asi-added" : ""}`}
-                                                            onClick={() => handleAddClick(p)}
-                                                        >
-                                                            {addedItems.some(i => i.productId === (p.id || p._id)) ? "✓" : "+"}
-                                                        </button>
-                                                    </td>
+                                    <div className="asi-product-table-wrap" onScroll={handleScroll}>
+                                        <table className="asi-product-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>PRODUCT</th>
+                                                    <th>PRICE</th>
+                                                    <th>QTY</th>
+                                                    <th>BONUS</th>
+                                                    <th></th>
                                                 </tr>
-                                            ))}
-                                            {loadingProducts && <tr><td colSpan="5" className="asi-loading">Loading more...</td></tr>}
-                                            {!loadingProducts && products.length === 0 && <tr><td colSpan="5" className="asi-loading">No products found</td></tr>}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                {products.map(p => (
+                                                    <tr key={p.id || p._id}>
+                                                        <td className="asi-product-name-cell" data-label="Product">
+                                                            <div className="asi-prod-name">{p.name}</div>
+                                                            <div className="asi-prod-unit">{p.unit}</div>
+                                                        </td>
+                                                        <td className="asi-price-cell" data-label="Price">{p.sellingPrice?.toFixed(2)}</td>
+                                                        <td data-label="Qty">
+                                                            <input
+                                                                type="number" min="0"
+                                                                className="asi-num-input"
+                                                                value={p.inputQty}
+                                                                placeholder="0"
+                                                                onChange={e => handleProductInputChange(p.id || p._id, "inputQty", e.target.value)}
+                                                            />
+                                                        </td>
+                                                        <td data-label="Bonus">
+                                                            <input
+                                                                type="number" min="0"
+                                                                className="asi-num-input"
+                                                                value={p.inputBonus}
+                                                                placeholder="0"
+                                                                onChange={e => handleProductInputChange(p.id || p._id, "inputBonus", e.target.value)}
+                                                            />
+                                                        </td>
+                                                        <td data-label="Action">
+                                                            <button
+                                                                className={`asi-add-btn ${addedItems.some(i => i.productId === (p.id || p._id)) ? "asi-added" : ""}`}
+                                                                onClick={() => handleAddClick(p)}
+                                                            >
+                                                                {addedItems.some(i => i.productId === (p.id || p._id)) ? "✓" : "+"}
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {loadingProducts && <tr><td colSpan="5" className="asi-loading">Loading more...</td></tr>}
+                                                {!loadingProducts && products.length === 0 && <tr><td colSpan="5" className="asi-loading">No products found</td></tr>}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         </div>
 
                         {/* ── Bottom: Formal Invoice Preview ── */}
@@ -533,7 +536,7 @@ const AddSalesInvoice = () => {
                                     <p>Tel: +94 774 088 839</p>
                                 </div>
                                 <div className="asi-inv-title-block">
-                                    <div className="asi-inv-title">INVOICE</div>
+                                    <div className="asi-inv-title">ORDER</div>
                                     <p className="asi-inv-date">{formattedDate}</p>
                                 </div>
                             </div>
@@ -543,11 +546,11 @@ const AddSalesInvoice = () => {
                             {/* Invoice Info Bar */}
                             <div className="asi-inv-info-bar">
                                 <div className="asi-inv-info-item">
-                                    <span className="asi-inv-info-label">Invoice No. :</span>
+                                    <span className="asi-inv-info-label">Order No. :</span>
                                     <span className="asi-inv-info-value">Auto Generated</span>
                                 </div>
                                 <div className="asi-inv-info-item">
-                                    <span className="asi-inv-info-label">Invoice Date :</span>
+                                    <span className="asi-inv-info-label">Order Date :</span>
                                     <span className="asi-inv-info-value">{formattedDate}</span>
                                 </div>
                                 <div className="asi-inv-info-item">
@@ -595,63 +598,65 @@ const AddSalesInvoice = () => {
                             </div>
 
                             <div className="asi-inv-table-scroll">
-                            <table className="asi-inv-table">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Product</th>
-                                        <th>Unit</th>
-                                        <th>Qty</th>
-                                        <th>Bonus</th>
-                                        <th>MRP</th>
-                                        <th>Price</th>
-                                        <th>Amount</th>
-                                        <th>BCI</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {addedItems.length === 0 ? (
+                                <table className="asi-inv-table">
+                                    <thead>
                                         <tr>
-                                            <td colSpan="10" className="asi-inv-empty">
-                                                No items added yet. Add products from the section above.
-                                            </td>
+                                            <th>#</th>
+                                            <th>Product</th>
+                                            <th>Unit</th>
+                                            <th>Qty</th>
+                                            <th>Bonus</th>
+                                            <th>MRP</th>
+                                            <th>Price</th>
+                                            <th>Amount</th>
+                                            <th>BCI</th>
+                                            <th>Action</th>
                                         </tr>
-                                    ) : (
-                                        addedItems.map((item, idx) => (
-                                            <tr key={item.productId}>
-                                                <td>{idx + 1}</td>
-                                                <td>
-                                                    <div className="asi-inv-prod-name">{item.productName}</div>
-                                                    <div className="asi-inv-prod-sub">* B/N &amp; Exp: Default (30/11/2027)</div>
-                                                </td>
-                                                <td>{item.unit || "-"}</td>
-                                                <td>{item.quantity}</td>
-                                                <td>{item.bonus > 0 ? item.bonus : "-"}</td>
-                                                <td className="asi-mrp-inv-cell">
-                                                    {item.mrp > 0 ? parseFloat(item.mrp).toFixed(2) : <span className="asi-no-mrp">—</span>}
-                                                </td>
-                                                <td>{parseFloat(item.sellingPrice).toFixed(2)}</td>
-                                                <td>{parseFloat(item.totalAmount).toFixed(2)}</td>
-                                                <td className="asi-bci-cell">
-                                                    {(() => {
-                                                        const divisor = (item.quantity || 0) + (item.bonus || 0);
-                                                        return divisor > 0
-                                                            ? (item.totalAmount / divisor).toFixed(2)
-                                                            : "-";
-                                                    })()}
-                                                </td>
-                                                <td>
-                                                    <div className="asi-inv-actions">
-                                                        <Edit3 size={15} className="asi-edit-icon" onClick={() => handleEditItem(item.productId)} />
-                                                        <Trash2 size={15} className="asi-delete-icon" onClick={() => removeItem(item.productId)} />
-                                                    </div>
+                                    </thead>
+                                    <tbody>
+                                        {addedItems.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="10" className="asi-inv-empty">
+                                                    No items added yet. Add products from the section above.
                                                 </td>
                                             </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                                        ) : (
+                                            addedItems.map((item, idx) => (
+                                                <tr key={item.productId} data-label={idx + 1}>
+                                                    <td data-label="#">{idx + 1}</td>
+                                                    <td data-label="Product">
+                                                        <div>
+                                                            <div className="asi-inv-prod-name">{item.productName}</div>
+                                                            <div className="asi-inv-prod-sub">* B/N &amp; Exp: Default (30/11/2027)</div>
+                                                        </div>
+                                                    </td>
+                                                    <td data-label="Unit">{item.unit || "-"}</td>
+                                                    <td data-label="Qty">{item.quantity}</td>
+                                                    <td data-label="Bonus">{item.bonus > 0 ? item.bonus : "-"}</td>
+                                                    <td className="asi-mrp-inv-cell" data-label="MRP">
+                                                        {item.mrp > 0 ? parseFloat(item.mrp).toFixed(2) : <span className="asi-no-mrp">—</span>}
+                                                    </td>
+                                                    <td data-label="Price">{parseFloat(item.sellingPrice).toFixed(2)}</td>
+                                                    <td data-label="Amount">{parseFloat(item.totalAmount).toFixed(2)}</td>
+                                                    <td className="asi-bci-cell" data-label="BCI">
+                                                        {(() => {
+                                                            const divisor = (item.quantity || 0) + (item.bonus || 0);
+                                                            return divisor > 0
+                                                                ? (item.totalAmount / divisor).toFixed(2)
+                                                                : "-";
+                                                        })()}
+                                                    </td>
+                                                    <td data-label="Action">
+                                                        <div className="asi-inv-actions">
+                                                            <Edit3 size={15} className="asi-edit-icon" onClick={() => handleEditItem(item.productId)} />
+                                                            <Trash2 size={15} className="asi-delete-icon" onClick={() => removeItem(item.productId)} />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>{/* end asi-inv-table-scroll */}
 
                             {addedItems.length > 0 && (
@@ -683,4 +688,4 @@ const AddSalesInvoice = () => {
     );
 };
 
-export default AddSalesInvoice;
+export default SalesRepOrder;
