@@ -168,13 +168,13 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
               <li className="nav-item">
                 <Link to="/sales-order" className={`nav-link ${isActive('/sales-order') ? 'active' : ''}`}>
                   <ShoppingCart size={20} className="nav-icon" />
-                  <span className="link-text">Sales Order</span>
+                  <span className="link-text">Sales Invoice</span>
                 </Link>
               </li>
               <li className="nav-item">
                 <Link to="/sales-invoice" className={`nav-link ${isActive('/sales-invoice') ? 'active' : ''}`}>
                   <UserCheck size={20} className="nav-icon" />
-                  <span className="link-text">Sales Invoice</span>
+                  <span className="link-text">Sales Order</span>
                 </Link>
               </li>
               <li className="nav-item">

@@ -21,5 +21,10 @@ export const softDeleteProduct = (id, userId) =>
 
 export const searchProduct = (query) => api.get(`/products/search?searchKey=${query}`);
 
-export const getPaginatedProductResults = (page, size, filter) =>
-  api.get(`/products?page=${page}&size=${size}&filter=${filter}`);
+export const getPaginatedProductResults = (page, size, filter, categoryID) => {
+  let url = `/products?page=${page}&size=${size}&filter=${filter}`;
+  if (categoryID) {
+    url += `&categoryID=${categoryID}`;
+  }
+  return api.get(url);
+};
