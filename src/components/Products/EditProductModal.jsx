@@ -13,7 +13,11 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
         customUnit: '',
         minimumStockLevel: '',
         reorderLevel: '',
-        packSize: ''
+        packSize: '',
+        openingBalance: '',
+        sRepCommissionRate: '',
+        sellingPrice: '',
+        mrp: ''
     });
     const [image, setImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
@@ -36,7 +40,11 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
                     customUnit: isCustom ? unitValue : '',
                     minimumStockLevel: product.minimumStockLevel || '',
                     reorderLevel: product.reorderLevel || '',
-                    packSize: product.packSize || ''
+                    packSize: product.packSize || '',
+                    openingBalance: product.openingBalance || '',
+                    sRepCommissionRate: product.sRepCommissionRate || '',
+                    sellingPrice: product.sellingPrice || '',
+                    mrp: product.mrp || ''
                 });
                 setImagePreview(product.imageUrl || null);
                 setIsCustomUnit(isCustom);
@@ -97,6 +105,10 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
             data.append('packSize', formData.packSize);
             data.append('minimumStockLevel', formData.minimumStockLevel);
             data.append('reorderLevel', formData.reorderLevel);
+            data.append('openingBalance', formData.openingBalance);
+            data.append('sRepCommissionRate', formData.sRepCommissionRate);
+            data.append('sellingPrice', formData.sellingPrice);
+            data.append('mrp', formData.mrp);
             if (image) {
                 data.append('imageFile', image);
             }
@@ -220,6 +232,58 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
                                 className="form-input"
                                 placeholder="0"
                                 value={formData.reorderLevel}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+                    <div className="form-row">
+                        <div className="form-col">
+                            <label className="form-label">Opening Balance</label>
+                            <input
+                                type="number"
+                                name="openingBalance"
+                                className="form-input"
+                                placeholder="0"
+                                value={formData.openingBalance}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="form-col">
+                            <label className="form-label">Sales Rep Commission Rate (%)</label>
+                            <input
+                                type="number"
+                                name="sRepCommissionRate"
+                                className="form-input"
+                                placeholder="0-100"
+                                min="0"
+                                max="100"
+                                value={formData.sRepCommissionRate}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+                    <div className="form-row">
+                        <div className="form-col">
+                            <label className="form-label">Selling Price</label>
+                            <input
+                                type="number"
+                                name="sellingPrice"
+                                className="form-input"
+                                placeholder="0.00"
+                                step="0.01"
+                                value={formData.sellingPrice}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="form-col">
+                            <label className="form-label">MRP</label>
+                            <input
+                                type="number"
+                                name="mrp"
+                                className="form-input"
+                                placeholder="0.00"
+                                step="0.01"
+                                value={formData.mrp}
                                 onChange={handleChange}
                             />
                         </div>

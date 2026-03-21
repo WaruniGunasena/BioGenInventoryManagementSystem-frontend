@@ -12,6 +12,7 @@ const EMPTY_FORM = {
     province: '',
     postalCode: '',
     creditPeriod: '30',
+    creditLimit: '',
 };
 
 const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
@@ -45,7 +46,8 @@ const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
 
             const dataToSubmit = {
                 ...formData,
-                creditPeriod: parseInt(formData.creditPeriod, 10)
+                creditPeriod: parseInt(formData.creditPeriod, 10),
+                creditLimit: formData.creditLimit ? parseFloat(formData.creditLimit) : null
             };
             await createCustomer(dataToSubmit);
             setFormData(EMPTY_FORM);
@@ -163,6 +165,17 @@ const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
                             <option value="60">60 days</option>
                             <option value="90">90 days</option>
                         </select>
+                    </div>
+                    <div className="form-group form-col">
+                        <label className="form-label">Credit Limit</label>
+                        <input
+                            type="number"
+                            name="creditLimit"
+                            className="form-input"
+                            placeholder="Enter credit limit"
+                            value={formData.creditLimit}
+                            onChange={handleChange}
+                        />
                     </div>
                 </div>
 

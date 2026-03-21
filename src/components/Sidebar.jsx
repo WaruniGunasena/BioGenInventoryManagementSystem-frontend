@@ -19,7 +19,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Menu
+  Menu,
+  FileText
 } from "lucide-react";
 import "./Sidebar.css";
 import { getUserName, getUserRole } from "./common/Utils/userUtils/userUtils";
@@ -162,12 +163,28 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
             </Link>
           </li> */}
 
-          {(admin || salesRep) && (<li className="nav-item">
-            <Link to="/sales-order" className={`nav-link ${isActive('/sales-order') ? 'active' : ''}`}>
-              <UserCheck size={20} className="nav-icon" />
-              <span className="link-text">Sales Order</span>
-            </Link>
-          </li>)}
+          {(admin || salesRep) && (
+            <>
+              <li className="nav-item">
+                <Link to="/sales-order" className={`nav-link ${isActive('/sales-order') ? 'active' : ''}`}>
+                  <ShoppingCart size={20} className="nav-icon" />
+                  <span className="link-text">Sales Order</span>
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/sales-invoice" className={`nav-link ${isActive('/sales-invoice') ? 'active' : ''}`}>
+                  <UserCheck size={20} className="nav-icon" />
+                  <span className="link-text">Sales Invoice</span>
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/sales-invoices" className={`nav-link ${isActive('/sales-invoices') ? 'active' : ''}`}>
+                  <FileText size={20} className="nav-icon" />
+                  <span className="link-text">Invoices List</span>
+                </Link>
+              </li>
+            </>
+          )}
 
           {(admin || salesRep) && (<li className="nav-item">
             <Link to="/customers" className={`nav-link ${isActive('/customers') ? 'active' : ''}`}>

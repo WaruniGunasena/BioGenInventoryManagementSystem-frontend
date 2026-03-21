@@ -14,6 +14,7 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
         province: '',
         postalCode: '',
         creditPeriod: '',
+        creditLimit: '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -27,6 +28,7 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
                 province: customer.province ?? '',
                 postalCode: customer.postalCode ?? '',
                 creditPeriod: customer.creditPeriod ?? '30',
+                creditLimit: customer.creditLimit ?? '',
             });
         }
     }, [customer]);
@@ -44,7 +46,8 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
             const dataToSubmit = {
                 customerId: id,
                 ...formData,
-                creditPeriod: parseInt(formData.creditPeriod, 10)
+                creditPeriod: parseInt(formData.creditPeriod, 10),
+                creditLimit: formData.creditLimit !== '' && formData.creditLimit !== null ? parseFloat(formData.creditLimit) : null
             };
             await updateCustomer(id, dataToSubmit);
             showToast('success', 'Customer updated successfully!');
@@ -153,6 +156,17 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
                             <option value="60">60 days</option>
                             <option value="90">90 days</option>
                         </select>
+                    </div>
+                    <div className="form-group form-col">
+                        <label className="form-label">Credit Limit</label>
+                        <input
+                            type="number"
+                            name="creditLimit"
+                            className="form-input"
+                            placeholder="Enter credit limit"
+                            value={formData.creditLimit}
+                            onChange={handleChange}
+                        />
                     </div>
                 </div>
 

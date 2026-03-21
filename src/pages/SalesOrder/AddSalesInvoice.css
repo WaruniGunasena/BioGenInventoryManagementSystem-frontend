@@ -1,0 +1,782 @@
+/* ─────────────────────────────────────────
+   Add Sales Invoice – Namespaced (asi-)
+   ───────────────────────────────────────── */
+
+.asi-page {
+    padding: 28px 32px;
+    background: #f0f2f8;
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ── Header ── */
+.asi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.asi-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.asi-header-icon {
+    background: #7c3aed;
+    color: white;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+    flex-shrink: 0;
+}
+
+.asi-header-title {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 800;
+    color: #1a1a2e;
+    letter-spacing: -0.3px;
+}
+
+.asi-header-sub {
+    margin: 3px 0 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.asi-header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.asi-btn-back {
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    color: #475569;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+
+.asi-btn-back:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.asi-btn-confirm {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: white;
+    border: none;
+    padding: 10px 26px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+    transition: all 0.18s;
+}
+
+.asi-btn-confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(124, 58, 237, 0.4);
+}
+
+/* ── Top Section: single full-width card ── */
+.asi-top-section {
+    margin-bottom: 24px;
+}
+
+.asi-combined-card {
+    /* inherits from .asi-card */
+    padding: 0;
+    overflow: hidden;
+}
+
+.asi-combined-section {
+    padding: 24px;
+}
+
+.asi-section-divider {
+    border: none;
+    border-top: 1px solid #f1f5f9;
+    margin: 0;
+}
+
+/* ── Card base ── */
+.asi-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.asi-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.asi-card-header h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+    flex: 1;
+}
+
+.asi-icon-purple {
+    color: #7c3aed;
+    flex-shrink: 0;
+}
+
+/* ── Customer Card ── */
+.asi-search-wrap {
+    position: relative;
+}
+
+.asi-search-field {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.asi-search-icon {
+    position: absolute;
+    left: 12px;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.asi-search-field input {
+    width: 100%;
+    padding: 12px 14px 12px 38px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    background: #f8fafc;
+    color: #1e293b;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.asi-search-field input:focus {
+    border-color: #7c3aed;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+    outline: none;
+}
+
+.asi-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    z-index: 100;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.asi-dropdown-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: background 0.15s;
+}
+
+.asi-dropdown-item:hover { background: #f5f3ff; }
+
+.asi-drop-name { font-weight: 600; color: #1e293b; font-size: 14px; }
+.asi-drop-sub { font-size: 12px; color: #94a3b8; }
+.asi-dropdown-empty { padding: 14px 16px; color: #94a3b8; font-size: 14px; text-align: center; }
+
+/* Credit Info */
+.asi-credit-info {
+    margin-top: 20px;
+    background: #fafafa;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid #f1f5f9;
+}
+
+.asi-credit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13.5px;
+    color: #475569;
+}
+
+.asi-credit-row strong { color: #1e293b; font-weight: 700; }
+
+.asi-credit-available {
+    margin-top: 4px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #f0fdf4;
+}
+
+.asi-credit-available.ok strong { color: #16a34a; }
+.asi-credit-available.over { background: #fef2f2; }
+.asi-credit-available.over strong { color: #dc2626; }
+
+.asi-text-warning { color: #f59e0b !important; }
+
+.asi-over-limit {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #dc2626;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 8px 10px;
+    background: #fef2f2;
+    border-radius: 8px;
+}
+
+/* ── Product Card ── */
+.asi-product-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-left: auto;
+}
+
+.asi-category-select {
+    padding: 8px 12px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #475569;
+    background: white;
+    cursor: pointer;
+}
+
+.asi-search-toggle {
+    padding: 8px 10px;
+    border: 1.5px solid #e2e8f0;
+    background: white;
+    border-radius: 8px;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.18s;
+}
+
+.asi-search-toggle:hover {
+    border-color: #7c3aed;
+    color: #7c3aed;
+}
+
+.asi-product-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    margin-bottom: 16px;
+}
+
+.asi-product-search-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    color: #1e293b;
+    outline: none;
+}
+
+/* Product Table */
+.asi-product-table-wrap {
+    height: 310px;       /* shows ~5 rows; scroll triggers next page */
+    overflow-y: auto;
+    border-radius: 10px;
+    border: 1px solid #f1f5f9;
+    scroll-behavior: smooth;
+}
+
+.asi-product-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.asi-product-table thead {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+}
+
+.asi-product-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.asi-product-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f8fafc;
+    vertical-align: middle;
+    font-size: 14px;
+}
+
+.asi-product-table tbody tr:hover { background: #f9f7ff; }
+
+.asi-product-name-cell { min-width: 160px; }
+.asi-prod-name { font-weight: 600; color: #1e293b; }
+.asi-prod-unit { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+
+.asi-price-cell { font-weight: 600; color: #374151; }
+
+.asi-num-input {
+    width: 58px;
+    padding: 7px 8px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 13px;
+    color: #1e293b;
+    transition: border-color 0.15s;
+}
+
+.asi-num-input:focus {
+    border-color: #7c3aed;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.asi-add-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #ede9fe;
+    color: #7c3aed;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    line-height: 1;
+}
+
+.asi-add-btn:hover { background: #7c3aed; color: white; }
+
+.asi-add-btn.asi-added {
+    background: #dcfce7;
+    color: #16a34a;
+    font-size: 14px;
+}
+
+.asi-add-btn.asi-added:hover { background: #16a34a; color: white; }
+
+.asi-loading {
+    text-align: center;
+    padding: 20px;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* ── Invoice Section ── */
+.asi-invoice-section {
+    background: white;
+    border-radius: 16px;
+    padding: 40px 48px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+/* Invoice Top Header */
+.asi-inv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+.asi-company-name {
+    font-size: 28px;
+    font-weight: 900;
+    color: #7c3aed;
+    margin: 0 0 4px;
+}
+
+.asi-company-tag {
+    font-size: 14px;
+    color: #374151;
+    margin: 0 0 2px;
+}
+
+.asi-company-link {
+    font-size: 13px;
+    color: #7c3aed;
+    margin: 0 0 4px;
+}
+
+.asi-company-block p {
+    margin: 2px 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.asi-inv-title-block {
+    text-align: right;
+}
+
+.asi-inv-title {
+    font-size: 42px;
+    font-weight: 900;
+    color: #7c3aed;
+    letter-spacing: 1px;
+    line-height: 1;
+}
+
+.asi-inv-date {
+    font-size: 15px;
+    color: #374151;
+    margin: 6px 0 0;
+    font-weight: 500;
+}
+
+.asi-divider {
+    border: none;
+    border-top: 1.5px solid #e5e7eb;
+    margin: 24px 0;
+}
+
+/* Invoice Info Bar */
+.asi-inv-info-bar {
+    display: flex;
+    justify-content: space-between;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 14px 24px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.asi-inv-info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.asi-inv-info-label {
+    font-weight: 700;
+    color: #374151;
+}
+
+.asi-inv-info-value {
+    color: #111827;
+    font-weight: 500;
+}
+
+/* Bill To + Payment Info */
+.asi-inv-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.asi-bill-to,
+.asi-payment-info {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 20px 24px;
+    border: 1px solid #f3f4f6;
+}
+
+.asi-meta-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #6b7280;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+}
+
+.asi-meta-divider {
+    border: none;
+    border-top: 1.5px solid #e5e7eb;
+    margin-bottom: 12px;
+}
+
+.asi-bill-name {
+    font-weight: 700;
+    color: #111827;
+    font-size: 16px;
+    margin: 0 0 4px;
+}
+
+.asi-bill-to p { font-size: 13.5px; color: #6b7280; margin: 3px 0; }
+
+.asi-meta-placeholder { color: #9ca3af; font-size: 14px; }
+
+.asi-pay-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13.5px;
+    color: #374151;
+    padding: 4px 0;
+}
+
+.asi-pay-row span:last-child { font-weight: 700; color: #111827; }
+
+/* Invoice Table */
+.asi-inv-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+}
+
+.asi-inv-table thead tr {
+    background: #7c3aed;
+}
+
+.asi-inv-table th {
+    color: white;
+    padding: 13px 16px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.asi-inv-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+    color: #374151;
+    vertical-align: middle;
+}
+
+.asi-inv-table tbody tr:hover { background: #faf5ff; }
+
+.asi-inv-prod-name { font-weight: 600; color: #111827; }
+.asi-inv-prod-sub { font-size: 11.5px; color: #9ca3af; margin-top: 2px; }
+
+/* BCI column — calculated value highlight */
+.asi-bci-cell {
+    text-align: center;
+    font-weight: 700;
+    color: #6d28d9;
+    letter-spacing: 0.02em;
+}
+
+.asi-inv-empty {
+    text-align: center;
+    padding: 32px;
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+.asi-inv-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.asi-edit-icon { color: #3b82f6; cursor: pointer; transition: color 0.15s; }
+.asi-edit-icon:hover { color: #1d4ed8; }
+.asi-delete-icon { color: #ef4444; cursor: pointer; transition: color 0.15s; }
+.asi-delete-icon:hover { color: #dc2626; }
+
+/* Totals */
+.asi-totals {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 1.5px solid #e5e7eb;
+}
+
+.asi-total-row {
+    display: flex;
+    justify-content: space-between;
+    min-width: 320px;
+    font-size: 14px;
+    color: #374151;
+    padding: 4px 0;
+}
+
+.asi-total-row span:last-child { font-weight: 600; }
+
+.asi-grand-total {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1.5px solid #e5e7eb;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    color: #7c3aed;
+}
+
+.asi-grand-total span { color: #7c3aed !important; font-weight: 800 !important; font-size: 17px; }
+.asi-grand-total.over span { color: #dc2626 !important; }
+
+/* ── MRP cells ── */
+.asi-mrp-cell {
+    font-size: 13px;
+    color: #6b7280;
+    font-style: italic;
+}
+.asi-mrp-inv-cell {
+    font-size: 13px;
+    color: #6b7280;
+}
+.asi-no-mrp { color: #d1d5db; }
+
+/* ── Invoice table scroll wrapper ── */
+.asi-inv-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+}
+
+/* ── Responsive — Tablet (≤1024px) ── */
+@media (max-width: 1024px) {
+    .asi-page { padding: 20px 16px; }
+    .asi-invoice-section { padding: 28px 24px; }
+    .asi-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .asi-header-actions { width: 100%; display: flex; gap: 10px; }
+    .asi-btn-back, .asi-btn-confirm { flex: 1; text-align: center; }
+    .asi-inv-meta { grid-template-columns: 1fr; }
+}
+
+/* ── Responsive — Mobile (≤768px) ── */
+@media (max-width: 768px) {
+    .asi-page { padding: 12px; }
+    .asi-invoice-section { padding: 20px 14px; }
+
+    /* Company header stacks */
+    .asi-inv-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+    .asi-inv-title-block { text-align: left; }
+    .asi-inv-title { font-size: 30px; }
+
+    /* Info bar wraps */
+    .asi-inv-info-bar {
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 16px;
+    }
+
+    /* Bill To / Payment stacked */
+    .asi-inv-meta { grid-template-columns: 1fr; gap: 12px; }
+
+    /* Totals full width */
+    .asi-total-row { min-width: unset; width: 100%; }
+    .asi-totals { align-items: stretch; }
+
+    /* ── INVOICE TABLE → Card layout on mobile ── */
+    .asi-inv-table-scroll { border-radius: 0; }
+
+    .asi-inv-table thead { display: none; }
+
+    .asi-inv-table,
+    .asi-inv-table tbody,
+    .asi-inv-table tr,
+    .asi-inv-table td { display: block; width: 100%; }
+
+    .asi-inv-table tr {
+        margin-bottom: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+        background: white;
+    }
+
+    .asi-inv-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 14px;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 13.5px;
+        text-align: right;
+    }
+
+    .asi-inv-table td:last-child { border-bottom: none; }
+
+    /* Label via data-label attribute */
+    .asi-inv-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: #6b7280;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        text-align: left;
+        flex-shrink: 0;
+        margin-right: 12px;
+    }
+
+    /* #, Action full-width rows */
+    .asi-inv-table td:first-child {
+        background: #7c3aed;
+        color: white;
+        font-weight: 700;
+        justify-content: flex-start;
+        gap: 8px;
+        padding: 10px 14px;
+    }
+
+    .asi-inv-table td:first-child::before { color: rgba(255,255,255,0.7); }
+
+    /* Action row */
+    .asi-inv-table td:last-child {
+        justify-content: flex-end;
+        padding: 12px 14px;
+    }
+
+    .asi-bci-cell { color: #7c3aed; font-weight: 700; }
+
+    /* Product selection table on mobile */
+    .asi-product-table { font-size: 12px; }
+    .asi-num-input { width: 44px; padding: 5px 4px; font-size: 12px; }
+}
+
+/* ── Responsive — Small mobile (≤480px) ── */
+@media (max-width: 480px) {
+    .asi-company-name { font-size: 20px; }
+    .asi-header-title { font-size: 20px; }
+    .asi-inv-title { font-size: 24px; }
+    .asi-btn-back, .asi-btn-confirm { padding: 9px 14px; font-size: 13px; }
+}
+

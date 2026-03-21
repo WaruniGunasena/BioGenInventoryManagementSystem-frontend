@@ -18,6 +18,8 @@ import Invoices from "./pages/Invoices/Invoices";
 import SalesOrder from "./pages/SalesOrder/SalesOrder";
 import ComponentsDemo from "./pages/ComponentsDemo";
 import SalesInvoices from "./pages/SalesOrder/SalesInvoices";
+import AddSalesInvoice from "./pages/SalesOrder/AddSalesInvoice";
+import EditSalesInvoice from "./pages/SalesOrder/EditSalesInvoice";
 import Settings from "./pages/Settings/Settings";
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { AdminStatusProvider, useAdminStatus } from "./context/AdminStatusContext";
@@ -63,7 +65,9 @@ function App() {
                 <Route path="/stock" element={<Stock />} />
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/sales-order" element={<SalesOrder />} />
+                <Route path="/sales-invoice" element={<AddSalesInvoice />} />
                 <Route path="/sales-invoices" element={<SalesInvoices />} />
+                <Route path="/sales-invoices/edit" element={<EditSalesInvoice />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/test-components" element={<ComponentsDemo />} />
               </Routes>
