@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getToken } from "../auth/tokenService";
 import { isAdmin, isInventoryManager, isSalesRep } from "../auth/roleService";
 import { logout as logoutService } from "../api/authService";
+import { getPendingOrderCount } from "../api/salesOrderService";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -35,6 +36,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
   const [salesRep, setSalesRep] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState('');
   const [loggedInUserRole, setLoggedInUserRole] = useState('');
+  const [pendingOrderCount, setPendingOrderCount] = useState(0);
 
   const fetchUserInfo = async () => {
     const name = await getUserName();
@@ -43,13 +45,36 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
     setLoggedInUserRole(role);
   };
 
+  const fetchPendingCount = async () => {
+    try {
+      const res = await getPendingOrderCount();
+      setPendingOrderCount(res.data || 0);
+    } catch (e) {
+      console.error("Failed to fetch pending order count", e);
+    }
+  };
+
   useEffect(() => {
     const token = getToken();
     setIsAuth(!!token);
-    setAdmin(isAdmin());
-    setInventoryManager(isInventoryManager());
-    setSalesRep(isSalesRep());
+    
+    const isAdminUser = isAdmin();
+    const isInvManager = isInventoryManager();
+    const isSalesUser = isSalesRep();
+    
+    setAdmin(isAdminUser);
+    setInventoryManager(isInvManager);
+    setSalesRep(isSalesUser);
+    
     fetchUserInfo();
+
+    if (token && (isAdminUser || isInvManager)) {
+      fetchPendingCount();
+
+      const handleInvoiceUpdate = () => fetchPendingCount();
+      window.addEventListener("invoiceStatusChanged", handleInvoiceUpdate);
+      return () => window.removeEventListener("invoiceStatusChanged", handleInvoiceUpdate);
+    }
   }, []);
 
   const handleLogout = async () => {
@@ -163,27 +188,34 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
             </Link>
           </li> */}
 
-          {(admin || salesRep) && (
-            <>
-              <li className="nav-item">
-                <Link to="/sales-order" className={`nav-link ${isActive('/sales-order') ? 'active' : ''}`}>
-                  <ShoppingCart size={20} className="nav-icon" />
-                  <span className="link-text">Sales Invoice</span>
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/sales-invoice" className={`nav-link ${isActive('/sales-invoice') ? 'active' : ''}`}>
-                  <UserCheck size={20} className="nav-icon" />
-                  <span className="link-text">Sales Order</span>
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/sales-invoices" className={`nav-link ${isActive('/sales-invoices') ? 'active' : ''}`}>
-                  <FileText size={20} className="nav-icon" />
-                  <span className="link-text">Invoices List</span>
-                </Link>
-              </li>
-            </>
+          {(admin || inventoryManager) && (
+            <li className="nav-item">
+              <Link to="/sales-order" className={`nav-link ${isActive('/sales-order') ? 'active' : ''}`}>
+                <ShoppingCart size={20} className="nav-icon" />
+                <span className="link-text">Sales Invoice</span>
+              </Link>
+            </li>
+          )}
+
+          {salesRep && (
+            <li className="nav-item">
+              <Link to="/sales-invoice" className={`nav-link ${isActive('/sales-invoice') ? 'active' : ''}`}>
+                <UserCheck size={20} className="nav-icon" />
+                <span className="link-text">Sales Order</span>
+              </Link>
+            </li>
+          )}
+
+          {(admin || inventoryManager || salesRep) && (
+            <li className="nav-item">
+              <Link to="/sales-invoices" className={`nav-link ${isActive('/sales-invoices') ? 'active' : ''}`}>
+                <FileText size={20} className="nav-icon" />
+                <span className="link-text">Invoices List</span>
+                {(admin || inventoryManager) && pendingOrderCount > 0 && (
+                  <span className="notification-bubble">{pendingOrderCount}</span>
+                )}
+              </Link>
+            </li>
           )}
 
           {(admin || salesRep) && (<li className="nav-item">

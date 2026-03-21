@@ -44,6 +44,8 @@ const EditSalesRepOrder = () => {
 
     // Invoice/order state
     const [addedItems, setAddedItems] = useState([]);
+    const addedItemsRef = useRef([]);
+    useEffect(() => { addedItemsRef.current = addedItems; }, [addedItems]);
     const [stockData, setStockData] = useState([]);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [currentUserName, setCurrentUserName] = useState("");
@@ -116,11 +118,27 @@ const EditSalesRepOrder = () => {
                 } else { data = []; }
             }
             const stock = resolvedStock !== null ? resolvedStock : stockData;
+
+            const getInitialQtyBonus = (pid) => {
+                const fromAdded = addedItemsRef.current.find(a => String(a.productId) === String(pid));
+                if (fromAdded) return { q: fromAdded.quantity, b: fromAdded.bonus };
+                
+                if (addedItemsRef.current.length === 0 && invoice?.items) {
+                    const saleLine = invoice.items.find(i => String(i.productId || i.product?.id) === String(pid) && parseFloat(i.sellingPrice) > 0);
+                    const bonusLine = invoice.items.find(i => String(i.productId || i.product?.id) === String(pid) && parseFloat(i.sellingPrice) === 0);
+                    if (saleLine || bonusLine) {
+                        return { q: saleLine?.quantity || 0, b: bonusLine?.quantity || 0 };
+                    }
+                }
+                return { q: "", b: "" };
+            };
+
             const productsWithInputs = data.map(p => {
                 const pid = (p.id || p._id)?.toString();
                 const stockItem = stock.find(s => s.productId?.toString() === pid);
                 const resolvedPrice = stockItem?.sellingPrice ?? p.sellingPrice ?? 0;
-                return { ...p, sellingPrice: resolvedPrice, inputQty: "", inputBonus: "" };
+                const { q, b } = getInitialQtyBonus(pid);
+                return { ...p, sellingPrice: resolvedPrice, inputQty: q, inputBonus: b };
             });
             setProducts(prev => append ? [...prev, ...productsWithInputs] : productsWithInputs);
             setTotalPages(total);
@@ -136,7 +154,7 @@ const EditSalesRepOrder = () => {
     // ── Init: load master data then pre-populate invoice ─────────────────────
     useEffect(() => {
         if (!invoice) {
-            showToast("error", "No invoice data found. Redirecting back.");
+            showToast("error", "No Order data found. Redirecting back.");
             navigate("/sales-invoices");
             return;
         }
@@ -157,8 +175,15 @@ const EditSalesRepOrder = () => {
     // Pre-populate customer and addedItems from the invoice
     useEffect(() => {
         if (!invoice) return;
-        // Set customer
-        if (invoice.customer) {
+        
+        // Match the invoice's customerId with the full customers list to get the creditLimit
+        const customerId = invoice.customer?.id || invoice.customer?._id || invoice.customerId;
+        const fullCustomer = customers.find(c => (c.id || c._id) === customerId);
+
+        if (fullCustomer) {
+            setSelectedCustomer(fullCustomer);
+            setCustomerSearch(fullCustomer.name);
+        } else if (invoice.customer) {
             setSelectedCustomer(invoice.customer);
             setCustomerSearch(invoice.customer.name || invoice.customerName || "");
         } else if (invoice.customerName) {
@@ -184,7 +209,7 @@ const EditSalesRepOrder = () => {
             };
         });
         setAddedItems(preloadedItems);
-    }, [invoice]);
+    }, [invoice, customers]);
 
     // Re-fetch when category/search changes
     useEffect(() => {
@@ -193,6 +218,7 @@ const EditSalesRepOrder = () => {
 
     // Click-outside handler for customer dropdown
     useEffect(() => {
+        console.log("selected CUstomer", selectedCustomer)
         const handler = (e) => {
             if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target))
                 setShowCustomerDropdown(false);
@@ -246,7 +272,7 @@ const EditSalesRepOrder = () => {
         const bonus = parseFloat(product.inputBonus) || 0;
         if (qty <= 0 && bonus <= 0) { showToast("warning", "Please enter a valid quantity or bonus"); return; }
         addToOrder(product, qty, bonus);
-        showToast("success", `Added ${product.name} to invoice`);
+        showToast("success", `Added ${product.name} to Order`);
     };
 
     const handleEditItem = () => {
@@ -315,10 +341,10 @@ const EditSalesRepOrder = () => {
         setIsSubmitting(true);
         try {
             await updateSalesOrder(invoiceId, currentUserId, payload);
-            showToast("success", `Invoice ${invoice?.invoiceNumber} updated successfully!`);
+            showToast("success", `Order ${invoice?.invoiceNumber} updated successfully!`);
             navigate("/sales-invoices");
         } catch (error) {
-            showToast("error", error?.response?.data?.message || "Failed to update Sales Invoice");
+            showToast("error", error?.response?.data?.message || "Failed to update Sales Order");
         } finally {
             setIsSubmitting(false);
         }
@@ -344,8 +370,8 @@ const EditSalesRepOrder = () => {
                                     <FileText size={22} />
                                 </div>
                                 <div>
-                                    <h1 className="asi-header-title">Edit Invoice — {invoice?.invoiceNumber}</h1>
-                                    <p className="asi-header-sub">Modify items and quantities for this invoice</p>
+                                    <h1 className="asi-header-title">Edit Order — {invoice?.invoiceNumber}</h1>
+                                    <p className="asi-header-sub">Modify items and quantities for this order</p>
                                 </div>
                             </div>
                             <div className="asi-header-actions">
@@ -412,7 +438,7 @@ const EditSalesRepOrder = () => {
                                         </div>
                                         {isOverCredit && (
                                             <div className="asi-over-limit">
-                                                <AlertCircle size={14} /> Invoice exceeds credit limit!
+                                                <AlertCircle size={14} /> Order exceeds credit limit!
                                             </div>
                                         )}
                                     </div>
@@ -523,7 +549,7 @@ const EditSalesRepOrder = () => {
                                     <p>Tel: +94 774 088 839</p>
                                 </div>
                                 <div className="asi-inv-title-block">
-                                    <div className="asi-inv-title">INVOICE</div>
+                                    <div className="asi-inv-title">ORDER</div>
                                     <p className="asi-inv-date">{invoice?.date || formattedDate}</p>
                                 </div>
                             </div>
@@ -532,11 +558,11 @@ const EditSalesRepOrder = () => {
 
                             <div className="asi-inv-info-bar">
                                 <div className="asi-inv-info-item">
-                                    <span className="asi-inv-info-label">Invoice No. :</span>
+                                    <span className="asi-inv-info-label">Order No. :</span>
                                     <span className="asi-inv-info-value">{invoice?.invoiceNumber || "—"}</span>
                                 </div>
                                 <div className="asi-inv-info-item">
-                                    <span className="asi-inv-info-label">Invoice Date :</span>
+                                    <span className="asi-inv-info-label">Order Date :</span>
                                     <span className="asi-inv-info-value">{invoice?.date || formattedDate}</span>
                                 </div>
                                 <div className="asi-inv-info-item">

@@ -134,6 +134,7 @@ const SalesInvoices = () => {
         try {
             await approveSalesOrder(status, currentUserId, invoiceId);
             showToast("success", `Invoice ${status} successfully`);
+            window.dispatchEvent(new Event("invoiceStatusChanged"));
             setIsModalOpen(false);
             fetchInvoices(currentPage);
         } catch (error) {
