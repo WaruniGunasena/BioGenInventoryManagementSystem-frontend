@@ -10,7 +10,13 @@ export const updateProduct = (id, formData) =>
     headers: { "Content-Type": "multipart/form-data" },
   });
 
-export const getAllProducts = () => api.get("/products/all");
+export const getAllProducts = (categoryID) => {
+  let url = "/products/all";
+  if (categoryID) {
+    url += `?categoryID=${categoryID}`;
+  }
+  return api.get(url);
+};
 
 export const getProductById = (id) => api.get(`/products/${id}`);
 
