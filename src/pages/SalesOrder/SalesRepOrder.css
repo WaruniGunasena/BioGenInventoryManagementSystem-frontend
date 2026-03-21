@@ -116,7 +116,7 @@
     background: white;
     border-radius: 16px;
     padding: 24px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .asi-card-header {
@@ -184,7 +184,7 @@
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     z-index: 100;
     max-height: 240px;
     overflow-y: auto;
@@ -199,11 +199,27 @@
     transition: background 0.15s;
 }
 
-.asi-dropdown-item:hover { background: #f5f3ff; }
+.asi-dropdown-item:hover {
+    background: #f5f3ff;
+}
 
-.asi-drop-name { font-weight: 600; color: #1e293b; font-size: 14px; }
-.asi-drop-sub { font-size: 12px; color: #94a3b8; }
-.asi-dropdown-empty { padding: 14px 16px; color: #94a3b8; font-size: 14px; text-align: center; }
+.asi-drop-name {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.asi-drop-sub {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.asi-dropdown-empty {
+    padding: 14px 16px;
+    color: #94a3b8;
+    font-size: 14px;
+    text-align: center;
+}
 
 /* Credit Info */
 .asi-credit-info {
@@ -225,7 +241,10 @@
     color: #475569;
 }
 
-.asi-credit-row strong { color: #1e293b; font-weight: 700; }
+.asi-credit-row strong {
+    color: #1e293b;
+    font-weight: 700;
+}
 
 .asi-credit-available {
     margin-top: 4px;
@@ -234,11 +253,21 @@
     background: #f0fdf4;
 }
 
-.asi-credit-available.ok strong { color: #16a34a; }
-.asi-credit-available.over { background: #fef2f2; }
-.asi-credit-available.over strong { color: #dc2626; }
+.asi-credit-available.ok strong {
+    color: #16a34a;
+}
 
-.asi-text-warning { color: #f59e0b !important; }
+.asi-credit-available.over {
+    background: #fef2f2;
+}
+
+.asi-credit-available.over strong {
+    color: #dc2626;
+}
+
+.asi-text-warning {
+    color: #f59e0b !important;
+}
 
 .asi-over-limit {
     display: flex;
@@ -309,10 +338,13 @@
 
 /* Product Table */
 .asi-product-table-wrap {
-    height: 310px;       /* shows ~5 rows; scroll triggers next page */
+    height: 310px;
+    /* shows ~5 rows; scroll triggers next page */
     overflow-y: auto;
+    overflow-x: auto;
     border-radius: 10px;
     border: 1px solid #f1f5f9;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
     scroll-behavior: smooth;
 }
 
@@ -346,13 +378,29 @@
     font-size: 14px;
 }
 
-.asi-product-table tbody tr:hover { background: #f9f7ff; }
+.asi-product-table tbody tr:hover {
+    background: #f9f7ff;
+}
 
-.asi-product-name-cell { min-width: 160px; }
-.asi-prod-name { font-weight: 600; color: #1e293b; }
-.asi-prod-unit { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.asi-product-name-cell {
+    min-width: 160px;
+}
 
-.asi-price-cell { font-weight: 600; color: #374151; }
+.asi-prod-name {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.asi-prod-unit {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.asi-price-cell {
+    font-weight: 600;
+    color: #374151;
+}
 
 .asi-num-input {
     width: 58px;
@@ -388,7 +436,10 @@
     line-height: 1;
 }
 
-.asi-add-btn:hover { background: #7c3aed; color: white; }
+.asi-add-btn:hover {
+    background: #7c3aed;
+    color: white;
+}
 
 .asi-add-btn.asi-added {
     background: #dcfce7;
@@ -396,7 +447,10 @@
     font-size: 14px;
 }
 
-.asi-add-btn.asi-added:hover { background: #16a34a; color: white; }
+.asi-add-btn.asi-added:hover {
+    background: #16a34a;
+    color: white;
+}
 
 .asi-loading {
     text-align: center;
@@ -410,7 +464,7 @@
     background: white;
     border-radius: 16px;
     padding: 40px 48px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 /* Invoice Top Header */
@@ -447,7 +501,10 @@
 }
 
 .asi-inv-title-block {
-    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
 }
 
 .asi-inv-title {
@@ -461,7 +518,7 @@
 .asi-inv-date {
     font-size: 15px;
     color: #374151;
-    margin: 6px 0 0;
+    margin-top: 6px;
     font-weight: 500;
 }
 
@@ -538,9 +595,16 @@
     margin: 0 0 4px;
 }
 
-.asi-bill-to p { font-size: 13.5px; color: #6b7280; margin: 3px 0; }
+.asi-bill-to p {
+    font-size: 13.5px;
+    color: #6b7280;
+    margin: 3px 0;
+}
 
-.asi-meta-placeholder { color: #9ca3af; font-size: 14px; }
+.asi-meta-placeholder {
+    color: #9ca3af;
+    font-size: 14px;
+}
 
 .asi-pay-row {
     display: flex;
@@ -550,7 +614,10 @@
     padding: 4px 0;
 }
 
-.asi-pay-row span:last-child { font-weight: 700; color: #111827; }
+.asi-pay-row span:last-child {
+    font-weight: 700;
+    color: #111827;
+}
 
 /* Invoice Table */
 .asi-inv-table {
@@ -581,10 +648,20 @@
     vertical-align: middle;
 }
 
-.asi-inv-table tbody tr:hover { background: #faf5ff; }
+.asi-inv-table tbody tr:hover {
+    background: #faf5ff;
+}
 
-.asi-inv-prod-name { font-weight: 600; color: #111827; }
-.asi-inv-prod-sub { font-size: 11.5px; color: #9ca3af; margin-top: 2px; }
+.asi-inv-prod-name {
+    font-weight: 600;
+    color: #111827;
+}
+
+.asi-inv-prod-sub {
+    font-size: 11.5px;
+    color: #9ca3af;
+    margin-top: 2px;
+}
 
 /* BCI column — calculated value highlight */
 .asi-bci-cell {
@@ -607,10 +684,25 @@
     align-items: center;
 }
 
-.asi-edit-icon { color: #3b82f6; cursor: pointer; transition: color 0.15s; }
-.asi-edit-icon:hover { color: #1d4ed8; }
-.asi-delete-icon { color: #ef4444; cursor: pointer; transition: color 0.15s; }
-.asi-delete-icon:hover { color: #dc2626; }
+.asi-edit-icon {
+    color: #3b82f6;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.asi-edit-icon:hover {
+    color: #1d4ed8;
+}
+
+.asi-delete-icon {
+    color: #ef4444;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.asi-delete-icon:hover {
+    color: #dc2626;
+}
 
 /* Totals */
 .asi-totals {
@@ -631,7 +723,9 @@
     padding: 4px 0;
 }
 
-.asi-total-row span:last-child { font-weight: 600; }
+.asi-total-row span:last-child {
+    font-weight: 600;
+}
 
 .asi-grand-total {
     margin-top: 8px;
@@ -642,8 +736,15 @@
     color: #7c3aed;
 }
 
-.asi-grand-total span { color: #7c3aed !important; font-weight: 800 !important; font-size: 17px; }
-.asi-grand-total.over span { color: #dc2626 !important; }
+.asi-grand-total span {
+    color: #7c3aed !important;
+    font-weight: 800 !important;
+    font-size: 17px;
+}
+
+.asi-grand-total.over span {
+    color: #dc2626 !important;
+}
 
 /* ── MRP cells ── */
 .asi-mrp-cell {
@@ -651,11 +752,15 @@
     color: #6b7280;
     font-style: italic;
 }
+
 .asi-mrp-inv-cell {
     font-size: 13px;
     color: #6b7280;
 }
-.asi-no-mrp { color: #d1d5db; }
+
+.asi-no-mrp {
+    color: #d1d5db;
+}
 
 /* ── Invoice table scroll wrapper ── */
 .asi-inv-table-scroll {
@@ -667,27 +772,60 @@
 
 /* ── Responsive — Tablet (≤1024px) ── */
 @media (max-width: 1024px) {
-    .asi-page { padding: 20px 16px; }
-    .asi-invoice-section { padding: 28px 24px; }
-    .asi-header { flex-direction: column; align-items: flex-start; gap: 14px; }
-    .asi-header-actions { width: 100%; display: flex; gap: 10px; }
-    .asi-btn-back, .asi-btn-confirm { flex: 1; text-align: center; }
-    .asi-inv-meta { grid-template-columns: 1fr; }
+    .asi-page {
+        padding: 20px 16px;
+    }
+
+    .asi-invoice-section {
+        padding: 28px 24px;
+    }
+
+    .asi-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .asi-header-actions {
+        width: 100%;
+        display: flex;
+        gap: 10px;
+    }
+
+    .asi-btn-back,
+    .asi-btn-confirm {
+        flex: 1;
+        text-align: center;
+    }
+
+    .asi-inv-meta {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ── Responsive — Mobile (≤768px) ── */
 @media (max-width: 768px) {
-    .asi-page { padding: 12px; }
-    .asi-invoice-section { padding: 20px 14px; }
+    .asi-page {
+        padding: 12px;
+    }
 
-    /* Company header stacks */
+    .asi-invoice-section {
+        padding: 20px 14px;
+    }
+
+    /* Company header stays row so ORDER is on the right */
     .asi-inv-header {
-        flex-direction: column;
-        gap: 16px;
+        flex-direction: row;
+        gap: 12px;
+        flex-wrap: wrap; /* allow wrap if really narrow */
         align-items: flex-start;
     }
-    .asi-inv-title-block { text-align: left; }
-    .asi-inv-title { font-size: 30px; }
+
+
+
+    .asi-inv-title {
+        font-size: 24px;
+    }
 
     /* Info bar wraps */
     .asi-inv-info-bar {
@@ -697,86 +835,57 @@
     }
 
     /* Bill To / Payment stacked */
-    .asi-inv-meta { grid-template-columns: 1fr; gap: 12px; }
+    .asi-inv-meta {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
 
     /* Totals full width */
-    .asi-total-row { min-width: unset; width: 100%; }
-    .asi-totals { align-items: stretch; }
-
-    /* ── INVOICE TABLE → Card layout on mobile ── */
-    .asi-inv-table-scroll { border-radius: 0; }
-
-    .asi-inv-table thead { display: none; }
-
-    .asi-inv-table,
-    .asi-inv-table tbody,
-    .asi-inv-table tr,
-    .asi-inv-table td { display: block; width: 100%; }
-
-    .asi-inv-table tr {
-        margin-bottom: 14px;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-        background: white;
+    .asi-total-row {
+        min-width: unset;
+        width: 100%;
     }
 
-    .asi-inv-table td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 14px;
-        border-bottom: 1px solid #f3f4f6;
-        font-size: 13.5px;
-        text-align: right;
+    .asi-totals {
+        align-items: stretch;
     }
 
-    .asi-inv-table td:last-child { border-bottom: none; }
-
-    /* Label via data-label attribute */
-    .asi-inv-table td::before {
-        content: attr(data-label);
-        font-weight: 700;
-        color: #6b7280;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        text-align: left;
-        flex-shrink: 0;
-        margin-right: 12px;
+    /* Ensure horizontal scroll works well on mobile */
+    .asi-inv-table-scroll {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
     }
-
-    /* #, Action full-width rows */
-    .asi-inv-table td:first-child {
-        background: #7c3aed;
-        color: white;
-        font-weight: 700;
-        justify-content: flex-start;
-        gap: 8px;
-        padding: 10px 14px;
-    }
-
-    .asi-inv-table td:first-child::before { color: rgba(255,255,255,0.7); }
-
-    /* Action row */
-    .asi-inv-table td:last-child {
-        justify-content: flex-end;
-        padding: 12px 14px;
-    }
-
-    .asi-bci-cell { color: #7c3aed; font-weight: 700; }
 
     /* Product selection table on mobile */
-    .asi-product-table { font-size: 12px; }
-    .asi-num-input { width: 44px; padding: 5px 4px; font-size: 12px; }
+    .asi-product-table {
+        font-size: 12px;
+    }
+
+    .asi-num-input {
+        width: 44px;
+        padding: 5px 4px;
+        font-size: 12px;
+    }
 }
 
 /* ── Responsive — Small mobile (≤480px) ── */
 @media (max-width: 480px) {
-    .asi-company-name { font-size: 20px; }
-    .asi-header-title { font-size: 20px; }
-    .asi-inv-title { font-size: 24px; }
-    .asi-btn-back, .asi-btn-confirm { padding: 9px 14px; font-size: 13px; }
-}
+    .asi-company-name {
+        font-size: 20px;
+    }
 
+    .asi-header-title {
+        font-size: 20px;
+    }
+
+    .asi-inv-title {
+        font-size: 24px;
+    }
+
+    .asi-btn-back,
+    .asi-btn-confirm {
+        padding: 9px 14px;
+        font-size: 13px;
+    }
+}
