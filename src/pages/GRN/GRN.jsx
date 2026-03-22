@@ -334,6 +334,7 @@ const GRN = () => {
             userId: currentUserId,
             date: formData.date,
             invoiceNumber: formData.invoiceNumber,
+            paymentStatus: 'unpaid',
             items: addedItems.map((item) => ({
                 id: item.originalId, 
                 productId: item.productId,
