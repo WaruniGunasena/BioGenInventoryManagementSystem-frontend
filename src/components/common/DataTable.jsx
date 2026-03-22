@@ -33,6 +33,7 @@ const DataTable = ({
     onDelete = () => { },
     onToggleStatus = () => { },
     onRowClick = null,          // optional: fires when a data row (not action buttons) is clicked
+    customControls = null,      // custom nodes to render in the control-right section
 
     rowKey = "id",
 }) => {
@@ -103,6 +104,7 @@ const DataTable = ({
                     </div>
 
                     <div className="control-right">
+                        {customControls}
                         {showFilter && (
                             <div className="filter-dropdown-wrapper" ref={filterRef}>
                                 <button
