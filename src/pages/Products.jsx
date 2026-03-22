@@ -92,7 +92,6 @@ const Products = () => {
         setIsEditModalOpen(false);
         fetchProducts();
     };
-    
 
     const handleExportToCsv = () => {
         exportToCSV({
