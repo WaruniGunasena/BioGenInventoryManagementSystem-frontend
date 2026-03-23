@@ -34,19 +34,21 @@ const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
         setIsSubmitting(true);
 
         try {
-            const emailCheckRes = await checkCustomerEmailExists(formData.email);
-            const emailExists = emailCheckRes.data;
+            if (formData.email) {
+                const emailCheckRes = await checkCustomerEmailExists(formData.email);
+                const emailExists = emailCheckRes.data;
 
-            if (emailExists) {
-                setEmailError(true);
-                showToast('error', 'This email address is already registered.');
-                setIsSubmitting(false);
-                return;
+                if (emailExists) {
+                    setEmailError(true);
+                    showToast('error', 'This email address is already registered.');
+                    setIsSubmitting(false);
+                    return;
+                }
             }
 
             const dataToSubmit = {
                 ...formData,
-                creditPeriod: parseInt(formData.creditPeriod, 10),
+                creditPeriod: formData.creditPeriod === 'cash' ? 'cash' : parseInt(formData.creditPeriod, 10),
                 creditLimit: formData.creditLimit ? parseFloat(formData.creditLimit) : null
             };
             await createCustomer(dataToSubmit);
@@ -82,7 +84,7 @@ const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
                     </div>
                     <div className="form-group form-col">
                         <label className="form-label" style={{ color: emailError ? '#ef4444' : undefined }}>
-                            Email * {emailError && <span style={{ fontSize: '12px', fontWeight: 400 }}>— already registered</span>}
+                            Email {emailError && <span style={{ fontSize: '12px', fontWeight: 400 }}>— already registered</span>}
                         </label>
                         <input
                             type="email"
@@ -91,7 +93,6 @@ const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
                             placeholder="Enter email address"
                             value={formData.email}
                             onChange={handleChange}
-                            required
                             style={{
                                 borderColor: emailError ? '#ef4444' : undefined,
                                 backgroundColor: emailError ? '#fef2f2' : undefined,
@@ -161,7 +162,9 @@ const AddCustomerModal = ({ isOpen, onClose, onCustomerAdded }) => {
                             onChange={handleChange}
                             required
                         >
+                            <option value="cash">cash</option>
                             <option value="30">30 days</option>
+                            <option value="45">45 days</option>
                             <option value="60">60 days</option>
                             <option value="90">90 days</option>
                         </select>
