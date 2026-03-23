@@ -31,7 +31,7 @@ const SalesOrder = () => {
 
     const [formData, setFormData] = useState({
         customerId: "",
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toLocaleDateString('en-CA'),
         creditTerm: "",
         invoiceNumber: null,
         productId: "",
@@ -271,7 +271,7 @@ const SalesOrder = () => {
             setAddedItems([]);
             setFormData({
                 customerId: "",
-                date: new Date().toISOString().split("T")[0],
+                date: new Date().toLocaleDateString('en-CA'),
                 creditTerm: "",
                 invoiceNumber: null,
                 productId: "",

@@ -106,7 +106,7 @@ export const exportToCSV = async ({
         }
 
         const csv = buildCSV(rows, columnMap);
-        const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        const dateStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
         downloadCSV(csv, `${filenamePrefix}_${dateStr}.csv`);
     } catch (error) {
         console.error('ExportToCSV: export failed:', error);

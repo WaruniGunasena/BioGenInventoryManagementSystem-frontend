@@ -316,7 +316,7 @@ const SalesRepOrder = () => {
         const payload = {
             customerId: selectedCustomer.id || selectedCustomer._id,
             userId: currentUserId,
-            date: new Date().toISOString().split("T")[0],
+            date: new Date().toLocaleDateString('en-CA'),
             grandTotal,
             items: mappedItems
         };

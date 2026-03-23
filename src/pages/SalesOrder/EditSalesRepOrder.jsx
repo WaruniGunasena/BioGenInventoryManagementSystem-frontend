@@ -37,6 +37,7 @@ const EditSalesRepOrder = () => {
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [productSearch, setProductSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(0);
+    // eslint-disable-next-line no-unused-vars
     const [totalPages, setTotalPages] = useState(0);
     const [pageSize] = useState(5);
     const [loadingProducts, setLoadingProducts] = useState(false);
@@ -51,19 +52,6 @@ const EditSalesRepOrder = () => {
     const [currentUserName, setCurrentUserName] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // ── Dummy fallbacks ──────────────────────────────────────────────────────
-    const dummyCustomers = [
-        { id: 1, name: "Walk-in Customer", contact_No: "0000000000", creditLimit: 50000, dueAmount: 5000 },
-        { id: 2, name: "BioGen Clinic", contact_No: "0112345678", creditLimit: 200000, dueAmount: 150000 },
-    ];
-    const dummyCategories = [
-        { id: 1, name: "Antibiotics" }, { id: 2, name: "Painkillers" },
-        { id: 3, name: "Supplements" }, { id: 4, name: "Surgicals" }
-    ];
-    const dummyProducts = [
-        { id: 101, name: "Amoxicillin 500mg", sellingPrice: 45.50, unit: "Tablet", categoryId: 1 },
-        { id: 102, name: "Paracetamol 500mg", sellingPrice: 5.00, unit: "Tablet", categoryId: 2 },
-    ];
 
     // ── Data fetchers ────────────────────────────────────────────────────────
     const fetchUserId = useCallback(async () => {
@@ -77,8 +65,8 @@ const EditSalesRepOrder = () => {
         try {
             const res = await getAllCustomers();
             const data = res.data?.customers || res.data || [];
-            setCustomers(Array.isArray(data) && data.length > 0 ? data : dummyCustomers);
-        } catch { setCustomers(dummyCustomers); }
+            setCustomers(Array.isArray(data) && data.length > 0 ? data : []);
+        } catch { setCustomers([]); }
     }, []);
 
     const fetchCategories = useCallback(async () => {
@@ -95,7 +83,6 @@ const EditSalesRepOrder = () => {
     const fetchProducts = useCallback(async (page, categoryId, search, append = false, resolvedStock = null) => {
         if (!append) setLoadingProducts(true);
         try {
-            const filter = categoryId !== "all" ? categoryId : "";
             let data = [], total = 0, res;
             if (search) {
                 res = await searchProduct(search);
@@ -108,15 +95,7 @@ const EditSalesRepOrder = () => {
                 data = res.data?.products || res.data?.content || [];
                 total = res.data?.totalPages || 1;
             }
-            if (!Array.isArray(data) || data.length === 0) {
-                if (page === 0) {
-                    data = dummyProducts.filter(p =>
-                        (categoryId === "all" || p.categoryId.toString() === categoryId.toString()) &&
-                        (search === "" || p.name.toLowerCase().includes(search.toLowerCase()))
-                    );
-                    total = 1;
-                } else { data = []; }
-            }
+
             const stock = resolvedStock !== null ? resolvedStock : stockData;
 
             const getInitialQtyBonus = (pid) => {
@@ -144,12 +123,8 @@ const EditSalesRepOrder = () => {
             setTotalPages(total);
             setHasMore(page < total - 1);
         } catch {
-            if (!append) {
-                setProducts(dummyProducts.map(p => ({ ...p, inputQty: "", inputBonus: "" })));
-                setTotalPages(1);
-            }
         } finally { setLoadingProducts(false); }
-    }, [pageSize, stockData]);
+    }, [pageSize, stockData, invoice.items]);
 
     // ── Init: load master data then pre-populate invoice ─────────────────────
     useEffect(() => {
@@ -170,6 +145,7 @@ const EditSalesRepOrder = () => {
             fetchProducts(0, "all", "", false, resolvedStock);
         };
         init();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Pre-populate customer and addedItems from the invoice
@@ -214,7 +190,7 @@ const EditSalesRepOrder = () => {
     // Re-fetch when category/search changes
     useEffect(() => {
         fetchProducts(0, selectedCategory, productSearch);
-    }, [selectedCategory, productSearch]);
+    }, [selectedCategory, productSearch, fetchProducts]);
 
     // Click-outside handler for customer dropdown
     useEffect(() => {
@@ -225,7 +201,7 @@ const EditSalesRepOrder = () => {
         };
         document.addEventListener("mousedown", handler);
         return () => document.removeEventListener("mousedown", handler);
-    }, []);
+    }, [selectedCustomer]);
 
     // ── Event handlers ───────────────────────────────────────────────────────
     const handleProductSearch = (val) => { setProductSearch(val); setCurrentPage(0); };
@@ -333,7 +309,7 @@ const EditSalesRepOrder = () => {
         const payload = {
             customerId: selectedCustomer.id || selectedCustomer._id,
             userId: currentUserId,
-            date: invoice?.date || new Date().toISOString().split("T")[0],
+            date: invoice?.date || new Date().toLocaleDateString('en-CA'),
             grandTotal,
             items: mappedItems
         };
