@@ -16,7 +16,7 @@ const GRN = () => {
     const location = useLocation();
     const { showToast } = useToast();
     const formRef = useRef(null);
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toLocaleDateString('en-CA');
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -26,7 +26,7 @@ const GRN = () => {
 
     const [formData, setFormData] = useState({
         supplierId: "",
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toLocaleDateString('en-CA'),
         creditPeriod: "",
         productId: "",
         productName: "",
@@ -66,7 +66,7 @@ const GRN = () => {
             setFormData((prev) => ({
                 ...prev,
                 supplierId: invoice.supplierId || invoice.supplier?.id || invoice.supplier?._id || "",
-                date: invoice.date || invoice.grnDate || new Date().toISOString().split("T")[0],
+                date: invoice.date || invoice.grnDate || new Date().toLocaleDateString('en-CA'),
                 invoiceNumber: invoice.invoiceNumber || invoice.grnNumber || "",
                 creditPeriod: invoice.creditPeriod || invoice.supplier?.creditPeriod || "",
                 invoiceId: invoice.id || invoice._id,
@@ -365,7 +365,7 @@ const GRN = () => {
             setAddedItems([]);
             setFormData({
                 supplierId: "",
-                date: new Date().toISOString().split("T")[0],
+                date: new Date().toLocaleDateString('en-CA'),
                 creditPeriod: "",
                 productId: "",
                 productName: "",
