@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from '../common/Modal';
 import { updateCustomer } from '../../api/customerService';
 import { useToast } from '../../context/ToastContext';
+import { getUserId } from '../common/Utils/userUtils/userUtils';
 import './CustomerModal.css';
 
 const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => {
@@ -43,11 +44,13 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
         const id = customer?.id ?? customer?._id;
         setIsSubmitting(true);
         try {
+            const userId = await getUserId();
             const dataToSubmit = {
                 customerId: id,
                 ...formData,
-                creditPeriod: parseInt(formData.creditPeriod, 10),
-                creditLimit: formData.creditLimit !== '' && formData.creditLimit !== null ? parseFloat(formData.creditLimit) : null
+                creditPeriod: formData.creditPeriod === 'cash' ? 'cash' : parseInt(formData.creditPeriod, 10),
+                creditLimit: formData.creditLimit !== '' && formData.creditLimit !== null ? parseFloat(formData.creditLimit) : null,
+                userId: userId
             };
             await updateCustomer(id, dataToSubmit);
             showToast('success', 'Customer updated successfully!');
@@ -79,7 +82,7 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
                         />
                     </div>
                     <div className="form-group form-col">
-                        <label className="form-label">Email *</label>
+                        <label className="form-label">Email</label>
                         <input
                             type="email"
                             name="email"
@@ -87,7 +90,6 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
                             placeholder="Enter email address"
                             value={formData.email}
                             onChange={handleChange}
-                            required
                         />
                     </div>
                 </div>
@@ -152,7 +154,9 @@ const EditCustomerModal = ({ isOpen, onClose, onCustomerUpdated, customer }) => 
                             onChange={handleChange}
                             required
                         >
+                            <option value="cash">cash</option>
                             <option value="30">30 days</option>
+                            <option value="45">45 days</option>
                             <option value="60">60 days</option>
                             <option value="90">90 days</option>
                         </select>
