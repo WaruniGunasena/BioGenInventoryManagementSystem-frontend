@@ -102,9 +102,9 @@ const Products = () => {
                 { key: 'name', label: 'Product Name' },
                 { key: 'categoryName', label: 'Category' },
                 { key: 'packSize', label: 'Pack Size' },
-                { key: 'unit', label: 'Unit'},
-                { key: 'sellingPrice', label: 'Selling Price'},
-                { key: 'mrp', label: 'MRP'}
+                { key: 'unit', label: 'Unit' },
+                { key: 'sellingPrice', label: 'Selling Price' },
+                { key: 'mrp', label: 'MRP' }
 
             ],
             filenamePrefix: 'products',
@@ -122,10 +122,10 @@ const Products = () => {
                 { key: 'name', label: 'Product Name' },
                 { key: 'categoryName', label: 'Category' },
                 { key: 'packSize', label: 'Pack Size' },
-                { key: 'unit', label: 'Unit'},
-                { key: 'sellingPrice', label: 'Selling Price'},
-                { key: 'mrp', label: 'MRP'}
-                
+                { key: 'unit', label: 'Unit' },
+                { key: 'sellingPrice', label: 'Selling Price' },
+                { key: 'mrp', label: 'MRP' }
+
             ],
             title: 'Product List',
             filenamePrefix: 'products',

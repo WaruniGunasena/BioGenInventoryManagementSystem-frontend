@@ -16,7 +16,7 @@ const EditSalesRepOrder = () => {
     const { showToast } = useToast();
     const location = useLocation();
     const navigate = useNavigate();
-    const invoice = location.state?.invoice;           // full invoice object passed from SalesInvoices
+    const invoice = location.state?.invoice;
     const invoiceId = invoice?.salesOrderId || invoice?.id;
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -24,14 +24,12 @@ const EditSalesRepOrder = () => {
     const customerDropdownRef = useRef(null);
     const topSelectionRef = useRef(null);
 
-    // Customer state
     const [customers, setCustomers] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [customerSearch, setCustomerSearch] = useState("");
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
     const [hasMore, setHasMore] = useState(true);
 
-    // Product list state
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("all");
@@ -42,7 +40,6 @@ const EditSalesRepOrder = () => {
     const [loadingProducts, setLoadingProducts] = useState(false);
     const [showProductSearch, setShowProductSearch] = useState(false);
 
-    // Invoice/order state
     const [addedItems, setAddedItems] = useState([]);
     const addedItemsRef = useRef([]);
     useEffect(() => { addedItemsRef.current = addedItems; }, [addedItems]);
@@ -51,7 +48,6 @@ const EditSalesRepOrder = () => {
     const [currentUserName, setCurrentUserName] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // ── Dummy fallbacks ──────────────────────────────────────────────────────
     const dummyCustomers = [
         { id: 1, name: "Walk-in Customer", contact_No: "0000000000", creditLimit: 50000, dueAmount: 5000 },
         { id: 2, name: "BioGen Clinic", contact_No: "0112345678", creditLimit: 200000, dueAmount: 150000 },
@@ -65,7 +61,6 @@ const EditSalesRepOrder = () => {
         { id: 102, name: "Paracetamol 500mg", sellingPrice: 5.00, unit: "Tablet", categoryId: 2 },
     ];
 
-    // ── Data fetchers ────────────────────────────────────────────────────────
     const fetchUserId = useCallback(async () => {
         try {
             setCurrentUserId(await getUserId());
@@ -151,7 +146,6 @@ const EditSalesRepOrder = () => {
         } finally { setLoadingProducts(false); }
     }, [pageSize, stockData]);
 
-    // ── Init: load master data then pre-populate invoice ─────────────────────
     useEffect(() => {
         if (!invoice) {
             showToast("error", "No Order data found. Redirecting back.");
@@ -172,11 +166,9 @@ const EditSalesRepOrder = () => {
         init();
     }, []);
 
-    // Pre-populate customer and addedItems from the invoice
     useEffect(() => {
         if (!invoice) return;
 
-        // Match the invoice's customerId with the full customers list to get the creditLimit
         const customerId = invoice.customer?.id || invoice.customer?._id || invoice.customerId;
         const fullCustomer = customers.find(c => (c.id || c._id) === customerId);
 
@@ -190,7 +182,6 @@ const EditSalesRepOrder = () => {
             setCustomerSearch(invoice.customerName);
         }
 
-        // Reconstruct items — group sale lines and their matching bonus line (sellingPrice=0)
         const salelines = (invoice.items || []).filter(i => parseFloat(i.sellingPrice) > 0);
         const preloadedItems = salelines.map(item => {
             const bonusLine = (invoice.items || []).find(
@@ -211,14 +202,11 @@ const EditSalesRepOrder = () => {
         setAddedItems(preloadedItems);
     }, [invoice, customers]);
 
-    // Re-fetch when category/search changes
     useEffect(() => {
         fetchProducts(0, selectedCategory, productSearch);
     }, [selectedCategory, productSearch]);
 
-    // Click-outside handler for customer dropdown
     useEffect(() => {
-        console.log("selected CUstomer", selectedCustomer)
         const handler = (e) => {
             if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target))
                 setShowCustomerDropdown(false);
@@ -227,7 +215,6 @@ const EditSalesRepOrder = () => {
         return () => document.removeEventListener("mousedown", handler);
     }, []);
 
-    // ── Event handlers ───────────────────────────────────────────────────────
     const handleProductSearch = (val) => { setProductSearch(val); setCurrentPage(0); };
     const handleCustomerSearch = (e) => { setCustomerSearch(e.target.value); setShowCustomerDropdown(true); };
     const selectCustomer = (c) => { setSelectedCustomer(c); setCustomerSearch(c.name); setShowCustomerDropdown(false); };
@@ -287,7 +274,6 @@ const EditSalesRepOrder = () => {
         setProducts(prev => prev.map(p => (p.id || p._id) === productId ? { ...p, inputQty: "", inputBonus: "" } : p));
     };
 
-    // ── Derived values ───────────────────────────────────────────────────────
     const grandTotal = addedItems.reduce((sum, i) => sum + i.totalAmount, 0);
     const availableCredit = selectedCustomer ? (selectedCustomer.creditLimit - (selectedCustomer.dueAmount || 0)) : 0;
     const isOverCredit = selectedCustomer && grandTotal > availableCredit;
@@ -299,7 +285,6 @@ const EditSalesRepOrder = () => {
     const today = new Date();
     const formattedDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
 
-    // ── Submit ───────────────────────────────────────────────────────────────
     const handleUpdateInvoice = async () => {
         if (!selectedCustomer) { showToast("error", "Please select a customer"); return; }
         if (addedItems.length === 0) { showToast("error", "Please add at least one product"); return; }
@@ -350,7 +335,6 @@ const EditSalesRepOrder = () => {
         }
     };
 
-    // ── Render ───────────────────────────────────────────────────────────────
     return (
         <Layout>
             <div className={`dashboard-container ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
@@ -363,7 +347,6 @@ const EditSalesRepOrder = () => {
                 <div className="dashboard-content">
                     <div className="asi-page">
 
-                        {/* ── Page Header ── */}
                         <header className="asi-header">
                             <div className="asi-header-left">
                                 <div className="asi-header-icon">
@@ -386,11 +369,9 @@ const EditSalesRepOrder = () => {
                             </div>
                         </header>
 
-                        {/* ── Top Section: Customer + Product ── */}
                         <div className="asi-top-section" ref={topSelectionRef}>
                             <div className="asi-card asi-combined-card">
 
-                                {/* Customer Info */}
                                 <div className="asi-combined-section">
                                     <div className="asi-card-header">
                                         <ShoppingCart size={18} className="asi-icon-purple" />
@@ -447,7 +428,6 @@ const EditSalesRepOrder = () => {
 
                                 <hr className="asi-section-divider" />
 
-                                {/* Product Selection */}
                                 <div className="asi-combined-section">
                                     <div className="asi-card-header">
                                         <ShoppingCart size={18} className="asi-icon-purple" />
@@ -537,8 +517,6 @@ const EditSalesRepOrder = () => {
                                 </div>
                             </div>
                         </div>
-
-                        {/* ── Invoice Preview ── */}
                         <div className="asi-invoice-section">
                             <div className="asi-inv-header">
                                 <div className="asi-company-block">

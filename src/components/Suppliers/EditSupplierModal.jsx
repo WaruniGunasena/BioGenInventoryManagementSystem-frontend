@@ -120,6 +120,7 @@ const EditSupplierModal = ({ isOpen, onClose, onSupplierUpdated, supplier }) => 
                                 <option value="cash">cash</option>
                                 <option value="15 days">15 days</option>
                                 <option value="30 days">30 days</option>
+                                <option value="45 days">45 days</option>
                                 <option value="60 days">60 days</option>
                                 <option value="90 days">90 days</option>
                             </select>
