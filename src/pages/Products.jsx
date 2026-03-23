@@ -6,6 +6,7 @@ import ConfirmationModal from '../components/common/ConfirmationModal';
 import '../components/Dashboard/Dashboard.css';
 import Layout from '../components/Layout';
 import { softDeleteProduct, searchProduct, getPaginatedProductResults, getAllProducts } from '../api/productService';
+import { getAllCategory } from '../api/categoryService';
 import { getUserId } from '../components/common/Utils/userUtils/userUtils';
 import AddProductModal from '../components/Products/AddProductModal';
 import EditProductModal from '../components/Products/EditProductModal';
@@ -30,6 +31,8 @@ const Products = () => {
     const [isExporting, setIsExporting] = useState(false);
     const [totalPages, setTotalPages] = useState(0);
     const [filter, setFilter] = useState(FilterType.ASC);
+    const [categoryId, setCategoryId] = useState("");
+    const [categories, setCategories] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [selectedIds, setSelectedIds] = useState([]);
 
@@ -42,7 +45,7 @@ const Products = () => {
     const fetchProducts = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await getPaginatedProductResults(currentPage, 5, filter);
+            const response = await getPaginatedProductResults(currentPage, 5, filter, categoryId);
             if (response.data && response.data.products && Array.isArray(response.data.products)) {
                 setProducts(response.data.products);
                 setTotalPages(response.data.totalPages);
@@ -54,7 +57,25 @@ const Products = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [currentPage, filter]);
+    }, [currentPage, filter, categoryId]);
+
+    useEffect(() => {
+        const fetchCats = async () => {
+            try {
+                const res = await getAllCategory();
+                let fetchedCategories = [];
+                if (res.data && Array.isArray(res.data)) {
+                    fetchedCategories = res.data;
+                } else if (res.data && res.data.categories && Array.isArray(res.data.categories)) {
+                    fetchedCategories = res.data.categories;
+                }
+                setCategories(fetchedCategories);
+            } catch (err) {
+                console.error("Failed to fetch categories:", err);
+            }
+        };
+        fetchCats();
+    }, []);
 
     useEffect(() => {
         fetchProducts();
@@ -74,16 +95,17 @@ const Products = () => {
 
     const handleExportToCsv = () => {
         exportToCSV({
-            fetchData: async () => { const res = await getAllProducts(); return res.data; },
+            fetchData: async () => { const res = await getAllProducts(categoryId); return res.data; },
             extractRows: (data) => Array.isArray(data) ? data : (data?.products ?? []),
             columnMap: [
-                { key: 'id', label: 'Product ID' },
+                { key: 'productID', label: 'Product ID' },
                 { key: 'name', label: 'Product Name' },
                 { key: 'categoryName', label: 'Category' },
-                { key: 'description', label: 'Description' },
                 { key: 'packSize', label: 'Pack Size' },
-                { key: 'minimumStockLevel', label: 'Min Stock' },
-                { key: 'reorderLevel', label: 'Reorder Level' }
+                { key: 'unit', label: 'Unit' },
+                { key: 'sellingPrice', label: 'Selling Price' },
+                { key: 'mrp', label: 'MRP' }
+
             ],
             filenamePrefix: 'products',
             onStart: () => setIsExporting(true),
@@ -93,16 +115,17 @@ const Products = () => {
 
     const handleExportToPdf = () => {
         exportToPDF({
-            fetchData: async () => { const res = await getAllProducts(); return res.data; },
+            fetchData: async () => { const res = await getAllProducts(categoryId); return res.data; },
             extractRows: (data) => Array.isArray(data) ? data : (data?.products ?? []),
             columnMap: [
-                { key: 'id', label: 'Product ID' },
+                { key: 'productID', label: 'Product ID' },
                 { key: 'name', label: 'Product Name' },
                 { key: 'categoryName', label: 'Category' },
-                { key: 'description', label: 'Description' },
                 { key: 'packSize', label: 'Pack Size' },
-                { key: 'minimumStockLevel', label: 'Min Stock' },
-                { key: 'reorderLevel', label: 'Reorder Level' }
+                { key: 'unit', label: 'Unit' },
+                { key: 'sellingPrice', label: 'Selling Price' },
+                { key: 'mrp', label: 'MRP' }
+
             ],
             title: 'Product List',
             filenamePrefix: 'products',
@@ -157,8 +180,8 @@ const Products = () => {
             )
         },
         { header: "Category", accessor: "categoryName" },
-        { header: "Description", accessor: "description" },
         { header: "Pack Size", accessor: "packSize" },
+        { header: "Opeining Balance", accessor: "openingBalance" },
         { header: "Min Stock", accessor: "minimumStockLevel" },
         { header: "Reorder Level", accessor: "reorderLevel" },
     ];
@@ -193,6 +216,24 @@ const Products = () => {
                         showActions={canEdit || canDelete}
                         onEdit={canEdit ? (row) => { setSelectedProduct(row); setIsEditModalOpen(true); } : null}
                         onDelete={canDelete ? handleDeleteClick : null}
+                        customControls={
+                            <select
+                                className="btn-secondary"
+                                style={{ padding: '8px 12px', outline: 'none', cursor: 'pointer' }}
+                                value={categoryId}
+                                onChange={(e) => {
+                                    setCategoryId(e.target.value);
+                                    setCurrentPage(0);
+                                }}
+                            >
+                                <option value="">All Categories</option>
+                                {categories.map(c => (
+                                    <option key={c.id || c._id} value={c.id || c._id}>
+                                        {c.name}
+                                    </option>
+                                ))}
+                            </select>
+                        }
                         filterOptions={[
                             { label: 'Ascending: A → Z', value: FilterType.ASC },
                             { label: 'Descending: Z → A', value: FilterType.DESC },

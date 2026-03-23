@@ -16,7 +16,7 @@ const GRN = () => {
     const location = useLocation();
     const { showToast } = useToast();
     const formRef = useRef(null);
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toLocaleDateString('en-CA');
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -26,7 +26,7 @@ const GRN = () => {
 
     const [formData, setFormData] = useState({
         supplierId: "",
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toLocaleDateString('en-CA'),
         creditPeriod: "",
         productId: "",
         productName: "",
@@ -60,24 +60,24 @@ const GRN = () => {
     }, []);
 
     useEffect(() => {
-        
+
         if (location.state?.editInvoice && !hasPopulatedRef.current && suppliers.length > 0 && products.length > 0) {
             const invoice = location.state.editInvoice;
             setFormData((prev) => ({
                 ...prev,
                 supplierId: invoice.supplierId || invoice.supplier?.id || invoice.supplier?._id || "",
-                date: invoice.date || invoice.grnDate || new Date().toISOString().split("T")[0],
+                date: invoice.date || invoice.grnDate || new Date().toLocaleDateString('en-CA'),
                 invoiceNumber: invoice.invoiceNumber || invoice.grnNumber || "",
                 creditPeriod: invoice.creditPeriod || invoice.supplier?.creditPeriod || "",
-                invoiceId: invoice.id || invoice._id, 
+                invoiceId: invoice.id || invoice._id,
             }));
 
             const mappedItems = (invoice.items || []).map((item, index) => ({
-                id: Date.now() + index, 
-                originalId: item.id || item._id, 
+                id: Date.now() + index,
+                originalId: item.id || item._id,
                 productId: item.productId || item.product?.id || item.product?._id,
                 productName: item.productName || item.product?.name || "N/A",
-                productCode: item.productCode || item.product?.itemCode || "N/A",
+                productCode: item.productCode || item.product?.productID || "N/A",
                 batchNumber: item.batchNumber || "",
                 mfgDate: item.mfgDate || "",
                 expDate: item.expDate || "",
@@ -152,7 +152,7 @@ const GRN = () => {
             ...prev,
             productId: id,
             productName: product ? product.name : "",
-            productCode: product ? (product.itemCode || product.id || product._id) : "",
+            productCode: product ? (product.productID || product.id || product._id) : "",
             packSize: product ? product.packSize : "",
         }));
     };
@@ -334,8 +334,9 @@ const GRN = () => {
             userId: currentUserId,
             date: formData.date,
             invoiceNumber: formData.invoiceNumber,
+            paymentStatus: 'unpaid',
             items: addedItems.map((item) => ({
-                id: item.originalId, 
+                id: item.originalId,
                 productId: item.productId,
                 batchNumber: item.batchNumber,
                 mfgDate: item.mfgDate,
@@ -364,7 +365,7 @@ const GRN = () => {
             setAddedItems([]);
             setFormData({
                 supplierId: "",
-                date: new Date().toISOString().split("T")[0],
+                date: new Date().toLocaleDateString('en-CA'),
                 creditPeriod: "",
                 productId: "",
                 productName: "",

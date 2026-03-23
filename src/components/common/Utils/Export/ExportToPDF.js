@@ -111,7 +111,7 @@ export const exportToPDF = async ({
         const doc = new jsPDF({ orientation, unit: 'mm', format: pageSize });
 
         const pageWidth = doc.internal.pageSize.getWidth();
-        const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        const dateStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
         const reportTitle = title || filenamePrefix;
 
         // --- Header: title ---

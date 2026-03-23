@@ -21,6 +21,8 @@ import SalesInvoices from "./pages/SalesOrder/SalesInvoices";
 import Settings from "./pages/Settings/Settings";
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { AdminStatusProvider, useAdminStatus } from "./context/AdminStatusContext";
+import SalesRepOrder from "./pages/SalesOrder/SalesRepOrder";
+import EditSalesRepOrder from "./pages/SalesOrder/EditSalesRepOrder";
 
 /**
  * FirstRunGuard — must live inside <Router> to use useLocation / useNavigate.
@@ -63,7 +65,9 @@ function App() {
                 <Route path="/stock" element={<Stock />} />
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/sales-order" element={<SalesOrder />} />
+                <Route path="/sales-invoice" element={<SalesRepOrder />} />
                 <Route path="/sales-invoices" element={<SalesInvoices />} />
+                <Route path="/sales-invoices/edit" element={<EditSalesRepOrder />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/test-components" element={<ComponentsDemo />} />
               </Routes>

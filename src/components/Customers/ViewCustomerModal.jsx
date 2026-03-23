@@ -13,7 +13,7 @@ const ViewCustomerModal = ({ isOpen, onClose, customer }) => {
         { label: 'Province', value: customer.province },
         { label: 'Address', value: customer.address },
         { label: 'Postal Code', value: customer.postalCode },
-        { label: 'Credit Term', value: customer.creditPeriod ? `${customer.creditPeriod} days` : '—' },
+        { label: 'Credit Term', value: customer.creditPeriod === 'cash' ? 'cash' : (customer.creditPeriod ? `${customer.creditPeriod} days` : '—') },
     ];
 
     const ReadOnlyField = ({ label, value }) => (

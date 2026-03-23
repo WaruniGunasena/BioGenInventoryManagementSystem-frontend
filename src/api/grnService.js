@@ -18,3 +18,8 @@ export const updateGRN = (id, data) => api.put(`/grn/update/${id}`, data);
 
 export const softDeleteGRN = (id, userId) =>
     api.put(`/grn/softDelete?id=${id}&userId=${userId}`);
+
+export const submitGRNPayment = (paymentData) => 
+    api.post('/grn/payment', paymentData, {
+        headers: { "Content-Type": "application/json" },
+    });

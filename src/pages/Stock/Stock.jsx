@@ -61,7 +61,7 @@ const Stock = () => {
 
     const columns = [
         { header: "Product Name", accessor: "productName" },
-        { header: "Product ID", accessor: "productId" },
+        { header: "Product ID", accessor: "itemCode" },
         { header: "Quantity", accessor: "totalQuantity" },
         { header: "Selling Price", accessor: "sellingPrice" },
         { header: "Minimum Stock", accessor: "minimumStockLevel" },

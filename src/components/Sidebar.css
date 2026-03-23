@@ -277,3 +277,30 @@
         display: block;
     }
 }
+
+/* Notification Bubble */
+.nav-link {
+    position: relative;
+}
+
+.notification-bubble {
+    background-color: #ef4444;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 12px;
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar.collapsed .notification-bubble {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    margin: 0;
+    padding: 2px 4px;
+    font-size: 10px;
+}

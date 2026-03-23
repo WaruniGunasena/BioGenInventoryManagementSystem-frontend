@@ -26,12 +26,12 @@ const SalesOrder = () => {
 
     const [customers, setCustomers] = useState([]);
     const [products, setProducts] = useState([]);
-    const [stockData, setStockData] = useState([]); 
+    const [stockData, setStockData] = useState([]);
     const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
 
     const [formData, setFormData] = useState({
         customerId: "",
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toLocaleDateString('en-CA'),
         creditTerm: "",
         invoiceNumber: null,
         productId: "",
@@ -271,7 +271,7 @@ const SalesOrder = () => {
             setAddedItems([]);
             setFormData({
                 customerId: "",
-                date: new Date().toISOString().split("T")[0],
+                date: new Date().toLocaleDateString('en-CA'),
                 creditTerm: "",
                 invoiceNumber: null,
                 productId: "",
@@ -303,7 +303,7 @@ const SalesOrder = () => {
                 <div className="dashboard-content">
                     <div className="sales-order-container">
                         <header className="sales-order-header">
-                            <h2>Sales Order</h2>
+                            <h2>Sales Invoice</h2>
                             <button className="see-invoices-btn" onClick={() => navigate("/sales-invoices")}>
                                 <FileText size={18} /> See All Invoices
                             </button>
@@ -612,7 +612,6 @@ const SalesOrder = () => {
                             </div>
                         </div>
                     </div>
-
                     <AddCustomerModal
                         isOpen={isAddCustomerModalOpen}
                         onClose={() => setIsAddCustomerModalOpen(false)}

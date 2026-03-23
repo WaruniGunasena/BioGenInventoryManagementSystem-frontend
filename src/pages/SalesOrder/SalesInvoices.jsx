@@ -2,19 +2,26 @@ import React, { useState, useEffect, useRef } from "react";
 import Layout from "../../components/Layout";
 import Sidebar from "../../components/Sidebar";
 import DataTable from "../../components/common/DataTable";
-import { X, FileText, Printer, Download, Share2 } from "lucide-react";
+import { X, FileText, Printer, Download, Share2, Trash2, Check, Edit } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { getPaginatedSalesOrders, searchSalesOrder } from "../../api/salesOrderService";
+import { getPaginatedSalesOrders, searchSalesOrder, softDeleteSalesOrder, approveSalesOrder } from "../../api/salesOrderService";
+import { getUserId, getUserRole } from "../../components/common/Utils/userUtils/userUtils";
+import { useToast } from "../../context/ToastContext";
+import { useNavigate } from "react-router-dom";
 import "./SalesInvoices.css";
 
 const SalesInvoices = () => {
+    const { showToast } = useToast();
+    const navigate = useNavigate();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+    const [currentUserId, setCurrentUserId] = useState(null);
+    const [userRole, setUserRole] = useState(null);
 
     const componentRef = useRef();
 
@@ -25,6 +32,11 @@ const SalesInvoices = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [pageSize] = useState(8);
     const [searchQuery, setSearchQuery] = useState("");
+
+    useEffect(() => {
+        getUserId().then(setCurrentUserId).catch(console.error);
+        getUserRole().then(setUserRole).catch(console.error);
+    }, []);
 
     useEffect(() => {
         if (searchQuery) {
@@ -99,6 +111,42 @@ const SalesInvoices = () => {
         setIsModalOpen(true);
     };
 
+    const handleSoftDelete = async (invoice) => {
+        const invoiceId = invoice.salesOrderId || invoice.id;
+        if (!invoiceId) { showToast("error", "Cannot identify invoice ID"); return; }
+        if (!currentUserId) { showToast("error", "User not identified"); return; }
+        if (!window.confirm(`Delete invoice ${invoice.invoiceNumber}? This action cannot be undone.`)) return;
+
+        try {
+            await softDeleteSalesOrder(invoiceId, currentUserId);
+            showToast("success", `Invoice ${invoice.invoiceNumber} deleted`);
+            setIsModalOpen(false); // Close modal if open
+            fetchInvoices(currentPage);
+        } catch (error) {
+            showToast("error", error?.response?.data?.message || "Failed to delete invoice");
+        }
+    };
+
+    const handleApproval = async (status) => {
+        if (!selectedInvoice || !currentUserId) return;
+        const invoiceId = selectedInvoice.salesOrderId || selectedInvoice.id;
+        
+        try {
+            await approveSalesOrder(status, currentUserId, invoiceId);
+            showToast("success", `Invoice ${status} successfully`);
+            window.dispatchEvent(new Event("invoiceStatusChanged"));
+            setIsModalOpen(false);
+            fetchInvoices(currentPage);
+        } catch (error) {
+            showToast("error", error?.response?.data?.message || `Failed to ${status} invoice`);
+        }
+    };
+
+    // ── Edit: navigate to full edit page ─────────────────────────────────────
+    const handleEditOpen = (invoice) => {
+        navigate("/sales-invoices/edit", { state: { invoice } });
+    };
+
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
         documentTitle: `Invoice_${selectedInvoice?.invoiceNumber || 'Detail'}`,
@@ -144,6 +192,17 @@ const SalesInvoices = () => {
         window.open(whatsappUrl, "_blank");
     };
 
+    const getStatusBadge = (status) => {
+        const map = {
+            Approved:  { label: "Approved",  cls: "si-badge si-badge--approved" },
+            Pending:   { label: "Pending",   cls: "si-badge si-badge--pending" },
+            Rejected:  { label: "Rejected",  cls: "si-badge si-badge--rejected" },
+            Deleted:   { label: "Deleted",   cls: "si-badge si-badge--deleted" },
+        };
+        const s = map[status] || { label: status || "Unknown", cls: "si-badge si-badge--default" };
+        return <span className={s.cls}>{s.label}</span>;
+    };
+
     const columns = [
         { header: "Invoice Number", accessor: "invoiceNumber" },
         { header: "Customer", accessor: "customerName" },
@@ -154,12 +213,17 @@ const SalesInvoices = () => {
             render: (row) => parseFloat(row.grandTotal).toLocaleString('en-US', { minimumFractionDigits: 2 })
         },
         {
+            header: "Status",
+            accessor: "status",
+            render: (row) => getStatusBadge(row.status)
+        },
+        {
             header: "Action",
             accessor: "action",
             render: (row) => (
-                <button className="view-link-btn" onClick={() => handleViewDetails(row)}>
-                    view
-                </button>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <button className="view-link-btn" onClick={() => handleViewDetails(row)}>view</button>
+                </div>
             )
         }
     ];
@@ -204,6 +268,7 @@ const SalesInvoices = () => {
                         <div className="modal-header">
                             <h3>Sales Invoice Details - {selectedInvoice.invoiceNumber}</h3>
                             <div className="modal-actions">
+                               
                                 <button className="action-btn btn-print" onClick={handlePrint}>
                                     <Printer size={18} /> Print
                                 </button>
@@ -332,9 +397,37 @@ const SalesInvoices = () => {
                                                 <span className="line-label">Due (LKR)</span>
                                                 <span className="line-value">{parseFloat(selectedInvoice.grandTotal).toFixed(2)}</span>
                                             </div>
+                                            
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <div className="modal-footer-actions">
+                                {(userRole === "ADMIN" || userRole === "INVENTORY_MANAGER") && selectedInvoice.status === "Pending" && (
+                                    <>
+                                        <button className="action-btn btn-approve" onClick={() => handleApproval("Approved")}>
+                                            <Check size={18} /> Approve
+                                        </button>
+                                        <button className="action-btn btn-reject" onClick={() => handleApproval("Rejected")}>
+                                            <X size={18} /> Reject
+                                        </button>
+                                    </>
+                                )}
+                                {selectedInvoice.status === "Pending" && (
+                                    <button className="action-btn btn-edit" onClick={() => handleEditOpen(selectedInvoice)}>
+                                        <Edit size={18} /> Edit
+                                    </button>
+                                )}
+                                {selectedInvoice.status !== "Deleted" && (
+                                    <button className="action-btn btn-delete" onClick={() => handleSoftDelete(selectedInvoice)}>
+                                        <Trash2 size={18} /> Delete
+                                    </button>
+                                )}
+                                <button className="action-btn btn-close-footer" onClick={() => setIsModalOpen(false)}>
+                                    Close
+                                </button>
                             </div>
                         </div>
                     </div>
