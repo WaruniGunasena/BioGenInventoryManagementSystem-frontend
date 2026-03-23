@@ -31,6 +31,7 @@ const SalesRepOrder = () => {
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [productSearch, setProductSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(0);
+    // eslint-disable-next-line no-unused-vars
     const [totalPages, setTotalPages] = useState(0);
     const [pageSize] = useState(5);
     const [loadingProducts, setLoadingProducts] = useState(false);
@@ -41,28 +42,6 @@ const SalesRepOrder = () => {
     const [stockData, setStockData] = useState([]);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [currentUserName, setCurrentUserName] = useState("");
-
-    // Dummy Data Fallbacks
-    const dummyCustomers = [
-        { id: 1, name: "Walk-in Customer", contact_No: "0000000000", creditLimit: 50000, dueAmount: 5000 },
-        { id: 2, name: "BioGen Clinic", contact_No: "0112345678", creditLimit: 200000, dueAmount: 150000 },
-        { id: 3, name: "City Pharmacy", contact_No: "0771234567", creditLimit: 100000, dueAmount: 20000 }
-    ];
-
-    const dummyCategories = [
-        { id: 1, name: "Antibiotics" },
-        { id: 2, name: "Painkillers" },
-        { id: 3, name: "Supplements" },
-        { id: 4, name: "Surgicals" }
-    ];
-
-    const dummyProducts = [
-        { id: 101, name: "Amoxicillin 500mg", sellingPrice: 45.50, unit: "Tablet", categoryId: 1 },
-        { id: 102, name: "Paracetamol 500mg", sellingPrice: 5.00, unit: "Tablet", categoryId: 2 },
-        { id: 103, name: "Vitamin C 1000mg", sellingPrice: 120.00, unit: "Bottle", categoryId: 3 },
-        { id: 104, name: "Surgical Gloves", sellingPrice: 85.00, unit: "Pair", categoryId: 4 },
-        { id: 105, name: "Metformin 500mg", sellingPrice: 12.00, unit: "Tablet", categoryId: 1 }
-    ];
 
     const fetchUserId = useCallback(async () => {
         try {
@@ -79,9 +58,9 @@ const SalesRepOrder = () => {
         try {
             const res = await getAllCustomers();
             const data = (res.data?.customers || res.data || []);
-            setCustomers(Array.isArray(data) && data.length > 0 ? data : dummyCustomers);
+            setCustomers(Array.isArray(data) && data.length > 0 ? data : []);
         } catch (error) {
-            setCustomers(dummyCustomers);
+            setCustomers([]);
         }
     }, []);
 
@@ -101,7 +80,6 @@ const SalesRepOrder = () => {
     const fetchProducts = useCallback(async (page, categoryId, search, append = false, resolvedStock = null) => {
         if (!append) setLoadingProducts(true);
         try {
-            const filter = categoryId !== "all" ? categoryId : "";
             let data = [];
             let total = 0;
             let res;
@@ -116,18 +94,6 @@ const SalesRepOrder = () => {
                 res = await getPaginatedProductResults(page, pageSize, sortFilter, catIdParam);
                 data = res.data?.products || res.data?.content || [];
                 total = res.data?.totalPages || 1;
-            }
-
-            if (!Array.isArray(data) || data.length === 0) {
-                if (page === 0) {
-                    data = dummyProducts.filter(p =>
-                        (categoryId === "all" || p.categoryId.toString() === categoryId.toString()) &&
-                        (search === "" || p.name.toLowerCase().includes(search.toLowerCase()))
-                    );
-                    total = 1;
-                } else {
-                    data = [];
-                }
             }
 
             // Use passed-in stock OR the current stockData state
@@ -149,14 +115,7 @@ const SalesRepOrder = () => {
             setTotalPages(total);
             setHasMore(page < total - 1);
         } catch (error) {
-            if (!append) {
-                const filteredDummy = dummyProducts.filter(p =>
-                    (categoryId === "all" || p.categoryId.toString() === categoryId.toString()) &&
-                    (search === "" || p.name.toLowerCase().includes(search.toLowerCase()))
-                );
-                setProducts(filteredDummy.map(p => ({ ...p, inputQty: "", inputBonus: "" })));
-                setTotalPages(1);
-            }
+            console.error("Failed to fetch products:", error);
         } finally {
             setLoadingProducts(false);
         }
@@ -179,6 +138,7 @@ const SalesRepOrder = () => {
             fetchProducts(0, "all", "", false, resolvedStock);
         };
         init();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -193,7 +153,7 @@ const SalesRepOrder = () => {
 
     useEffect(() => {
         fetchProducts(0, selectedCategory, productSearch);
-    }, [selectedCategory, productSearch]);
+    }, [selectedCategory, productSearch,fetchProducts]);
 
     const handleProductSearch = (val) => {
         setProductSearch(val);
