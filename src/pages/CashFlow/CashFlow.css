@@ -1,0 +1,290 @@
+.cashflow-dashboard {
+  padding: 2rem;
+  background-color: var(--background-color, #f4f7fe);
+  min-height: calc(100vh - 80px);
+  font-family: 'Inter', sans-serif;
+  color: #2b3674;
+}
+
+.cashflow-header {
+  margin-bottom: 1.5rem;
+}
+
+.cashflow-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.header-title h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1b2559;
+  letter-spacing: -0.5px;
+}
+
+.header-title p {
+  color: #a3aed1;
+  margin: 0.5rem 0 0 0;
+  font-size: 0.95rem;
+}
+
+.date-filter {
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  gap: 0.8rem;
+  border: 1px solid #e2e8f0;
+}
+
+.icon-calendar {
+  color: #4318FF;
+}
+
+.date-input {
+  border: none;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: #2b3674;
+  background: transparent;
+  cursor: pointer;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.date-separator {
+  color: #a3aed1;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.cashflow-tabs {
+  display: flex;
+  background: white;
+  padding: 0.4rem;
+  border-radius: 14px;
+  width: fit-content;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  padding: 0.8rem 1.8rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 10px;
+  color: #a3aed1;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+  color: #4318FF;
+}
+
+.tab-btn.active {
+  background: #4318FF;
+  color: white;
+  box-shadow: 0 4px 15px rgba(67, 24, 255, 0.3);
+}
+
+.tab-pane {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.tables-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .tables-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ledger-card {
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.ledger-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.ledger-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.ledger-card.debit-card .ledger-icon {
+  color: #05cd99;
+  background: rgba(5, 205, 153, 0.1);
+  padding: 8px;
+  border-radius: 8px;
+  box-sizing: content-box;
+}
+
+.ledger-card.credit-card .ledger-icon {
+  color: #ee5d50;
+  background: rgba(238, 93, 80, 0.1);
+  padding: 8px;
+  border-radius: 8px;
+  box-sizing: content-box;
+}
+
+.ledger-header h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1b2559;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ledger-table th {
+  text-align: left;
+  padding: 1rem 0.5rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: #a3aed1;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ledger-table td {
+  padding: 1.2rem 0.5rem;
+  font-size: 0.95rem;
+  color: #2b3674;
+  font-weight: 500;
+  border-bottom: 1px solid #f4f7fe;
+  transition: background 0.2s ease;
+}
+
+.ledger-table tbody tr:hover td {
+  background: #fafbff;
+}
+
+.ledger-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.empty-state {
+  text-align: center;
+  color: #a3aed1 !important;
+  font-style: italic;
+  padding: 3rem !important;
+}
+
+.summary-widgets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+@media (max-width: 900px) {
+  .summary-widgets {
+    grid-template-columns: 1fr;
+  }
+}
+
+.widget-card {
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  gap: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.widget-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+}
+
+.widget-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.widget-card.income .widget-icon {
+  background: linear-gradient(135deg, #05cd99 0%, #01a378 100%);
+  color: white;
+  box-shadow: 0 8px 20px rgba(5, 205, 153, 0.3);
+}
+
+.widget-card.expense .widget-icon {
+  background: linear-gradient(135deg, #ee5d50 0%, #db4639 100%);
+  color: white;
+  box-shadow: 0 8px 20px rgba(238, 93, 80, 0.3);
+}
+
+.widget-card.profit .widget-icon {
+  background: linear-gradient(135deg, #4318FF 0%, #3111c1 100%);
+  color: white;
+  box-shadow: 0 8px 20px rgba(67, 24, 255, 0.3);
+}
+
+.widget-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.widget-label {
+  font-size: 1rem;
+  color: #a3aed1;
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+}
+
+.widget-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1b2559;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
