@@ -21,7 +21,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  FileText
+  FileText,
+  TrendingUp
 } from "lucide-react";
 import "./Sidebar.css";
 import { getUserName, getUserRole } from "./common/Utils/userUtils/userUtils";
@@ -240,6 +241,14 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
               <span className="link-text">Roles</span>
             </Link>
           </li>}
+
+          {admin && <li className="nav-item">
+            <Link to="/cash-flow" className={`nav-link ${isActive('/cash-flow') ? 'active' : ''}`}>
+              <TrendingUp size={20} className="nav-icon" />
+              <span className="link-text">Cash Flow</span>
+            </Link>
+          </li>}
+
           <div style={{ flex: 1 }}></div>
 
           <li className="nav-item">
