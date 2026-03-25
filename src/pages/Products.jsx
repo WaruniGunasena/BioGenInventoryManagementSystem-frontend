@@ -236,6 +236,7 @@ const Products = () => {
                         showAddButton={canAdd}
                         onAddClick={() => setIsAddModalOpen(true)}
                         showActions={canEdit || canDelete}
+                        showStatusToggle={false}
                         onEdit={canEdit ? (row) => { setSelectedProduct(row); setIsEditModalOpen(true); } : null}
                         onDelete={canDelete ? handleDeleteClick : null}
                         customControls={
