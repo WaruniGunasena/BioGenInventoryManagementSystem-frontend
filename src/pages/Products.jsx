@@ -96,7 +96,18 @@ const Products = () => {
     const handleExportToCsv = () => {
         exportToCSV({
             fetchData: async () => { const res = await getAllProducts(categoryId); return res.data; },
-            extractRows: (data) => Array.isArray(data) ? data : (data?.products ?? []),
+            extractRows: (data) => {
+                const rows = Array.isArray(data) ? data : (data?.products ?? []);
+                return rows.map(row => {
+                    const sp = parseFloat(row.sellingPrice);
+                    const mp = parseFloat(row.mrp);
+                    return {
+                        ...row,
+                        sellingPrice: !isNaN(sp) ? sp.toFixed(2) : (row.sellingPrice || '0.00'),
+                        mrp: !isNaN(mp) ? mp.toFixed(2) : (row.mrp || '0.00')
+                    };
+                });
+            },
             columnMap: [
                 { key: 'productID', label: 'Product ID' },
                 { key: 'name', label: 'Product Name' },
@@ -116,15 +127,26 @@ const Products = () => {
     const handleExportToPdf = () => {
         exportToPDF({
             fetchData: async () => { const res = await getAllProducts(categoryId); return res.data; },
-            extractRows: (data) => Array.isArray(data) ? data : (data?.products ?? []),
+            extractRows: (data) => {
+                const rows = Array.isArray(data) ? data : (data?.products ?? []);
+                return rows.map(row => {
+                    const sp = parseFloat(row.sellingPrice);
+                    const mp = parseFloat(row.mrp);
+                    return {
+                        ...row,
+                        sellingPrice: !isNaN(sp) ? sp.toFixed(2) : (row.sellingPrice || '0.00'),
+                        mrp: !isNaN(mp) ? mp.toFixed(2) : (row.mrp || '0.00')
+                    };
+                });
+            },
             columnMap: [
                 { key: 'productID', label: 'Product ID' },
                 { key: 'name', label: 'Product Name' },
                 { key: 'categoryName', label: 'Category' },
                 { key: 'packSize', label: 'Pack Size' },
                 { key: 'unit', label: 'Unit' },
-                { key: 'sellingPrice', label: 'Selling Price' },
-                { key: 'mrp', label: 'MRP' }
+                { key: 'sellingPrice', label: 'Selling Price', align: 'right' },
+                { key: 'mrp', label: 'MRP', align: 'right' }
 
             ],
             title: 'Product List',
