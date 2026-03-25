@@ -57,8 +57,12 @@ const buildTableData = (rows, columnMap) => {
     );
     const columnStyles = {};
     columnMap.forEach((col, index) => {
+        columnStyles[index] = {};
         if (col.align) {
-            columnStyles[index] = { halign: col.align };
+            columnStyles[index].halign = col.align;
+        }
+        if (col.width) {
+            columnStyles[index].cellWidth = col.width;
         }
     });
     return { head, body, columnStyles };
