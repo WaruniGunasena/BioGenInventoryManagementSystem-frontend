@@ -23,6 +23,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from "r
 import { AdminStatusProvider, useAdminStatus } from "./context/AdminStatusContext";
 import SalesRepOrder from "./pages/SalesOrder/SalesRepOrder";
 import EditSalesRepOrder from "./pages/SalesOrder/EditSalesRepOrder";
+import EditSalesOrder from "./pages/SalesOrder/EditSalesOrder";
 
 /**
  * FirstRunGuard — must live inside <Router> to use useLocation / useNavigate.
@@ -68,6 +69,7 @@ function App() {
                 <Route path="/sales-invoice" element={<SalesRepOrder />} />
                 <Route path="/sales-invoices" element={<SalesInvoices />} />
                 <Route path="/sales-invoices/edit" element={<EditSalesRepOrder />} />
+                <Route path="/sales-invoices/edit-so" element={<EditSalesOrder />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/test-components" element={<ComponentsDemo />} />
               </Routes>
