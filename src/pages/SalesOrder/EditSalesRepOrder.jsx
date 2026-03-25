@@ -679,7 +679,7 @@ const EditSalesRepOrder = () => {
                                     </div>
                                     <div className={`asi-total-row asi-grand-total ${isOverCredit ? "over" : ""}`}>
                                         <span><b>Due</b> (LKR)</span>
-                                        <span>{netTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        <span>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 </div>
                             )}

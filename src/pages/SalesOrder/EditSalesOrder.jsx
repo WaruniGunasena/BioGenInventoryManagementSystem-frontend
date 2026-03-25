@@ -426,7 +426,6 @@ const EditSalesOrder = () => {
                 sellingPrice: "",
                 quantity: "",
                 preIssue: "",
-                quantity: "",
                 unit: "",
                 discountPercent: "0.00",
                 discountedPrice: "0.00",
