@@ -325,13 +325,13 @@ const Invoices = () => {
                         <div className="modal-header">
                             <h3>Invoice Details - {selectedInvoice.invoiceNumber}</h3>
                             <div className="modal-header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                {canEdit && (
+                                {canEdit && selectedInvoice.paymentStatus?.toUpperCase() !== 'PAID' && (
                                     <button className="edit-action-btn" onClick={() => handleEditClick(selectedInvoice)}>
                                         <Edit size={20} />
                                         <span>Edit</span>
                                     </button>
                                 )}
-                                {canDelete && (
+                                {canDelete && selectedInvoice.paymentStatus?.toUpperCase() !== 'PAID' && (
                                     <button className="delete-action-btn" onClick={() => handleDeleteClick(selectedInvoice)}>
                                         <Trash2 size={20} />
                                         <span>Delete</span>
