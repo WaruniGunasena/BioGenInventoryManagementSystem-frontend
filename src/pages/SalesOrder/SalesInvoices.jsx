@@ -130,7 +130,7 @@ const SalesInvoices = () => {
     const handleApproval = async (status) => {
         if (!selectedInvoice || !currentUserId) return;
         const invoiceId = selectedInvoice.salesOrderId || selectedInvoice.id;
-        
+
         try {
             await approveSalesOrder(status, currentUserId, invoiceId);
             showToast("success", `Invoice ${status} successfully`);
@@ -144,7 +144,12 @@ const SalesInvoices = () => {
 
     // ── Edit: navigate to full edit page ─────────────────────────────────────
     const handleEditOpen = (invoice) => {
-        navigate("/sales-invoices/edit", { state: { invoice } });
+        const role = invoice?.user?.role || invoice?.role;
+        if (role === "SALES_REP") {
+            navigate("/sales-invoices/edit", { state: { invoice } });
+        } else {
+            navigate("/sales-invoices/edit-so", { state: { invoice } });
+        }
     };
 
     const handlePrint = useReactToPrint({
@@ -185,19 +190,23 @@ const SalesInvoices = () => {
             `*Invoice No:* ${selectedInvoice.invoiceNumber}%0A` +
             `*Date:* ${selectedInvoice.date}%0A` +
             `*Customer:* ${selectedInvoice.customerName}%0A` +
-            `*Total:* LKR ${parseFloat(selectedInvoice.grandTotal).toFixed(2)}%0A%0A` +
+            `*Total:* LKR ${parseFloat(selectedInvoice.netTotal).toFixed(2)}%0A%0A` +
             `Thank you for your business!`;
 
         const whatsappUrl = `https://wa.me/?text=${message}`;
         window.open(whatsappUrl, "_blank");
     };
 
+    const handlePercentageValueCalculation = (value, percentage) => {
+        return value * (percentage / 100);
+    };
+
     const getStatusBadge = (status) => {
         const map = {
-            Approved:  { label: "Approved",  cls: "si-badge si-badge--approved" },
-            Pending:   { label: "Pending",   cls: "si-badge si-badge--pending" },
-            Rejected:  { label: "Rejected",  cls: "si-badge si-badge--rejected" },
-            Deleted:   { label: "Deleted",   cls: "si-badge si-badge--deleted" },
+            Approved: { label: "Approved", cls: "si-badge si-badge--approved" },
+            Pending: { label: "Pending", cls: "si-badge si-badge--pending" },
+            Rejected: { label: "Rejected", cls: "si-badge si-badge--rejected" },
+            Deleted: { label: "Deleted", cls: "si-badge si-badge--deleted" },
         };
         const s = map[status] || { label: status || "Unknown", cls: "si-badge si-badge--default" };
         return <span className={s.cls}>{s.label}</span>;
@@ -209,8 +218,8 @@ const SalesInvoices = () => {
         { header: "Date", accessor: "date" },
         {
             header: "Grand Total (RS.)",
-            accessor: "grandTotal",
-            render: (row) => parseFloat(row.grandTotal).toLocaleString('en-US', { minimumFractionDigits: 2 })
+            accessor: "netTotal",
+            render: (row) => parseFloat(row.netTotal).toLocaleString('en-US', { minimumFractionDigits: 2 })
         },
         {
             header: "Status",
@@ -268,7 +277,7 @@ const SalesInvoices = () => {
                         <div className="modal-header">
                             <h3>Sales Invoice Details - {selectedInvoice.invoiceNumber}</h3>
                             <div className="modal-actions">
-                               
+
                                 <button className="action-btn btn-print" onClick={handlePrint}>
                                     <Printer size={18} /> Print
                                 </button>
@@ -387,17 +396,23 @@ const SalesInvoices = () => {
                                             </div>
                                             <div className="totals-line">
                                                 <span className="line-label">Additional Discount (LKR)</span>
-                                                <span className="line-value">0.00</span>
+                                                <span className="line-value">{selectedInvoice.additionalDiscountValue > 0 ? (
+                                                    selectedInvoice.additionalDiscountType === 'percentage'
+                                                        ? `${handlePercentageValueCalculation(selectedInvoice.grandTotal, selectedInvoice.additionalDiscountValue).toFixed(2)} (${selectedInvoice.additionalDiscountValue}%)`
+                                                        : `${parseFloat(selectedInvoice.additionalDiscountValue).toFixed(2)}`
+                                                ) : "0.00"}</span>
                                             </div>
-                                            <div className="totals-line">
-                                                <span className="line-label">Payment Total (LKR)</span>
-                                                <span className="line-value">0.00</span>
-                                            </div>
+                                            {selectedInvoice.courierCharges > 0 && (
+                                                <div className="totals-line">
+                                                    <span className="line-label">Courier Charges (LKR)</span>
+                                                    <span className="line-value">{parseFloat(selectedInvoice.courierCharges).toFixed(2)}</span>
+                                                </div>
+                                            )}
                                             <div className="totals-line grand-due">
                                                 <span className="line-label">Due (LKR)</span>
-                                                <span className="line-value">{parseFloat(selectedInvoice.grandTotal).toFixed(2)}</span>
+                                                <span className="line-value">{parseFloat(selectedInvoice.netTotal).toFixed(2)}</span>
                                             </div>
-                                            
+
                                         </div>
                                     </div>
                                 </div>

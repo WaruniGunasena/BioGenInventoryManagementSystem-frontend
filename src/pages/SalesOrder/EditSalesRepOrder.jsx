@@ -10,6 +10,8 @@ import { getAllStock } from "../../api/stockService";
 import { updateSalesOrder } from "../../api/salesOrderService";
 import { useToast } from "../../context/ToastContext";
 import { getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
+import { DiscountTypeEnum } from "../../enums/DiscountTypeEnum";
+import { AdditionalDiscountPopup } from "./AdditionalDiscountPopup";
 import "./SalesRepOrder.css";
 
 const EditSalesRepOrder = () => {
@@ -48,6 +50,9 @@ const EditSalesRepOrder = () => {
     const [currentUserId, setCurrentUserId] = useState(null);
     const [currentUserName, setCurrentUserName] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [additionalDiscount, setAdditionalDiscount] = useState({ type: DiscountTypeEnum.cash, value: "" });
+    const [showDiscountPopup, setShowDiscountPopup] = useState(false);
 
 
     const fetchUserId = useCallback(async () => {
@@ -177,6 +182,11 @@ const EditSalesRepOrder = () => {
             };
         });
         setAddedItems(preloadedItems);
+
+        setAdditionalDiscount({
+            type: invoice.additionalDiscountType || DiscountTypeEnum.cash,
+            value: invoice.additionalDiscountValue ?? ""
+        });
     }, [invoice, customers]);
 
     useEffect(() => {
@@ -251,9 +261,21 @@ const EditSalesRepOrder = () => {
         setProducts(prev => prev.map(p => (p.id || p._id) === productId ? { ...p, inputQty: "", inputBonus: "" } : p));
     };
 
-    const grandTotal = addedItems.reduce((sum, i) => sum + i.totalAmount, 0);
+    const getAdditionalDiscountValue = () => {
+        const total = addedItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+        const value = parseFloat(additionalDiscount.value) || 0;
+        if (additionalDiscount.type === DiscountTypeEnum.percentage) {
+            return (total * value) / 100;
+        }
+        return value;
+    };
+
+    const totalBeforeExtras = addedItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+    const discountAmount = getAdditionalDiscountValue();
+    const netTotal = totalBeforeExtras - discountAmount;
+    const grandTotal = netTotal; // for backward compatibility if needed, but UI uses netTotal
     const availableCredit = selectedCustomer ? (selectedCustomer.creditLimit - (selectedCustomer.dueAmount || 0)) : 0;
-    const isOverCredit = selectedCustomer && grandTotal > availableCredit;
+    const isOverCredit = selectedCustomer && netTotal > availableCredit;
 
     const filteredCustomers = customers.filter(c =>
         c.name.toLowerCase().includes(customerSearch.toLowerCase())
@@ -296,7 +318,9 @@ const EditSalesRepOrder = () => {
             customerId: selectedCustomer.id || selectedCustomer._id,
             userId: currentUserId,
             date: invoice?.date || new Date().toLocaleDateString('en-CA'),
-            grandTotal,
+            grandTotal: totalBeforeExtras,
+            additionalDiscountType: additionalDiscount.type,
+            additionalDiscountValue: parseFloat(additionalDiscount.value) || 0,
             items: mappedItems
         };
 
@@ -628,19 +652,33 @@ const EditSalesRepOrder = () => {
                             {addedItems.length > 0 && (
                                 <div className="asi-totals">
                                     <div className="asi-total-row">
-                                        <span>Total (LKR)</span>
-                                        <span>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        <span><b>Total</b> (LKR)</span>
+                                        <span>{totalBeforeExtras.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
-                                    <div className="asi-total-row">
-                                        <span>Additional Discount</span>
-                                        <span>0.00</span>
-                                    </div>
-                                    <div className="asi-total-row">
-                                        <span>Payment Total</span>
-                                        <span>0.00</span>
+                                    <div className="asi-total-row" style={{ position: 'relative' }}>
+                                        <span
+                                            style={{ cursor: 'pointer', color: '#7c3aed', fontWeight: 600 }}
+                                            onClick={() => { setShowDiscountPopup(!showDiscountPopup) }}
+                                        >
+                                            Additional Discount (LKR)
+                                        </span>
+                                        <span style={{ fontWeight: 600 }}>
+                                            {additionalDiscount.value ? (
+                                                additionalDiscount.type === DiscountTypeEnum.percentage
+                                                    ? `${getAdditionalDiscountValue().toFixed(2)} (${additionalDiscount.value}%)`
+                                                    : `${parseFloat(additionalDiscount.value).toFixed(2)}`
+                                            ) : "0.00"}
+                                        </span>
+                                        {showDiscountPopup && (
+                                            <AdditionalDiscountPopup
+                                                initialDiscount={additionalDiscount}
+                                                onSave={(data) => { setAdditionalDiscount(data); setShowDiscountPopup(false); }}
+                                                onClose={() => setShowDiscountPopup(false)}
+                                            />
+                                        )}
                                     </div>
                                     <div className={`asi-total-row asi-grand-total ${isOverCredit ? "over" : ""}`}>
-                                        <span>Due (LKR)</span>
+                                        <span><b>Due</b> (LKR)</span>
                                         <span>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 </div>

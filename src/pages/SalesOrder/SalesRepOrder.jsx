@@ -9,6 +9,8 @@ import { getAllStock } from "../../api/stockService";
 import { createSalesOrder } from "../../api/salesOrderService";
 import { useToast } from "../../context/ToastContext";
 import { getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
+import { DiscountTypeEnum } from "../../enums/DiscountTypeEnum";
+import { AdditionalDiscountPopup } from "./AdditionalDiscountPopup";
 import "./SalesRepOrder.css";
 
 const SalesRepOrder = () => {
@@ -42,6 +44,9 @@ const SalesRepOrder = () => {
     const [stockData, setStockData] = useState([]);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [currentUserName, setCurrentUserName] = useState("");
+
+    const [additionalDiscount, setAdditionalDiscount] = useState({ type: DiscountTypeEnum.cash, value: "" });
+    const [showDiscountPopup, setShowDiscountPopup] = useState(false);
 
     const fetchUserId = useCallback(async () => {
         try {
@@ -153,7 +158,7 @@ const SalesRepOrder = () => {
 
     useEffect(() => {
         fetchProducts(0, selectedCategory, productSearch);
-    }, [selectedCategory, productSearch,fetchProducts]);
+    }, [selectedCategory, productSearch, fetchProducts]);
 
     const handleProductSearch = (val) => {
         setProductSearch(val);
@@ -233,7 +238,18 @@ const SalesRepOrder = () => {
         ));
     };
 
-    const grandTotal = addedItems.reduce((sum, item) => sum + item.totalAmount, 0);
+    const getAdditionalDiscountValue = () => {
+        const total = addedItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+        const value = parseFloat(additionalDiscount.value) || 0;
+        if (additionalDiscount.type === DiscountTypeEnum.percentage) {
+            return (total * value) / 100;
+        }
+        return value;
+    };
+
+    const totalBeforeExtras = addedItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+    const discountAmount = getAdditionalDiscountValue();
+    const grandTotal = totalBeforeExtras - discountAmount;
     const availableCredit = selectedCustomer ? (selectedCustomer.creditLimit - (selectedCustomer.dueAmount || 0)) : 0;
     const isOverCredit = selectedCustomer && grandTotal > availableCredit;
 
@@ -277,7 +293,9 @@ const SalesRepOrder = () => {
             customerId: selectedCustomer.id || selectedCustomer._id,
             userId: currentUserId,
             date: new Date().toLocaleDateString('en-CA'),
-            grandTotal,
+            grandTotal: totalBeforeExtras,
+            additionalDiscountType: additionalDiscount.type,
+            additionalDiscountValue: parseFloat(additionalDiscount.value) || 0,
             items: mappedItems
         };
 
@@ -622,19 +640,34 @@ const SalesRepOrder = () => {
                             {addedItems.length > 0 && (
                                 <div className="asi-totals">
                                     <div className="asi-total-row">
-                                        <span>Total (LKR)</span>
-                                        <span>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        <span><b>Total</b> (LKR)</span>
+                                        <span>{totalBeforeExtras.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
-                                    <div className="asi-total-row">
-                                        <span>Additional Discount</span>
-                                        <span>0.00</span>
+                                    <div className="asi-total-row" style={{ position: 'relative' }}>
+                                        <span
+                                            style={{ cursor: 'pointer', color: '#7c3aed', fontWeight: 600 }}
+                                            onClick={() => { setShowDiscountPopup(!showDiscountPopup)}}
+                                        >
+                                            Additional Discount (LKR)
+                                        </span>
+                                        <span style={{ fontWeight: 600 }}>
+                                            {additionalDiscount.value ? (
+                                                additionalDiscount.type === DiscountTypeEnum.percentage
+                                                    ? `${getAdditionalDiscountValue().toFixed(2)} (${additionalDiscount.value}%)`
+                                                    : `${parseFloat(additionalDiscount.value).toFixed(2)}`
+                                            ) : "0.00"}
+                                        </span>
+                                        {showDiscountPopup && (
+                                            <AdditionalDiscountPopup
+                                                initialDiscount={additionalDiscount}
+                                                onSave={(data) => { setAdditionalDiscount(data); setShowDiscountPopup(false); }}
+                                                onClose={() => setShowDiscountPopup(false)}
+                                            />
+                                        )}
                                     </div>
-                                    <div className="asi-total-row">
-                                        <span>Payment Total</span>
-                                        <span>0.00</span>
-                                    </div>
+
                                     <div className={`asi-total-row asi-grand-total ${isOverCredit ? "over" : ""}`}>
-                                        <span>Due (LKR)</span>
+                                        <span><b>Due</b> (LKR)</span>
                                         <span>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 </div>
