@@ -348,7 +348,7 @@ const SalesOrder = () => {
             additionalDiscountType: additionalDiscount.type,
             additionalDiscountValue: additionalDiscount.value || 0,
             courierCharges: courierCharges || 0,
-            grandTotal: formData.grandTotal
+            grandTotal: calculateTotal()
         };
 
         try {
