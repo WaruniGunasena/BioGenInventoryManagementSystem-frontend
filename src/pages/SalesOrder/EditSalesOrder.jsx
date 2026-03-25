@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Layout from "../../components/Layout";
 import { getAllCustomers } from "../../api/customerService";
 import { getAllProducts } from "../../api/productService";
-import { createSalesOrder } from "../../api/salesOrderService";
+import { updateSalesOrder } from "../../api/salesOrderService";
 import { useToast } from "../../context/ToastContext";
 import AddCustomerModal from "../../components/Customers/AddCustomerModal";
 import { AdditionalDiscountPopup } from "./AdditionalDiscountPopup";
@@ -20,8 +20,11 @@ import { getAllStock } from "../../api/stockService";
 import { getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
 import "./SalesOrder.css";
 
-const SalesOrder = () => {
+const EditSalesOrder = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const invoice = location.state?.invoice;
+    const invoiceId = invoice?.salesOrderId || invoice?.id;
     const { showToast } = useToast();
     const formRef = useRef(null);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -65,6 +68,58 @@ const SalesOrder = () => {
         fetchProducts();
         fetchUserId();
     }, []);
+
+    useEffect(() => {
+        if (invoice && customers.length > 0 && products.length > 0) {
+            const customer = customers.find(c => (c.id || c._id) === invoice.customerId || c.name === invoice.customerName);
+            if (customer) {
+                setSelectedCustomerData(customer);
+                setFormData(prev => ({
+                    ...prev,
+                    customerId: customer.id || customer._id,
+                    creditTerm: customer.creditPeriod || "Not Specified",
+                    invoiceNumber: invoice.invoiceNumber,
+                    date: invoice.date || prev.date
+                }));
+            } else {
+                setFormData(prev => ({
+                    ...prev,
+                    invoiceNumber: invoice.invoiceNumber,
+                    date: invoice.date || prev.date
+                }));
+            }
+
+            setAdditionalDiscount({
+                type: invoice.additionalDiscountType || DiscountTypeEnum.cash,
+                value: invoice.additionalDiscountValue || ""
+            });
+            setCourierCharges(invoice.courierCharges || "");
+
+            // Map items
+            const salelines = (invoice.items || []).filter(i => parseFloat(i.sellingPrice) > 0);
+            const preloadedItems = salelines.map((item, index) => {
+                const bonusLine = (invoice.items || []).find(
+                    b => (b.productId === item.productId || b.product?.id === item.productId) &&
+                        parseFloat(b.sellingPrice) === 0
+                );
+                return {
+                    id: Date.now() + index,
+                    productId: item.productId || item.product?.id,
+                    productName: item.productName || item.product?.name || "",
+                    productCode: item.productCode || item.itemCode || "",
+                    sellingPrice: parseFloat(item.sellingPrice),
+                    quantity: item.quantity,
+                    preIssue: bonusLine ? bonusLine.quantity : 0,
+                    unit: item.unit || "",
+                    packSize: item.packSize || "",
+                    discountPercent: item.discountPercent || "0.00",
+                    discountedPrice: item.discountedPrice || "0.00",
+                    totalAmount: parseFloat(item.totalAmount)
+                };
+            });
+            setAddedItems(preloadedItems);
+        }
+    }, [invoice, customers, products]);
 
     const fetchUserId = async () => {
         try {
@@ -296,7 +351,7 @@ const SalesOrder = () => {
         return (total - discountAmount + courier).toFixed(2);
     };
 
-    const handleIssueBill = async () => {
+    const handleUpdateBill = async () => {
         if (!formData.customerId) {
             showToast("error", "Please select a customer before issuing the bill");
             return;
@@ -348,16 +403,18 @@ const SalesOrder = () => {
             additionalDiscountType: additionalDiscount.type,
             additionalDiscountValue: additionalDiscount.value || 0,
             courierCharges: courierCharges || 0,
-            grandTotal: formData.grandTotal
+            grandTotal: calculateTotal()
         };
 
         try {
-            const res = await createSalesOrder(salesOrderData);
-            const generatedInvoiceNumber = res.data?.invoiceNumber || res.data?.data?.invoiceNumber;
+            const res = await updateSalesOrder(invoiceId, currentUserId, salesOrderData);
+            const generatedInvoiceNumber = res.data?.invoiceNumber || res.data?.data?.invoiceNumber || invoice.invoiceNumber;
 
-            showToast('success', `Sales Order issued successfully! Invoice No: ${generatedInvoiceNumber || ""}`);
+            showToast('success', `Sales Order updated successfully! Invoice No: ${generatedInvoiceNumber || ""}`);
 
-            setAddedItems([]);
+            setTimeout(() => {
+                navigate("/sales-invoices");
+            }, 1000);
             setFormData({
                 customerId: "",
                 date: new Date().toLocaleDateString('en-CA'),
@@ -399,7 +456,7 @@ const SalesOrder = () => {
                 <div className="dashboard-content">
                     <div className="sales-order-container">
                         <header className="sales-order-header">
-                            <h2>Sales Invoice</h2>
+                            <h2>Edit Sales Invoice</h2>
                             <button className="see-invoices-btn" onClick={() => navigate("/sales-invoices")}>
                                 <FileText size={18} /> See All Invoices
                             </button>
@@ -593,7 +650,7 @@ const SalesOrder = () => {
                                     <p>Email: biogenholdings.com</p>
                                 </div>
                                 <div className="invoice-title">
-                                    <h1>Sales Invoice</h1>
+                                    <h1>Edit Sales Invoice</h1>
                                 </div>
                             </div>
 
@@ -788,7 +845,7 @@ const SalesOrder = () => {
                                 </div>
 
                                 <div className="invoice-footer-actions">
-                                    <button className="issue-bill-btn" onClick={handleIssueBill}>Issue Bill</button>
+                                    <button className="issue-bill-btn" onClick={handleUpdateBill}>Update Bill</button>
                                 </div>
                             </div>
                         </div>
@@ -807,4 +864,4 @@ const SalesOrder = () => {
     );
 };
 
-export default SalesOrder;
+export default EditSalesOrder;

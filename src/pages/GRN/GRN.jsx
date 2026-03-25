@@ -38,6 +38,7 @@ const GRN = () => {
         quantity: "",
         totalAmount: "0.00",
         invoiceNumber: "",
+        invoiceId: "",
         sellingPricePercentage: "",
         sellingPrice: "",
         mrpValue: "",
@@ -176,8 +177,18 @@ const GRN = () => {
 
                 if (!isNaN(price) && !isNaN(percentage)) {
                     newData.sellingPrice = (price + (price * percentage / 100)).toFixed(2);
-                } else {
+                } else if (!isNaN(price) && newData.sellingPricePercentage === "") {
                     newData.sellingPrice = "";
+                }
+            }
+            if (name === "sellingPrice") {
+                const sp = parseFloat(newData.sellingPrice);
+                const price = parseFloat(newData.purchasePrice);
+
+                if (!isNaN(sp) && !isNaN(price) && price !== 0) {
+                    newData.sellingPricePercentage = (((sp / price) - 1) * 100).toFixed(2);
+                } else if (newData.sellingPrice === "") {
+                    newData.sellingPricePercentage = "";
                 }
             }
             return newData;
@@ -359,6 +370,7 @@ const GRN = () => {
                 await updateGRN(formData.invoiceId, grnData);
                 showToast('success', "Stock updated successfully!");
             } else {
+                console.log(grnData);
                 await createGRN(grnData);
                 showToast('success', "Stock added successfully!");
             }
@@ -377,6 +389,7 @@ const GRN = () => {
                 quantity: "",
                 totalAmount: "0.00",
                 invoiceNumber: "",
+                invoiceId: "",
                 sellingPricePercentage: "",
                 sellingPrice: "",
                 bonus: "",
@@ -508,11 +521,11 @@ const GRN = () => {
                             <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "14px", paddingBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Purchase Price <span style={{ color: "red" }}>*</span></label>
-                                    <input type="number" name="purchasePrice" style={inputStyle} placeholder="0.00" value={formData.purchasePrice} onChange={handleInputChange} />
+                                    <input type="number" name="purchasePrice" style={inputStyle} placeholder="0.00" value={formData.purchasePrice ?? ""} onChange={handleInputChange} />
                                 </div>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Quantity <span style={{ color: "red" }}>*</span></label>
-                                    <input type="number" name="quantity" style={inputStyle} placeholder="0" value={formData.quantity} onChange={handleInputChange} />
+                                    <input type="number" name="quantity" style={inputStyle} placeholder="0" value={formData.quantity ?? ""} onChange={handleInputChange} />
                                 </div>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Selling Price % <span style={{ color: "red" }}>*</span></label>
@@ -523,18 +536,19 @@ const GRN = () => {
                                         placeholder="0"
                                         min="0"
                                         max="100"
-                                        value={formData.sellingPricePercentage}
+                                        value={formData.sellingPricePercentage ?? ""}
                                         onChange={handleInputChange}
                                     />
                                 </div>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Selling Price <span style={{ color: "red" }}>*</span></label>
                                     <input
-                                        type="text"
-                                        style={{ ...inputStyle, backgroundColor: "#f1f5f9", cursor: "not-allowed" }}
-                                        value={formData.sellingPrice ? `${formData.sellingPrice}` : ""}
-                                        placeholder="Not Calculated"
-                                        readOnly
+                                        type="number"
+                                        name="sellingPrice"
+                                        style={inputStyle}
+                                        value={formData.sellingPrice ?? ""}
+                                        placeholder="0.00"
+                                        onChange={handleInputChange}
                                     />
                                 </div>
                                 <div style={fieldStyle}>
@@ -544,7 +558,7 @@ const GRN = () => {
                                         name="mrpValue"
                                         style={inputStyle}
                                         placeholder="0.00"
-                                        value={formData.mrpValue}
+                                        value={formData.mrpValue ?? ""}
                                         onChange={handleInputChange}
                                         required
                                     />
@@ -557,18 +571,18 @@ const GRN = () => {
                                 </div>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Discount %</label>
-                                    <input type="number" name="discountPercentage" style={inputStyle} placeholder="0" min="0" max="100" value={formData.discountPercentage} onChange={handleInputChange} />
+                                    <input type="number" name="discountPercentage" style={inputStyle} placeholder="0" min="0" max="100" value={formData.discountPercentage ?? ""} onChange={handleInputChange} />
                                 </div>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Discounted Price</label>
-                                    <input type="text" style={{ ...inputStyle, backgroundColor: "#f1f5f9", cursor: "not-allowed" }} value={formData.discountedPrice || ""} placeholder="Calculated" readOnly />
+                                    <input type="text" style={{ ...inputStyle, backgroundColor: "#f1f5f9", cursor: "not-allowed" }} value={formData.discountedPrice ?? ""} placeholder="Calculated" readOnly />
                                 </div>
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Total Amount</label>
                                     <input
                                         type="text"
                                         style={{ ...inputStyle, backgroundColor: "#eef2ff", borderColor: "#c7d2fe", color: "#252429ff", fontWeight: "600", cursor: "not-allowed" }}
-                                        value={formData.totalAmount}
+                                        value={formData.totalAmount ?? ""}
                                         readOnly
                                     />
                                 </div>
