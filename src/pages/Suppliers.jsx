@@ -98,16 +98,17 @@ const Suppliers = () => {
             fetchData: async () => { const res = await getAllSuppliers(); return res.data; },
             extractRows: (data) => Array.isArray(data) ? data : (data?.suppliers ?? []),
             columnMap: [
-                { key: 'id', label: 'Supplier ID' },
-                { key: 'name', label: 'Supplier/Company' },
-                { key: 'contactPerson', label: 'Contact Person' },
-                { key: 'phoneNumber', label: 'Phone Number' },
-                { key: 'email', label: 'Email' },
-                { key: 'address', label: 'Address' },
-                { key: 'creditPeriod', label: 'Credit Period' }
+                { key: 'id', label: 'ID', width: 15, align: 'right' },
+                { key: 'name', label: 'Supplier/Company', width: 'auto' },
+                { key: 'contactPerson', label: 'Contact Person', width: 'auto' },
+                { key: 'phoneNumber', label: 'Phone Number', width: 35 },
+                { key: 'email', label: 'Email', width: 55 },
+                { key: 'address', label: 'Address', width: 'auto' },
+                { key: 'creditPeriod', label: 'Credit Period', width: 30, align: 'center' }
             ],
             title: 'Supplier List',
             filenamePrefix: 'suppliers',
+            orientation: 'landscape',
             onStart: () => setIsExporting(true),
             onEnd: () => setIsExporting(false),
         });

@@ -55,7 +55,17 @@ const buildTableData = (rows, columnMap) => {
     const body = rows.map((row) =>
         columnMap.map((col) => cellToString(row[col.key]))
     );
-    return { head, body };
+    const columnStyles = {};
+    columnMap.forEach((col, index) => {
+        columnStyles[index] = {};
+        if (col.align) {
+            columnStyles[index].halign = col.align;
+        }
+        if (col.width) {
+            columnStyles[index].cellWidth = col.width;
+        }
+    });
+    return { head, body, columnStyles };
 };
 
 // ---------------------------------------------------------------------------
@@ -105,7 +115,7 @@ export const exportToPDF = async ({
         }
 
         // 2. Build table data
-        const { head, body } = buildTableData(rows, columnMap);
+        const { head, body, columnStyles } = buildTableData(rows, columnMap);
 
         // 3. Create PDF document
         const doc = new jsPDF({ orientation, unit: 'mm', format: pageSize });
@@ -135,8 +145,9 @@ export const exportToPDF = async ({
                 overflow: 'linebreak',
                 ...tableStyles,
             },
+            columnStyles,
             headStyles: {
-                fillColor: [99, 102, 241], // indigo-500
+                fillColor: [99, 102, 241], 
                 textColor: 255,
                 fontStyle: 'bold',
                 ...headStyles,
