@@ -56,7 +56,7 @@ const RegisterPage = () => {
         </div>
 
         <div className="brand-footer">
-          © BioGenHolding {new Date().getFullYear()}
+          © MenuraWijesekara {new Date().getFullYear()}
         </div>
       </div>
       <div className="auth-right">
