@@ -63,6 +63,17 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
                 setIsCustomUnit(false);
                 setFormData(prev => ({ ...prev, unit: value, customUnit: '' }));
             }
+        } else if (name === 'sRepCommissionRate') {
+            // Allow empty string (cleared field) or valid decimal input
+            if (value === '' || value === '-') {
+                setFormData(prev => ({ ...prev, [name]: value }));
+            } else {
+                const num = parseFloat(value);
+                if (!isNaN(num)) {
+                    const clamped = Math.min(100, Math.max(0, num));
+                    setFormData(prev => ({ ...prev, [name]: clamped }));
+                }
+            }
         } else {
             setFormData(prevState => ({
                 ...prevState,
@@ -91,7 +102,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
             data.append('minimumStockLevel', Number(formData.minimumStockLevel || 0));
             data.append('reorderLevel', Number(formData.reorderLevel || 0));
             data.append('openingBalance', Number(formData.openingBalance || 0));
-            data.append('sRepCommissionRate', Number(formData.sRepCommissionRate || 0));
+            data.append('sRepCommissionRate', parseFloat(formData.sRepCommissionRate || 0));
             data.append('sellingPrice', Number(formData.sellingPrice || 0));
             data.append('mrp', Number(formData.mrp || 0));
             if (imageFile) {
@@ -264,6 +275,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
                             <label className="form-label">Sales Rep Commission Rate (%)</label>
                             <input
                                 type="number"
+                                step={0.01}
                                 name="sRepCommissionRate"
                                 className="form-input"
                                 placeholder="0-100"

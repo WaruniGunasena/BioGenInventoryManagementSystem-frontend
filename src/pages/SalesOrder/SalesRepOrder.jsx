@@ -345,7 +345,7 @@ const SalesRepOrder = () => {
                             </div>
                             <div className="asi-header-actions">
                                 <button className="asi-btn-back" onClick={() => window.history.back()}>Back</button>
-                                <button className="asi-btn-confirm" onClick={handleSubmitInvoice}>Confirm Order</button>
+                                <button className="asi-btn-confirm" onClick={handleSubmitInvoice} disabled={isOverCredit}>Confirm Order</button>
                             </div>
                         </header>
 
