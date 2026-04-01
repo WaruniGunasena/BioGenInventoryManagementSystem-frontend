@@ -6,7 +6,7 @@ import { X, FileText, Printer, Download, Share2, Trash2, Check, Edit } from "luc
 import { useReactToPrint } from "react-to-print";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { getPaginatedSalesOrders, searchSalesOrder, softDeleteSalesOrder, approveSalesOrder } from "../../api/salesOrderService";
+import { getPaginatedSalesOrders, searchSalesOrder, softDeleteSalesOrder, approveSalesOrder, submitSalesOrderPayment } from "../../api/salesOrderService";
 import { getUserId, getUserRole } from "../../components/common/Utils/userUtils/userUtils";
 import { useToast } from "../../context/ToastContext";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +22,17 @@ const SalesInvoices = () => {
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [userRole, setUserRole] = useState(null);
+
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [selectedPaymentInvoice, setSelectedPaymentInvoice] = useState(null);
+    const [paymentFormData, setPaymentFormData] = useState({
+        paymentMethod: "cash",
+        amount: "",
+        chequeIssueDate: "",
+        chequeDueDate: "",
+        bank: "",
+        chequeNumber: ""
+    });
 
     const componentRef = useRef();
 
@@ -120,7 +131,7 @@ const SalesInvoices = () => {
         try {
             await softDeleteSalesOrder(invoiceId, currentUserId);
             showToast("success", `Invoice ${invoice.invoiceNumber} deleted`);
-            setIsModalOpen(false); // Close modal if open
+            setIsModalOpen(false); 
             fetchInvoices(currentPage);
         } catch (error) {
             showToast("error", error?.response?.data?.message || "Failed to delete invoice");
@@ -142,7 +153,76 @@ const SalesInvoices = () => {
         }
     };
 
-    // ── Edit: navigate to full edit page ─────────────────────────────────────
+    const handleMarkAsPaid = (invoice) => {
+        setSelectedPaymentInvoice(invoice);
+        let defaultAmount = invoice.netTotal || "";
+        if (invoice.dueBalance !== undefined && invoice.dueBalance !== null) {
+            defaultAmount = invoice.dueBalance;
+        }
+
+        setPaymentFormData(prev => ({
+            ...prev,
+            amount: defaultAmount
+        }));
+        setIsPaymentModalOpen(true);
+    };
+
+    const handlePaymentInputChange = (e) => {
+        const { name, value } = e.target;
+        setPaymentFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmitPayment = async (e) => {
+        e.preventDefault();
+
+        if (!paymentFormData.amount || isNaN(parseFloat(paymentFormData.amount)) || parseFloat(paymentFormData.amount) <= 0) {
+            showToast("error", "Please enter a valid payment amount.");
+            return;
+        }
+
+        if (paymentFormData.paymentMethod === 'cheque') {
+            if (!paymentFormData.chequeIssueDate || !paymentFormData.chequeDueDate || !paymentFormData.bank || !paymentFormData.chequeNumber) {
+                showToast("error", "Please fill all cheque details.");
+                return;
+            }
+        }
+
+        try {
+            const userId = currentUserId || await getUserId();
+            const salesOrderId = selectedPaymentInvoice.salesOrderId || selectedPaymentInvoice.id;
+
+            const paymentPayload = {
+                amount: parseFloat(paymentFormData.amount),
+                paymentMethod: paymentFormData.paymentMethod,
+                salesOrderId: salesOrderId,
+                grandTotal: selectedPaymentInvoice.netTotal,
+                userId: userId,
+                bank: paymentFormData.bank ? paymentFormData.bank.trim() : null,
+                chequeDueDate: paymentFormData.chequeDueDate ? paymentFormData.chequeDueDate.trim() : null,
+                chequeIssueDate: paymentFormData.chequeIssueDate ? paymentFormData.chequeIssueDate.trim() : null,
+                chequeNumber: paymentFormData.chequeNumber ? paymentFormData.chequeNumber.trim() : null
+            };
+
+            await submitSalesOrderPayment(paymentPayload);
+            showToast("success", `Payment submitted for Invoice ${selectedPaymentInvoice.invoiceNumber}`);
+
+            setIsPaymentModalOpen(false);
+            setPaymentFormData({
+                paymentMethod: "cash",
+                amount: "",
+                chequeIssueDate: "",
+                chequeDueDate: "",
+                bank: "",
+                chequeNumber: ""
+            });
+            fetchInvoices(currentPage);
+
+        } catch (error) {
+            console.error("Error submitting payment:", error);
+            showToast("error", "Failed to submit payment");
+        }
+    };
+
     const handleEditOpen = (invoice) => {
         const role = invoice?.user?.role || invoice?.role;
         if (role === "SALES_REP") {
@@ -220,6 +300,58 @@ const SalesInvoices = () => {
             header: "Grand Total (RS.)",
             accessor: "netTotal",
             render: (row) => parseFloat(row.netTotal).toLocaleString('en-US', { minimumFractionDigits: 2 })
+        },
+        {
+            header: "Due Balance (RS.)",
+            accessor: "dueBalance",
+            render: (row) => {
+                const pStatus = (row.paymentStatus || 'pending').toUpperCase();
+                
+                if (pStatus === 'PAID') return '0.00';
+                
+                const due = row.dueBalance !== undefined && row.dueBalance !== null 
+                                ? row.dueBalance 
+                                : (pStatus === 'PENDING' ? row.netTotal : 0);
+                                
+                return parseFloat(due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+            }
+        },
+        {
+            header: "Payment Status",
+            accessor: "paymentStatus",
+            render: (row) => {
+                const pStatus = (row.paymentStatus || 'pending').toUpperCase();
+                let statusLabel = "Pending";
+                let statusClass = "status-unpaid";
+
+                if (pStatus === 'PAID') {
+                    statusLabel = "Paid";
+                    statusClass = "status-paid";
+                } else if (pStatus === 'PARTIAL') {
+                    statusLabel = "Partial";
+                    statusClass = "status-partial";
+                }
+
+                return (
+                    <div className="status-container">
+                        <span className={`status-badge ${statusClass}`}>
+                            {statusLabel}
+                        </span>
+                        {row.status === "Approved" && (pStatus === 'PENDING' || pStatus === 'PARTIAL') && (
+                            <button
+                                className="mark-paid-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMarkAsPaid(row);
+                                }}
+                                title="Pay"
+                            >
+                                Pay
+                            </button>
+                        )}
+                    </div>
+                );
+            }
         },
         {
             header: "Status",
@@ -448,6 +580,108 @@ const SalesInvoices = () => {
                                     Close
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isPaymentModalOpen && selectedPaymentInvoice && (
+                <div className="sales-invoice-modal-overlay">
+                    <div className="payment-modal-content">
+                        <div className="modal-header">
+                            <h3>Record Payment - {selectedPaymentInvoice.invoiceNumber}</h3>
+                            <button className="close-modal-btn" onClick={() => setIsPaymentModalOpen(false)}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="modal-body-scroll">
+                            <form onSubmit={handleSubmitPayment} className="payment-form">
+                                <div className="payment-form-group">
+                                    <label>Payment Method <span className="text-red-500">*</span></label>
+                                    <select
+                                        name="paymentMethod"
+                                        value={paymentFormData.paymentMethod}
+                                        onChange={handlePaymentInputChange}
+                                        className="payment-input"
+                                    >
+                                        <option value="cash">Cash</option>
+                                        <option value="cheque">Cheque</option>
+                                    </select>
+                                </div>
+
+                                <div className="payment-form-group">
+                                    <label>Amount (RS.) <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="number"
+                                        name="amount"
+                                        value={paymentFormData.amount}
+                                        onChange={handlePaymentInputChange}
+                                        placeholder="0.00"
+                                        className="payment-input"
+                                        step="0.01"
+                                        min="0"
+                                    />
+                                </div>
+
+                                {paymentFormData.paymentMethod === 'cheque' && (
+                                    <div className="cheque-details-container">
+                                        <h4>Cheque Details</h4>
+                                        <div className="payment-grid">
+                                            <div className="payment-form-group">
+                                                <label>Bank <span className="text-red-500">*</span></label>
+                                                <input
+                                                    type="text"
+                                                    name="bank"
+                                                    value={paymentFormData.bank}
+                                                    onChange={handlePaymentInputChange}
+                                                    placeholder="Enter Bank Name"
+                                                    className="payment-input"
+                                                />
+                                            </div>
+                                            <div className="payment-form-group">
+                                                <label>Cheque Number <span className="text-red-500">*</span></label>
+                                                <input
+                                                    type="text"
+                                                    name="chequeNumber"
+                                                    value={paymentFormData.chequeNumber}
+                                                    onChange={handlePaymentInputChange}
+                                                    placeholder="Enter Cheque Number"
+                                                    className="payment-input"
+                                                />
+                                            </div>
+                                            <div className="payment-form-group">
+                                                <label>Issue Date <span className="text-red-500">*</span></label>
+                                                <input
+                                                    type="date"
+                                                    name="chequeIssueDate"
+                                                    value={paymentFormData.chequeIssueDate}
+                                                    onChange={handlePaymentInputChange}
+                                                    className="payment-input"
+                                                />
+                                            </div>
+                                            <div className="payment-form-group">
+                                                <label>Due Date <span className="text-red-500">*</span></label>
+                                                <input
+                                                    type="date"
+                                                    name="chequeDueDate"
+                                                    value={paymentFormData.chequeDueDate}
+                                                    onChange={handlePaymentInputChange}
+                                                    className="payment-input"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="payment-form-actions">
+                                    <button type="button" className="btn-secondary" onClick={() => setIsPaymentModalOpen(false)}>
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="btn-primary">
+                                        Submit Payment
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

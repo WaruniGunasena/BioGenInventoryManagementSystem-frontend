@@ -52,6 +52,7 @@ const CashFlow = () => {
           setPendingCredits(res.data?.credits || []);
         } else if (activeTab === "complete") {
           const res = await getCompletedCashFlow(startDate, endDate);
+          console.log(res.data);
           setCompletedDebits(res.data?.debits || []);
           setCompletedCredits(res.data?.credits || []);
         } else if (activeTab === "summary") {
@@ -219,8 +220,8 @@ const CashFlow = () => {
                     <div className="ledger-card debit-card">
                       <div className="ledger-header">
                         <div className="ledger-title-wrap">
-                          <TrendingDown className="ledger-icon" size={24} />
-                          <h2>Debit (Paid)</h2>
+                          <TrendingUp className="ledger-icon" size={24} />
+                          <h2>Debit (Received)</h2>
                         </div>
                       </div>
                       <div className="table-responsive">
@@ -257,8 +258,8 @@ const CashFlow = () => {
                     <div className="ledger-card credit-card">
                       <div className="ledger-header">
                         <div className="ledger-title-wrap">
-                          <TrendingUp className="ledger-icon" size={24} />
-                          <h2>Credit (Received)</h2>
+                          <TrendingDown className="ledger-icon" size={24} />
+                          <h2>Credit (Paid)</h2>
                         </div>
                       </div>
                       <div className="table-responsive">
