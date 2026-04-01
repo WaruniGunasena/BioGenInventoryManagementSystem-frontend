@@ -26,3 +26,8 @@ export const approveSalesOrder = (salesOrderStatus, userId, salesOrderId) =>
     api.post(`/sales-orders/Approval?userId=${userId}&salesOrderStatus=${salesOrderStatus}&salesOrderId=${salesOrderId}`);
 
 export const getPendingOrderCount = () => api.get("/sales-orders/getPendingOrderCount");
+
+export const submitSalesOrderPayment = (paymentData) =>
+    api.post("/sales-orders/payment", paymentData, {
+        headers: { "Content-Type": "application/json" },
+    });

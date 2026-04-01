@@ -20,26 +20,24 @@ const SalesRepOrder = () => {
     const customerDropdownRef = useRef(null);
     const topSelectionRef = useRef(null);
 
-    // Customer Selection State
     const [customers, setCustomers] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [customerSearch, setCustomerSearch] = useState("");
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
     const [hasMore, setHasMore] = useState(true);
 
-    // Product List State
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [productSearch, setProductSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(0);
+
     // eslint-disable-next-line no-unused-vars
     const [totalPages, setTotalPages] = useState(0);
     const [pageSize] = useState(5);
     const [loadingProducts, setLoadingProducts] = useState(false);
     const [showProductSearch, setShowProductSearch] = useState(false);
 
-    // Invoice/Order State
     const [addedItems, setAddedItems] = useState([]);
     const [stockData, setStockData] = useState([]);
     const [currentUserId, setCurrentUserId] = useState(null);
@@ -62,6 +60,7 @@ const SalesRepOrder = () => {
     const fetchCustomers = useCallback(async () => {
         try {
             const res = await getAllCustomers();
+            console.log(res.data);
             const data = (res.data?.customers || res.data || []);
             setCustomers(Array.isArray(data) && data.length > 0 ? data : []);
         } catch (error) {
@@ -80,8 +79,6 @@ const SalesRepOrder = () => {
         }
     }, []);
 
-
-    // fetchProducts accepts optional pre-loaded stock array to avoid closure staleness
     const fetchProducts = useCallback(async (page, categoryId, search, append = false, resolvedStock = null) => {
         if (!append) setLoadingProducts(true);
         try {
@@ -101,7 +98,6 @@ const SalesRepOrder = () => {
                 total = res.data?.totalPages || 1;
             }
 
-            // Use passed-in stock OR the current stockData state
             const stock = resolvedStock !== null ? resolvedStock : stockData;
 
             const productsWithInputs = data.map(p => {
@@ -127,7 +123,6 @@ const SalesRepOrder = () => {
     }, [pageSize, stockData]);
 
     useEffect(() => {
-        // Load stock FIRST, then load products with the stock data so prices resolve immediately
         const init = async () => {
             await Promise.all([fetchCustomers(), fetchCategories(), fetchUserId()]);
             let resolvedStock = [];
@@ -139,7 +134,6 @@ const SalesRepOrder = () => {
             } catch (e) {
                 console.error("Stock fetch failed:", e);
             }
-            // Pass stock inline so fetchProducts doesn't rely on stale closure
             fetchProducts(0, "all", "", false, resolvedStock);
         };
         init();
@@ -257,12 +251,9 @@ const SalesRepOrder = () => {
         if (!selectedCustomer) { showToast("error", "Please select a customer"); return; }
         if (addedItems.length === 0) { showToast("error", "Please add at least one product"); return; }
 
-        // Expand each item into sale line + optional bonus line (separate zero-price entry)
-        // This matches the behaviour in the existing SalesOrder flow
         const mappedItems = [];
 
         addedItems.forEach(item => {
-            // Regular sale line
             mappedItems.push({
                 productId: item.productId,
                 productName: item.productName,
@@ -274,7 +265,6 @@ const SalesRepOrder = () => {
                 discountedPrice: item.discountedPrice ?? 0
             });
 
-            // Bonus line — separate entry with qty = bonusQty and price = 0
             if (item.bonus > 0) {
                 mappedItems.push({
                     productId: item.productId,
@@ -332,7 +322,6 @@ const SalesRepOrder = () => {
                 <div className="dashboard-content">
                     <div className="asi-page">
 
-                        {/* ── Page Header ── */}
                         <header className="asi-header">
                             <div className="asi-header-left">
                                 <div className="asi-header-icon">
@@ -349,11 +338,9 @@ const SalesRepOrder = () => {
                             </div>
                         </header>
 
-                        {/* ── Top Section: Customer (top) + Product (below) in one card ── */}
                         <div className="asi-top-section" ref={topSelectionRef}>
                             <div className="asi-card asi-combined-card">
 
-                                {/* Customer Info (top) */}
                                 <div className="asi-combined-section">
                                     <div className="asi-card-header">
                                         <ShoppingCart size={18} className="asi-icon-purple" />
@@ -395,7 +382,7 @@ const SalesRepOrder = () => {
                                             </div>
                                             <div className="asi-credit-row">
                                                 <span>Due Amount</span>
-                                                <strong className="asi-text-warning">LKR {(selectedCustomer.dueAmount || 0).toLocaleString()}</strong>
+                                                <strong className="asi-text-warning">LKR {(selectedCustomer.totalDue || 0).toLocaleString()}</strong>
                                             </div>
                                             <div className={`asi-credit-row asi-credit-available ${isOverCredit ? "over" : "ok"}`}>
                                                 <span>Available Credit</span>
@@ -412,7 +399,6 @@ const SalesRepOrder = () => {
 
                                 <hr className="asi-section-divider" />
 
-                                {/* Product Selection (below) */}
                                 <div className="asi-combined-section">
                                     <div className="asi-card-header">
                                         <ShoppingCart size={18} className="asi-icon-purple" />
@@ -503,7 +489,6 @@ const SalesRepOrder = () => {
                             </div>
                         </div>
 
-                        {/* ── Bottom: Formal Invoice Preview ── */}
                         <div className="asi-invoice-section">
                             <div className="asi-inv-header">
                                 <div className="asi-company-block">
@@ -521,7 +506,6 @@ const SalesRepOrder = () => {
 
                             <hr className="asi-divider" />
 
-                            {/* Invoice Info Bar */}
                             <div className="asi-inv-info-bar">
                                 <div className="asi-inv-info-item">
                                     <span className="asi-inv-info-label">Order No. :</span>
@@ -635,7 +619,7 @@ const SalesRepOrder = () => {
                                         )}
                                     </tbody>
                                 </table>
-                            </div>{/* end asi-inv-table-scroll */}
+                            </div>
 
                             {addedItems.length > 0 && (
                                 <div className="asi-totals">
@@ -646,7 +630,7 @@ const SalesRepOrder = () => {
                                     <div className="asi-total-row" style={{ position: 'relative' }}>
                                         <span
                                             style={{ cursor: 'pointer', color: '#7c3aed', fontWeight: 600 }}
-                                            onClick={() => { setShowDiscountPopup(!showDiscountPopup)}}
+                                            onClick={() => { setShowDiscountPopup(!showDiscountPopup) }}
                                         >
                                             Additional Discount (LKR)
                                         </span>
