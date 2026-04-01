@@ -363,7 +363,7 @@ const EditSalesRepOrder = () => {
                                 <button
                                     className="asi-btn-confirm"
                                     onClick={handleUpdateInvoice}
-                                    disabled={isSubmitting}
+                                    disabled={isSubmitting || isOverCredit}
                                 >
                                     {isSubmitting ? "Saving…" : "Save Changes"}
                                 </button>

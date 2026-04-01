@@ -276,7 +276,7 @@ const EditSalesOrder = () => {
         const reqPreIssue = parseFloat(formData.preIssue) || 0;
 
         if (reqQty <= 0 && reqPreIssue <= 0) {
-            showToast("error", "Please enter a valid quantity or pre-issue amount");
+            showToast("error", "Please enter a valid quantity or Free-issue amount");
             return;
         }
 
@@ -579,12 +579,12 @@ const EditSalesOrder = () => {
                                     )}
                                 </div>
                                 <div className="sales-order-field">
-                                    <label>Pre-Issue</label>
+                                    <label>Free Issue</label>
                                     <input
                                         type="number"
                                         name="preIssue"
                                         className="sales-order-input"
-                                        placeholder="Pre-Issue"
+                                        placeholder="Free Issue"
                                         value={formData.preIssue}
                                         onChange={handleInputChange}
                                     />
@@ -763,7 +763,7 @@ const EditSalesOrder = () => {
                                                         <td></td>
                                                         <td>
                                                             <div className="product-desc-cell">
-                                                                <span className="main-desc" style={{ color: "#666" }}>{item.productName} (Pre-Issue)</span>
+                                                                <span className="main-desc" style={{ color: "#666" }}>{item.productName} (Free-Issue)</span>
                                                                 <span className="sub-desc">{item.itemCode}</span>
                                                             </div>
                                                         </td>
@@ -845,7 +845,7 @@ const EditSalesOrder = () => {
                                 </div>
 
                                 <div className="invoice-footer-actions">
-                                    <button className="issue-bill-btn" onClick={handleUpdateBill}>Update Bill</button>
+                                    <button className="issue-bill-btn" onClick={handleUpdateBill} disabled={isOverLimit}>Update Bill</button>
                                 </div>
                             </div>
                         </div>

@@ -42,7 +42,7 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
                     reorderLevel: product.reorderLevel || '',
                     packSize: product.packSize || '',
                     openingBalance: product.openingBalance || '',
-                    sRepCommissionRate: product.sRepCommissionRate || '',
+                    sRepCommissionRate: product.srepCommissionRate || '',
                     sellingPrice: product.sellingPrice || '',
                     mrp: product.mrp || ''
                 });
@@ -252,6 +252,7 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
                             <label className="form-label">Sales Rep Commission Rate (%)</label>
                             <input
                                 type="number"
+                                step={0.01}
                                 name="sRepCommissionRate"
                                 className="form-input"
                                 placeholder="0-100"

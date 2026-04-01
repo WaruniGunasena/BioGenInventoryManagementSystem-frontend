@@ -343,9 +343,13 @@ const SalesInvoices = () => {
                                         </div>
                                     </div>
                                     <div className="details-box">
-                                        <h4 className="box-title">Delivery Address</h4>
+                                        <h4 className="box-title">Customer Credit Details</h4>
                                         <div className="box-content">
-                                            <p>{selectedInvoice.customer?.address || selectedInvoice.address}</p>
+                                            <span className="info-label">Credit Term :{selectedInvoice.creditTerm} {selectedInvoice.creditTerm === "cash" ? "" : "Days"} </span>
+                                            <p></p>
+                                            <span className="info-label">Credit Limit : Rs.{selectedInvoice.customer?.creditLimit || selectedInvoice.creditLimit}</span>
+                                             <p></p>
+                                            <span className="info-label">Invoice Status  : {selectedInvoice.status}</span>
                                         </div>
                                     </div>
                                 </div>
