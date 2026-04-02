@@ -202,10 +202,10 @@ const Products = () => {
             )
         },
         { header: "Category", accessor: "categoryName" },
-        { header: "Pack Size", accessor: "packSize" },
-        { header: "Opeining Balance", accessor: "openingBalance" },
-        { header: "Min Stock", accessor: "minimumStockLevel" },
-        { header: "Reorder Level", accessor: "reorderLevel" },
+        { header: "Pack Size", accessor: "packSize", align: "right" },
+        { header: "Opeining Balance", accessor: "openingBalance", align: "right" },
+        { header: "Min Stock", accessor: "minimumStockLevel", align: "right" },
+        { header: "Reorder Level", accessor: "reorderLevel", align: "right" },
     ];
 
     return (
