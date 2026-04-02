@@ -62,10 +62,15 @@ const Stock = () => {
     const columns = [
         { header: "Product Name", accessor: "productName" },
         { header: "Product ID", accessor: "itemCode" },
-        { header: "Quantity", accessor: "totalQuantity" },
-        { header: "Selling Price", accessor: "sellingPrice" },
-        { header: "Minimum Stock", accessor: "minimumStockLevel" },
-        { header: "Reorder Level", accessor: "reorderLevel" },
+        { header: "Quantity", accessor: "totalQuantity", align: "right" },
+        { 
+            header: "Selling Price", 
+            accessor: "sellingPrice",
+            align: "right",
+            render: (row) => row.sellingPrice != null ? Number(row.sellingPrice).toFixed(2) : "-"
+        },
+        { header: "Minimum Stock", accessor: "minimumStockLevel", align: "right" },
+        { header: "Reorder Level", accessor: "reorderLevel", align: "right" },
     ];
 
     return (

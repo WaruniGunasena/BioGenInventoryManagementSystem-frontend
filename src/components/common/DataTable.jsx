@@ -191,7 +191,7 @@ const DataTable = ({
                     <thead>
                         <tr>
                             {columns.map((col, index) => (
-                                <th key={index}>{col.header}</th>
+                                <th key={index} style={col.align ? { textAlign: col.align } : {}}>{col.header}</th>
                             ))}
                             {showActions && <th style={{ textAlign: 'right' }}>Actions</th>}
                         </tr>
@@ -204,7 +204,7 @@ const DataTable = ({
                                 style={onRowClick ? { cursor: 'pointer' } : {}}
                             >
                                 {columns.map((col, idx) => (
-                                    <td key={idx}>
+                                    <td key={idx} style={col.align ? { textAlign: col.align } : {}}>
                                         {(() => {
                                             const value = col.render ? col.render(row) : row[col.accessor];
                                             return (value === null || value === undefined || value === "") ? "-" : value;

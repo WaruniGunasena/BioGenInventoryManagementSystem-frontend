@@ -221,7 +221,7 @@ const SalesOrder = () => {
         const reqPreIssue = parseFloat(formData.preIssue) || 0;
 
         if (reqQty <= 0 && reqPreIssue <= 0) {
-            showToast("error", "Please enter a valid quantity or pre-issue amount");
+            showToast("error", "Please enter a valid quantity or Free-issue amount");
             return;
         }
 
@@ -384,7 +384,7 @@ const SalesOrder = () => {
     };
 
     const grandTotalValue = parseFloat(calculateGrandTotal()) || 0;
-    const availableLimit = selectedCustomerData ? ((parseFloat(selectedCustomerData.creditLimit) || 0) - (parseFloat(selectedCustomerData.dueAmount) || 0)) : 0;
+    const availableLimit = selectedCustomerData ? ((parseFloat(selectedCustomerData.creditLimit) || 0) - (parseFloat(selectedCustomerData.dueBalance) || 0)) : 0;
     const isOverLimit = selectedCustomerData && selectedCustomerData.creditPeriod !== 'Cash' && (grandTotalValue > availableLimit);
 
     return (
@@ -430,7 +430,7 @@ const SalesOrder = () => {
                                     <input
                                         type="text"
                                         className="sales-order-input"
-                                        value={formData.creditTerm ? `${formData.creditTerm} days` : "Not Specified"}
+                                        value={formData.creditTerm ? formData.creditTerm === 'cash' ? 'Cash' : `${formData.creditTerm} days` : "Not Specified"}
                                         readOnly
                                     />
                                 </div>
@@ -522,12 +522,12 @@ const SalesOrder = () => {
                                     )}
                                 </div>
                                 <div className="sales-order-field">
-                                    <label>Pre-Issue</label>
+                                    <label>Free Issue</label>
                                     <input
                                         type="number"
                                         name="preIssue"
                                         className="sales-order-input"
-                                        placeholder="Pre-Issue"
+                                        placeholder="Free Issue"
                                         value={formData.preIssue}
                                         onChange={handleInputChange}
                                     />
@@ -610,7 +610,7 @@ const SalesOrder = () => {
                                 </div>
                                 <div className="info-col">
                                     <span className="info-label">Credit Terms : </span>
-                                    <span className="info-value">{formData.creditTerm ? `${formData.creditTerm} Days` : "COD"}</span>
+                                    <span className="info-value">{formData.creditTerm ? formData.creditTerm === 'cash' ? 'Cash' : `${formData.creditTerm} Days` : "COD"}</span>
                                 </div>
                                 <div className="info-col">
                                     <span className="info-label">Sales Rep : </span>
@@ -640,10 +640,10 @@ const SalesOrder = () => {
                                     <div className="box-content">
                                         {selectedCustomerData ? (
                                             <>
-                                                <p><b>Credit Period : </b>{selectedCustomerData.creditPeriod} days</p>
+                                                <p><b>Credit Period : </b>{selectedCustomerData.creditPeriod === 'cash' ? 'Cash' : `${selectedCustomerData.creditPeriod} Days`}</p>
                                                 <p><b>Credit Limit : </b>Rs.{selectedCustomerData.creditLimit}</p>
-                                                <p><b>Due Amount : </b>Rs.{selectedCustomerData.dueAmount}</p>
-                                                <p><b>Available Limit : </b>Rs.{selectedCustomerData.creditLimit - selectedCustomerData.dueAmount}</p>
+                                                <p><b>Due Amount : </b>Rs.{selectedCustomerData.dueBalance}</p>
+                                                <p><b>Available Limit : </b>Rs.{selectedCustomerData.creditLimit - selectedCustomerData.dueBalance}</p>
                                             </>
                                         ) : (
                                             <>
@@ -706,7 +706,7 @@ const SalesOrder = () => {
                                                         <td></td>
                                                         <td>
                                                             <div className="product-desc-cell">
-                                                                <span className="main-desc" style={{ color: "#666" }}>{item.productName} (Pre-Issue)</span>
+                                                                <span className="main-desc" style={{ color: "#666" }}>{item.productName} (Free-Issue)</span>
                                                                 <span className="sub-desc">{item.itemCode}</span>
                                                             </div>
                                                         </td>
@@ -788,7 +788,7 @@ const SalesOrder = () => {
                                 </div>
 
                                 <div className="invoice-footer-actions">
-                                    <button className="issue-bill-btn" onClick={handleIssueBill}>Issue Bill</button>
+                                    <button className="issue-bill-btn" onClick={handleIssueBill} disabled={isOverLimit}>Issue Bill</button>
                                 </div>
                             </div>
                         </div>

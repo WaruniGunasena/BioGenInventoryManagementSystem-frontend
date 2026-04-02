@@ -1,5 +1,4 @@
 import React from "react";
-import Sidebar from "../components/Sidebar";
 import { getToken } from "../auth/tokenService";
 
 const Layout = ({ children }) => {
@@ -7,7 +6,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className="layout">
-      {isAuth && <Sidebar />}
+      {isAuth}
 
       <div className={`main-content ${isAuth ? "with-sidebar" : "full-width"}`}>
         {children}

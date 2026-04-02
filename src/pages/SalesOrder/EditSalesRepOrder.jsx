@@ -274,7 +274,7 @@ const EditSalesRepOrder = () => {
     const discountAmount = getAdditionalDiscountValue();
     const netTotal = totalBeforeExtras - discountAmount;
     const grandTotal = netTotal; // for backward compatibility if needed, but UI uses netTotal
-    const availableCredit = selectedCustomer ? (selectedCustomer.creditLimit - (selectedCustomer.dueAmount || 0)) : 0;
+    const availableCredit = selectedCustomer ? (selectedCustomer.creditLimit - (selectedCustomer.dueBalance || 0)) : 0;
     const isOverCredit = selectedCustomer && netTotal > availableCredit;
 
     const filteredCustomers = customers.filter(c =>
@@ -363,7 +363,7 @@ const EditSalesRepOrder = () => {
                                 <button
                                     className="asi-btn-confirm"
                                     onClick={handleUpdateInvoice}
-                                    disabled={isSubmitting}
+                                    disabled={isSubmitting || isOverCredit}
                                 >
                                     {isSubmitting ? "Saving…" : "Save Changes"}
                                 </button>
@@ -412,7 +412,7 @@ const EditSalesRepOrder = () => {
                                             </div>
                                             <div className="asi-credit-row">
                                                 <span>Due Amount</span>
-                                                <strong className="asi-text-warning">LKR {(selectedCustomer.dueAmount || 0).toLocaleString()}</strong>
+                                                <strong className="asi-text-warning">LKR {(selectedCustomer.dueBalance || 0).toLocaleString()}</strong>
                                             </div>
                                             <div className={`asi-credit-row asi-credit-available ${isOverCredit ? "over" : "ok"}`}>
                                                 <span>Available Credit</span>

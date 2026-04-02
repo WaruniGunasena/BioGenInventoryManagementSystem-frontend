@@ -162,7 +162,7 @@ const Suppliers = () => {
 
     const columns = [
         {
-            header: "Supplier Name / Company Name", accessor: "name", render: (row) => (
+            header: "Supplier / Company Name", accessor: "name", render: (row) => (
                 <div className="user-cell">
                     <img src={`https://ui-avatars.com/api/?name=${row.name}&background=random`} alt="" className="user-avatar" />
                     <span style={{ fontWeight: '500', color: '#6366f1' }}>{row.name}</span>
@@ -210,6 +210,7 @@ const Suppliers = () => {
                         showAddButton={canAdd}
                         onAddClick={() => setIsAddModalOpen(true)}
                         showActions={canEdit || canDelete}
+                        showStatusToggle={false}
                         onEdit={canEdit ? (row) => { setSelectedSupplier(row); setIsEditModalOpen(true); } : null}
                         onDelete={canDelete ? handleDeleteClick : null}
                         filterOptions={[
