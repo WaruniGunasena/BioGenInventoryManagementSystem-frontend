@@ -285,31 +285,6 @@
     letter-spacing: -1px;
 }
 
-.invoice-info-bar {
-    display: flex;
-    background-color: #e5eef9;
-    padding: 12px 20px;
-    border-radius: 4px;
-    justify-content: space-between;
-    margin-bottom: 25px;
-}
-
-.info-col {
-    display: flex;
-    gap: 8px;
-    font-size: 14px;
-}
-
-.info-label {
-    font-weight: 600;
-    color: #666;
-}
-
-.info-value {
-    color: #000;
-    font-weight: 500;
-}
-
 .customer-details-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -885,3 +860,17 @@
 .text-red-500 {
     color: #ef4444;
 }
+
+.invoice-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #e9edf3;
+  margin-bottom: 20px;
+}
+
+.invoice-info-table td {
+  padding: 6px 8px;
+  white-space: nowrap;
+  font-size: small;
+}
+
