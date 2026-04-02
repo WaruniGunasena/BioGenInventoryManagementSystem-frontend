@@ -131,7 +131,7 @@ const SalesInvoices = () => {
         try {
             await softDeleteSalesOrder(invoiceId, currentUserId);
             showToast("success", `Invoice ${invoice.invoiceNumber} deleted`);
-            setIsModalOpen(false); 
+            setIsModalOpen(false);
             fetchInvoices(currentPage);
         } catch (error) {
             showToast("error", error?.response?.data?.message || "Failed to delete invoice");
@@ -306,13 +306,13 @@ const SalesInvoices = () => {
             accessor: "dueBalance",
             render: (row) => {
                 const pStatus = (row.paymentStatus || 'pending').toUpperCase();
-                
+
                 if (pStatus === 'PAID') return '0.00';
-                
-                const due = row.dueBalance !== undefined && row.dueBalance !== null 
-                                ? row.dueBalance 
-                                : (pStatus === 'PENDING' ? row.netTotal : 0);
-                                
+
+                const due = row.dueBalance !== undefined && row.dueBalance !== null
+                    ? row.dueBalance
+                    : (pStatus === 'PENDING' ? row.netTotal : 0);
+
                 return parseFloat(due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
             }
         },
@@ -444,26 +444,23 @@ const SalesInvoices = () => {
                                     </div>
                                 </div>
 
-                                <div className="invoice-info-bar">
-                                    <div className="info-col">
-                                        <span className="info-label">Invoice No. : </span>
-                                        <span className="info-value">
-                                            {selectedInvoice.invoiceNumber}
-                                        </span>
-                                    </div>
-                                    <div className="info-col">
-                                        <span className="info-label">Invoice Date : </span>
-                                        <span className="info-value">{selectedInvoice.date}</span>
-                                    </div>
-                                    <div className="info-col">
-                                        <span className="info-label">Credit Terms : </span>
-                                        <span className="info-value">{selectedInvoice.creditTerm ? `${selectedInvoice.creditTerm} Days` : "COD"}</span>
-                                    </div>
-                                    <div className="info-col">
-                                        <span className="info-label">Sales Rep : </span>
-                                        <span className="info-value">{selectedInvoice.userName || selectedInvoice.user?.name || "Not Assigned"}</span>
-                                    </div>
-                                </div>
+                                <table className="invoice-info-table">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Invoice No. :</strong></td>
+                                            <td>{selectedInvoice.invoiceNumber}</td>
+
+                                            <td><strong>Invoice Date :</strong></td>
+                                            <td>{selectedInvoice.date}</td>
+
+                                            <td><strong>Credit Terms :</strong></td>
+                                            <td>{selectedInvoice.creditTerm ? `${selectedInvoice.creditTerm} Days` : "COD"}</td>
+
+                                            <td><strong>Sales Rep :</strong></td>
+                                            <td>{selectedInvoice.userName || selectedInvoice.user?.name || "Not Assigned"}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
 
                                 <div className="customer-details-grid">
                                     <div className="details-box">
@@ -480,8 +477,10 @@ const SalesInvoices = () => {
                                             <span className="info-label">Credit Term :{selectedInvoice.creditTerm} {selectedInvoice.creditTerm === "cash" ? "" : "Days"} </span>
                                             <p></p>
                                             <span className="info-label">Credit Limit : Rs.{selectedInvoice.customer?.creditLimit || selectedInvoice.creditLimit}</span>
-                                             <p></p>
+                                            <p></p>
                                             <span className="info-label">Invoice Status  : {selectedInvoice.status}</span>
+                                            <p></p>
+                                            <span className="info-label">Payment Status  : {selectedInvoice.paymentStatus}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -550,6 +549,14 @@ const SalesInvoices = () => {
                                             </div>
 
                                         </div>
+                                    </div>
+                                    <div>
+                                        <p>Prepared By: {selectedInvoice.user?.name}
+                                            <span style={{ marginLeft: "40px" }}>Checked By: ..............................</span>
+                                            <span style={{ marginLeft: "40px" }}>Approved By: ..............................</span>
+                                        </p>
+                                        <p>Cheques to drawn in Favour of <b>BioGen Holdings (pvt) Ltd</b> & Crossed Account Payee Only</p>
+                                        <p style={{ textAlign: "center" }}><b>Thank you for your business!</b></p>
                                     </div>
                                 </div>
                             </div>

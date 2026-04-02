@@ -441,7 +441,7 @@ const EditSalesOrder = () => {
     };
 
     const grandTotalValue = parseFloat(calculateGrandTotal()) || 0;
-    const availableLimit = selectedCustomerData ? ((parseFloat(selectedCustomerData.creditLimit) || 0) - (parseFloat(selectedCustomerData.dueAmount) || 0)) : 0;
+    const availableLimit = selectedCustomerData ? ((parseFloat(selectedCustomerData.creditLimit) || 0) - (parseFloat(selectedCustomerData.dueBalance) || 0)) : 0;
     const isOverLimit = selectedCustomerData && selectedCustomerData.creditPeriod !== 'Cash' && (grandTotalValue > availableLimit);
 
     return (
@@ -699,8 +699,8 @@ const EditSalesOrder = () => {
                                             <>
                                                 <p><b>Credit Period : </b>{selectedCustomerData.creditPeriod} days</p>
                                                 <p><b>Credit Limit : </b>Rs.{selectedCustomerData.creditLimit}</p>
-                                                <p><b>Due Amount : </b>Rs.{selectedCustomerData.dueAmount}</p>
-                                                <p><b>Available Limit : </b>Rs.{selectedCustomerData.creditLimit - selectedCustomerData.dueAmount}</p>
+                                                <p><b>Due Amount : </b>Rs.{selectedCustomerData.dueBalance}</p>
+                                                <p><b>Available Limit : </b>Rs.{selectedCustomerData.creditLimit - selectedCustomerData.dueBalance}</p>
                                             </>
                                         ) : (
                                             <>

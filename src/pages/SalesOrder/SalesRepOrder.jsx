@@ -244,7 +244,7 @@ const SalesRepOrder = () => {
     const totalBeforeExtras = addedItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
     const discountAmount = getAdditionalDiscountValue();
     const grandTotal = totalBeforeExtras - discountAmount;
-    const availableCredit = selectedCustomer ? (selectedCustomer.creditLimit - (selectedCustomer.dueAmount || 0)) : 0;
+    const availableCredit = selectedCustomer ? (selectedCustomer.creditLimit - (selectedCustomer.dueBalance || 0)) : 0;
     const isOverCredit = selectedCustomer && grandTotal > availableCredit;
 
     const handleSubmitInvoice = async () => {
