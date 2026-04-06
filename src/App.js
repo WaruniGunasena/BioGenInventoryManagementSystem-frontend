@@ -29,6 +29,7 @@ import Reports from "./pages/Reports/Reports";
 import ProductReturns from "./pages/Returns/ProductReturns";
 import CreditNotes from "./pages/Returns/CreditNotes";
 import Reports from "./pages/Reports/Reports";
+import ProductReturns from "./pages/Returns/ProductReturns";
 import Reports from "./pages/Reports/Reports";
 
 /**
@@ -79,11 +80,9 @@ function App() {
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/test-components" element={<ComponentsDemo />} />
                 <Route path="/cash-flow" element={<CashFlow />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/product-returns" element={<ProductReturns />} />
-                <Route path="/reports" element={<Reports />} />
                 <Route path="/credit-notes" element={<CreditNotes />} />
                 <Route path="/reports" element={<Reports />} />
+                <Route path="/product-returns" element={<ProductReturns />} />
               </Routes>
             </FirstRunGuard>
           </Router>
