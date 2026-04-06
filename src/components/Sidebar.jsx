@@ -23,6 +23,7 @@ import {
   Menu,
   FileText,
   TrendingUp,
+  RotateCcw,
   BarChart2
 } from "lucide-react";
 import "./Sidebar.css";
@@ -236,10 +237,10 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
             </li>
           )}
 
-          {admin && <li className="nav-item">
-            <Link to="/roles" className={`nav-link ${isActive('/roles') ? 'active' : ''}`}>
-              <Layers size={20} className="nav-icon" />
-              <span className="link-text">Roles</span>
+          {(admin || inventoryManager) && <li className="nav-item">
+            <Link to="/product-returns" className={`nav-link ${isActive('/product-returns') ? 'active' : ''}`}>
+              <RotateCcw size={20} className="nav-icon" />
+              <span className="link-text">Returns</span>
             </Link>
           </li>}
 

@@ -26,6 +26,7 @@ import EditSalesRepOrder from "./pages/SalesOrder/EditSalesRepOrder";
 import CashFlow from "./pages/CashFlow/CashFlow";
 import EditSalesOrder from "./pages/SalesOrder/EditSalesOrder";
 import Reports from "./pages/Reports/Reports";
+import ProductReturns from "./pages/Returns/ProductReturns";
 
 /**
  * FirstRunGuard — must live inside <Router> to use useLocation / useNavigate.
@@ -75,6 +76,7 @@ function App() {
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/test-components" element={<ComponentsDemo />} />
                 <Route path="/cash-flow" element={<CashFlow />} />
+                <Route path="/product-returns" element={<ProductReturns />} />
                 <Route path="/reports" element={<Reports />} />
               </Routes>
             </FirstRunGuard>
