@@ -94,6 +94,7 @@ export const exportToPDF = async ({
     extractRows,
     columnMap,
     title,
+    subTitle,
     filenamePrefix = 'export',
     orientation = 'portrait',
     pageSize = 'a4',
@@ -124,21 +125,32 @@ export const exportToPDF = async ({
         const dateStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
         const reportTitle = title || filenamePrefix;
 
+        let currentY = 18;
+
         // --- Header: title ---
         doc.setFontSize(16);
         doc.setTextColor(40, 40, 40);
-        doc.text(reportTitle, pageWidth / 2, 18, { align: 'center' });
+        doc.text(reportTitle, pageWidth / 2, currentY, { align: 'center' });
 
-        // --- Sub-header: generated date ---
+        // --- Sub-header ---
+        if (subTitle) {
+            currentY += 7;
+            doc.setFontSize(14);
+            doc.setTextColor(60, 60, 60);
+            doc.text(subTitle, pageWidth / 2, currentY, { align: 'center' });
+        }
+
+        // --- Date ---
+        currentY += 7;
         doc.setFontSize(9);
         doc.setTextColor(130, 130, 130);
-        doc.text(`Generated: ${dateStr}`, pageWidth / 2, 25, { align: 'center' });
+        doc.text(`Date: ${dateStr}`, pageWidth / 2, currentY, { align: 'center' });
 
         // --- Table ---
         autoTable(doc, {
             head,
             body,
-            startY: 32,
+            startY: currentY + 7,
             styles: {
                 fontSize: 9,
                 cellPadding: 3,
@@ -147,7 +159,7 @@ export const exportToPDF = async ({
             },
             columnStyles,
             headStyles: {
-                fillColor: [99, 102, 241], 
+                fillColor: [99, 102, 241],
                 textColor: 255,
                 fontStyle: 'bold',
                 ...headStyles,

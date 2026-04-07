@@ -45,12 +45,18 @@ const escapeCell = (value) => {
  * @param {Array<{ key: string, label: string }>} columnMap
  * @returns {string}
  */
-const buildCSV = (rows, columnMap) => {
+const buildCSV = (rows, columnMap, title, subTitle, dateStr) => {
+    let headerLines = [];
+    if (title) headerLines.push(`"${title}"`);
+    if (subTitle) headerLines.push(`"${subTitle}"`);
+    if (dateStr && (title || subTitle)) headerLines.push(`"Generated: ${dateStr}"`);
+    if (headerLines.length > 0) headerLines.push(''); // empty line
+
     const headers = columnMap.map((col) => col.label).join(',');
     const body = rows.map((row) =>
         columnMap.map((col) => escapeCell(row[col.key])).join(',')
     );
-    return [headers, ...body].join('\n');
+    return [...headerLines, headers, ...body].join('\n');
 };
 
 /**
@@ -90,6 +96,8 @@ export const exportToCSV = async ({
     fetchData,
     extractRows,
     columnMap,
+    title,
+    subTitle,
     filenamePrefix = 'export',
     onStart,
     onEnd,
@@ -105,8 +113,8 @@ export const exportToCSV = async ({
             return;
         }
 
-        const csv = buildCSV(rows, columnMap);
         const dateStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+        const csv = buildCSV(rows, columnMap, title, subTitle, dateStr);
         downloadCSV(csv, `${filenamePrefix}_${dateStr}.csv`);
     } catch (error) {
         console.error('ExportToCSV: export failed:', error);
