@@ -282,3 +282,146 @@
     font-size: 14px;
     color: #6b7280;
 }
+
+/* ── Subheadline & refresh ── */
+.dashboard-subhead {
+    font-size: 12px;
+    color: #9ca3af;
+    margin: 2px 0 0;
+}
+
+.db-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6366f1;
+    border-color: #c7d2fe;
+}
+
+.db-refresh-btn:hover:not(:disabled) {
+    background: #eef2ff;
+    border-color: #6366f1;
+}
+
+.db-refresh-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ── KPI icon wrap ── */
+.stat-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Chart subtitle ── */
+.chart-sub {
+    font-size: 12px;
+    color: #9ca3af;
+    margin: 2px 0 0;
+}
+
+/* ── Badges ── */
+.db-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.db-badge-indigo { background: #eef2ff; color: #4f46e5; }
+.db-badge-green  { background: #f0fdf4; color: #059669; }
+.db-badge-red    { background: #fff1f2; color: #dc2626; }
+.db-badge-amber  { background: #fffbeb; color: #d97706; }
+
+/* ── Tooltip ── */
+.db-tooltip {
+    background: #1f2937;
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.db-tooltip-label { font-size: 11px; color: #9ca3af; margin: 0 0 2px; }
+.db-tooltip-value { font-weight: 700; margin: 0; }
+
+/* ── Alert tables ── */
+.db-alert-card {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f3f4f6;
+}
+
+.db-table-wrap { overflow-x: auto; }
+
+.db-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.db-table th {
+    text-align: left;
+    padding: 8px 10px;
+    background: #f9fafb;
+    color: #374151;
+    font-weight: 600;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.db-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #4b5563;
+}
+
+.db-table tr:last-child td { border-bottom: none; }
+
+/* ── Skeleton loader ── */
+.db-chart-skeleton {
+    height: 230px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: db-shimmer 1.4s infinite;
+}
+
+.stat-skeleton {
+    display: inline-block;
+    width: 80px;
+    height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: db-shimmer 1.4s infinite;
+}
+
+@keyframes db-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ── Empty state ── */
+.db-empty {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 13px;
+    padding: 30px 0;
+}
+
+/* ── Spin animation for refresh icon ── */
+.db-spin { animation: db-rotate 0.9s linear infinite; }
+@keyframes db-rotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}

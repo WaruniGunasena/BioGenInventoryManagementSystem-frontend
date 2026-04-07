@@ -1,77 +1,62 @@
-import React from 'react';
+import React from "react";
+import {
+    ShoppingCart,
+    AlertTriangle,
+    Clock,
+    Wallet,
+} from "lucide-react";
 
-const DashboardStats = () => {
-    const stats = [
-        {
-            title: "Total Medicine in Stock",
-            value: "3000 Units",
-            change: "+ 12%",
-            subtitle: "vs last month",
-            isPositive: true,
-            color: "#4ade80", // green-400
-            iconColor: "#22c55e" // green-500
-        },
-        {
-            title: "Low Stock Alerts",
-            value: "38 Items",
-            change: "- 2%",
-            subtitle: "vs last month",
-            isPositive: false,
-            color: "#fbbf24", // amber-400
-            iconColor: "#f59e0b" // amber-500
-        },
-        {
-            title: "Expired / Near Expiry",
-            value: "12 Items",
-            change: "+ 2%",
-            subtitle: "vs last month",
-            isPositive: true,
-            color: "#f87171", // red-400
-            iconColor: "#ef4444" // red-500
-        },
-        {
-            title: "Today's Sales",
-            value: "LKR 100 000",
-            change: "+ 12%",
-            subtitle: "vs last month",
-            isPositive: true,
-            color: "#60a5fa", // blue-400
-            iconColor: "#3b82f6" // blue-500
-        },
-        {
-            title: "Monthly Sales Revenue",
-            value: "LKR 10 M",
-            change: "+ 12%",
-            subtitle: "vs last month",
-            isPositive: true,
-            color: "#60a5fa", // blue-400
-            iconColor: "#3b82f6" // blue-500
-        },
-        {
-            title: "Debt Payment",
-            value: "LKR 2 M",
-            change: "+ 2%",
-            subtitle: "vs last month",
-            isPositive: true,
-            color: "#60a5fa", // blue-400
-            iconColor: "#3b82f6" // blue-500
-        }
-    ];
+const KPI_CONFIG = [
+    {
+        key: "pendingOrdersCount",
+        label: "Pending Orders",
+        icon: ShoppingCart,
+        color: "#6366f1",
+        bg: "#eef2ff",
+        format: (v) => v ?? "—",
+    },
+    {
+        key: "totalOutstandingBalance",
+        label: "Total Outstanding",
+        icon: Wallet,
+        color: "#f59e0b",
+        bg: "#fffbeb",
+        format: (v) =>
+            v != null
+                ? `LKR ${parseFloat(v).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                : "—",
+    },
+    {
+        key: "lowStockCount",
+        label: "Low Stock Items",
+        icon: AlertTriangle,
+        color: "#ef4444",
+        bg: "#fff1f2",
+        format: (v) => (v != null ? `${v} items` : "—"),
+    },
+    {
+        key: "upcomingExpiriesCount",
+        label: "Expiring Soon (3 mo.)",
+        icon: Clock,
+        color: "#10b981",
+        bg: "#f0fdf4",
+        format: (v) => (v != null ? `${v} items` : "—"),
+    },
+];
 
+const DashboardStats = ({ data, loading }) => {
     return (
         <div className="dashboard-stats-grid">
-            {stats.map((stat, index) => (
-                <div key={index} className="stat-card">
+            {KPI_CONFIG.map(({ key, label, icon: Icon, color, bg, format }) => (
+                <div key={key} className="stat-card" style={{ borderTop: `3px solid ${color}` }}>
                     <div className="stat-header">
-                        <h3>{stat.title}</h3>
-                        <span className="more-options">⋮</span>
+                        <h3>{label}</h3>
+                        <div className="stat-icon-wrap" style={{ background: bg }}>
+                            <Icon size={18} color={color} />
+                        </div>
                     </div>
-                    <div className="stat-value">{stat.value}</div>
-                    <div className="stat-change">
-                        <span className={`change-indicator ${stat.isPositive ? 'positive' : 'negative'}`}>
-                            {stat.change}
-                        </span>
-                        <span className="subtitle"> {stat.subtitle}</span>
+                    <div className="stat-value" style={{ color }}>
+                        {loading ? <span className="stat-skeleton" /> : format(data?.[key])}
                     </div>
                 </div>
             ))}

@@ -1,0 +1,140 @@
+/* ═══════════════════════════════════════════════════════════════
+   Reports.css — Page-level styles
+   Project color palette:
+     --rp-primary   #6366f1  (indigo)
+     --rp-secondary #4f46e5  (indigo dark)
+     --rp-tertiary  #2b0958  (deep purple)
+═══════════════════════════════════════════════════════════════ */
+
+:root {
+    --rp-primary:   #6366f1;
+    --rp-secondary: #4f46e5;
+    --rp-tertiary:  #2b0958;
+    --rp-tint:      #e5eef9;
+    --rp-bg:        #f9fafb;
+    --rp-white:     #ffffff;
+    --rp-border:    #e5e7eb;
+    --rp-text:      #374151;
+    --rp-muted:     #6b7280;
+}
+
+/* ── Page wrapper ── */
+.rp-page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 24px;
+    min-height: 100vh;
+    background: var(--rp-bg);
+}
+
+/* ── Page header ── */
+.rp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, var(--rp-primary), var(--rp-secondary));
+    color: var(--rp-white);
+    padding: 20px 26px;
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(99, 102, 241, 0.3);
+}
+
+.rp-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.rp-header-icon {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rp-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.rp-subtitle {
+    font-size: 13px;
+    opacity: 0.85;
+    margin: 4px 0 0;
+}
+
+.rp-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--rp-white);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ── Collapsible section ── */
+.rp-section {
+    background: var(--rp-white);
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.rp-section-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid var(--rp-tint);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--rp-tertiary);
+    transition: background 0.15s;
+}
+
+.rp-section-toggle:hover {
+    background: var(--rp-tint);
+}
+
+.rp-chevron {
+    transition: transform 0.25s;
+    color: var(--rp-primary);
+}
+
+.rp-chevron.open {
+    transform: rotate(180deg);
+}
+
+/* ── Report cards grid ── */
+.rp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 18px;
+    padding: 20px 22px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .rp-page {
+        padding: 12px;
+    }
+
+    .rp-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .rp-grid {
+        grid-template-columns: 1fr;
+    }
+}
