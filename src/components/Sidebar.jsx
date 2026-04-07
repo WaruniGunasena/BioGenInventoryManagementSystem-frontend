@@ -24,6 +24,7 @@ import {
   FileText,
   TrendingUp,
   RotateCcw,
+  BarChart2,
   BarChart2
 } from "lucide-react";
 import "./Sidebar.css";
