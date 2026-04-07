@@ -118,6 +118,8 @@ const Products = () => {
                 { key: 'mrp', label: 'MRP' }
 
             ],
+            title: 'BioGenHoldings Pvt. Ltd',
+            subTitle: 'Price List',
             filenamePrefix: 'products',
             onStart: () => setIsExporting(true),
             onEnd: () => setIsExporting(false),
@@ -149,7 +151,8 @@ const Products = () => {
                 { key: 'mrp', label: 'MRP', align: 'right' }
 
             ],
-            title: 'Product List',
+            title: 'BioGenHoldings Pvt. Ltd',
+            subTitle: 'Price List',
             filenamePrefix: 'products',
             onStart: () => setIsExporting(true),
             onEnd: () => setIsExporting(false),
