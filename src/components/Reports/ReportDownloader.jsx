@@ -72,20 +72,58 @@ const ReportDownloader = ({
 
             // Build a sensible filename
             const labelSlug = reportName.replace(/\s+/g, "_");
-            const suffix = values.date || new Date().toLocaleDateString("en-CA");
-            const filename = `${labelSlug}_${suffix}.pdf`;
+            const dateSuffix =
+                values.reportDate ||
+                values.startDate ||
+                values.date ||
+                new Date().toLocaleDateString("en-CA");
+            const filename = `${labelSlug}_${dateSuffix}.pdf`;
 
-            // Open the PDF in a new browser tab.
-            // The user can view it inline and download via the browser's PDF viewer.
+            // Open a wrapper page in a new tab so the user can view the PDF
+            // and download it with the correct filename via the Download button.
             const newTab = window.open("", "_blank");
             if (!newTab) {
                 showToast("error", "Pop-up blocked. Please allow pop-ups for this site.");
                 URL.revokeObjectURL(url);
                 return;
             }
-            newTab.location.href = url;
-            // Do NOT revoke immediately — the tab needs the URL to stay alive.
-            // It will be cleaned up when the tab is closed.
+
+            newTab.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>${filename}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { display: flex; flex-direction: column; height: 100vh; font-family: Inter, sans-serif; background: #f3f4f6; }
+    .bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 18px;
+      background: #4f46e5; color: #fff;
+      box-shadow: 0 2px 6px rgba(79,70,229,.35);
+      flex-shrink: 0;
+    }
+    .bar-title { font-size: 14px; font-weight: 600; }
+    .dl-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #fff; color: #4f46e5;
+      padding: 7px 16px; border-radius: 8px;
+      font-size: 13px; font-weight: 700;
+      text-decoration: none;
+      transition: background .15s;
+    }
+    .dl-btn:hover { background: #e0e7ff; }
+    iframe { flex: 1; border: none; width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <span class="bar-title">📄 ${filename}</span>
+    <a class="dl-btn" href="${url}" download="${filename}">⬇ Download</a>
+  </div>
+  <iframe src="${url}"></iframe>
+</body>
+</html>`);
+            newTab.document.close();
 
             showToast("success", `${reportName} opened in a new tab.`);
         } catch (error) {
