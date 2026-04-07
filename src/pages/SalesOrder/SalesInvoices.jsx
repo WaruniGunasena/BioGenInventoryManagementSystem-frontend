@@ -476,11 +476,11 @@ const SalesInvoices = () => {
                                         <div className="box-content">
                                             <span className="info-label">Credit Term :{selectedInvoice.creditTerm} {selectedInvoice.creditTerm === "cash" ? "" : "Days"} </span>
                                             <p></p>
-                                            <span className="info-label">Credit Limit : Rs.{selectedInvoice.customer?.creditLimit || selectedInvoice.creditLimit}</span>
+                                            <span className="info-label">Invoice Due Date : {selectedInvoice.invoiceDueDate}</span>
                                             <p></p>
-                                            <span className="info-label">Invoice Status  : {selectedInvoice.status}</span>
+                                            <span className="info-label">Previous Due Amount  : Rs.{selectedInvoice.previousDueAmount}</span>
                                             <p></p>
-                                            <span className="info-label">Payment Status  : {selectedInvoice.paymentStatus}</span>
+                                            <span className="info-label">Invoice Amount  : Rs.{selectedInvoice.netTotal}</span>
                                         </div>
                                     </div>
                                 </div>
