@@ -45,7 +45,7 @@ const Products = () => {
     const fetchProducts = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await getPaginatedProductResults(currentPage, 5, filter, categoryId);
+            const response = await getPaginatedProductResults(currentPage, 8, filter, categoryId);
             if (response.data && response.data.products && Array.isArray(response.data.products)) {
                 setProducts(response.data.products);
                 setTotalPages(response.data.totalPages);

@@ -165,9 +165,9 @@ const DashboardTopProducts = ({ data, loading }) => {
     ];
     const EXPIRY_COLS = [
         { key: "productName", label: "Product" },
-        { key: "batchNumber", label: "Batch" },
+        { key: "batch", label: "Batch" },
         { key: "expiry",      label: "Expiry" },
-        { key: "quantity",    label: "Qty" },
+        { key: "qty",    label: "Qty" },
     ];
 
     return (

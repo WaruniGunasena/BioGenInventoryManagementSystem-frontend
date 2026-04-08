@@ -14,7 +14,6 @@ import {
   User,
   UserRound,
   Layers,
-  LifeBuoy,
   Settings,
   Search,
   LogOut,
@@ -237,13 +236,6 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
           )}
 
           {admin && <li className="nav-item">
-            <Link to="/roles" className={`nav-link ${isActive('/roles') ? 'active' : ''}`}>
-              <Layers size={20} className="nav-icon" />
-              <span className="link-text">Roles</span>
-            </Link>
-          </li>}
-
-          {admin && <li className="nav-item">
             <Link to="/cash-flow" className={`nav-link ${isActive('/cash-flow') ? 'active' : ''}`}>
               <TrendingUp size={20} className="nav-icon" />
               <span className="link-text">Cash Flow</span>
@@ -258,13 +250,6 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
           </li>}
 
           <div style={{ flex: 1 }}></div>
-
-          <li className="nav-item">
-            <Link to="/support" className={`nav-link ${isActive('/support') ? 'active' : ''}`}>
-              <LifeBuoy size={20} className="nav-icon" />
-              <span className="link-text">Support</span>
-            </Link>
-          </li>
 
           <li className="nav-item">
             <Link to="/settings" className={`nav-link ${isActive('/settings') ? 'active' : ''}`}>

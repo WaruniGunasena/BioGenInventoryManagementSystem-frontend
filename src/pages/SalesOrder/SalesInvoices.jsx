@@ -64,7 +64,7 @@ const SalesInvoices = () => {
             const res = await getPaginatedSalesOrders(page, pageSize);
             if (res.data) {
                 const data = res.data.salesOrderList || res.data.content || [];
-                const total = res.data.totalPages || 1;
+                const total = res.data.totalPages;
 
                 const mappedData = data.map(item => ({
                     ...item,
@@ -252,8 +252,9 @@ const SalesInvoices = () => {
             const imgProps = pdf.getImageProperties(imgData);
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            const margin = 10;
 
-            pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+            pdf.addImage(imgData, "PNG", margin, margin, pdfWidth - (margin * 2), pdfHeight - (margin * 2));
             pdf.save(`Invoice_${selectedInvoice.invoiceNumber}.pdf`);
         } catch (error) {
             console.error("Error generating PDF:", error);
@@ -505,8 +506,8 @@ const SalesInvoices = () => {
                                                     <td>{index + 1}</td>
                                                     <td>
                                                         <div className="product-desc-cell">
-                                                            <span className="main-desc">{item.productName || item.product?.name || "Product N/A"}</span>
-                                                            <span className="sub-desc">* B/N & (Exp Date): Default (30/11/2027)</span>
+                                                            <span className="main-desc">{item.product?.name || "Product N/A"}</span>
+                                                            <span className="sub-desc">{item.product?.productID}</span>
                                                         </div>
                                                     </td>
                                                     <td>{item.unit || "-"}</td>

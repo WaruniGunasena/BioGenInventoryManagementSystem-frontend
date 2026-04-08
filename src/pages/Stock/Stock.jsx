@@ -27,8 +27,8 @@ const Stock = () => {
             setIsLoading(true);
             try {
                 const response = searchQuery.trim()
-                    ? await searchStock(searchQuery, currentPage, 5, filter, { signal: controller.signal })
-                    : await getPaginatedStock(currentPage, 5, filter, { signal: controller.signal });
+                    ? await searchStock(searchQuery, currentPage, 8, filter, { signal: controller.signal })
+                    : await getPaginatedStock(currentPage, 8, filter, { signal: controller.signal });
 
                 if (controller.signal.aborted) return;
 

@@ -874,3 +874,14 @@
   font-size: small;
 }
 
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  .sales-order-summary-section {
+    margin: 0; 
+  }
+}
+

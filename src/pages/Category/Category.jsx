@@ -47,7 +47,7 @@ const Category = () => {
     const fetchCategories = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await getPaginatedResults(currentPage, 5, filter)
+            const response = await getPaginatedResults(currentPage, 8, filter)
             if (response.data && response.data.categories && Array.isArray(response.data.categories)) {
                 setCategories(response.data.categories);
                 setTotalPages(response.data.totalPages);
