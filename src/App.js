@@ -28,10 +28,6 @@ import EditSalesOrder from "./pages/SalesOrder/EditSalesOrder";
 import Reports from "./pages/Reports/Reports";
 import ProductReturns from "./pages/Returns/ProductReturns";
 import CreditNotes from "./pages/Returns/CreditNotes";
-import CreditNotes from "./pages/Returns/CreditNotes";
-import Reports from "./pages/Reports/Reports";
-import ProductReturns from "./pages/Returns/ProductReturns";
-import Reports from "./pages/Reports/Reports";
 
 /**
  * FirstRunGuard — must live inside <Router> to use useLocation / useNavigate.
