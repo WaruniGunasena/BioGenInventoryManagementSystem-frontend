@@ -5,7 +5,7 @@ import { getAllCustomers } from "../../api/customerService";
 import { getSalesOrdersByCustomer, createProductReturn } from "../../api/returnService";
 import { getSalesOrderById } from "../../api/salesOrderService";
 import { useToast } from "../../context/ToastContext";
-import { getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
+import { getCurrentUser, getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
 import { RotateCcw, ShoppingCart, FileText } from "lucide-react";
 import "./ProductReturns.css";
 
@@ -208,7 +208,7 @@ const ProductReturns = () => {
                 quantity: item.returnQty,
                 sellingPrice: parseFloat(item.sellingPrice),
                 totalAmount: parseFloat(item.refundAmount.toFixed(2)),
-                reusable: item.reusable,
+                isReusable: item.reusable,
             })),
         };
 
@@ -375,6 +375,7 @@ const ProductReturns = () => {
                                                     <th>Product</th>
                                                     <th>Unit</th>
                                                     <th>Invoice Qty</th>
+                                                    <th>Returnable Qty</th>
                                                     <th>Unit Price (LKR)</th>
                                                     <th>Return Qty</th>
                                                     <th>Refund Amount (LKR)</th>
@@ -387,6 +388,7 @@ const ProductReturns = () => {
                                                     const returnState = returnItems[key] || { returnQty: "", reusable: true };
                                                     const returnQty = parseFloat(returnState.returnQty) || 0;
                                                     const refund = returnQty * parseFloat(item.sellingPrice);
+                                                    const returnableQuantity = item.quantity - item.returnQty;
 
                                                     return (
                                                         <tr key={key} className={returnQty > 0 ? "pr-row-selected" : ""}>
@@ -398,18 +400,19 @@ const ProductReturns = () => {
                                                             </td>
                                                             <td>{item.unit || "—"}</td>
                                                             <td>{item.quantity}</td>
+                                                            <td>{returnableQuantity}</td>
                                                             <td>{parseFloat(item.sellingPrice).toFixed(2)}</td>
                                                             <td>
                                                                 <input
                                                                     type="number"
                                                                     className="pr-qty-input"
                                                                     min="0"
-                                                                    max={item.quantity}
+                                                                    max={returnableQuantity}
                                                                     step="1"
                                                                     value={returnState.returnQty}
                                                                     placeholder="0"
                                                                     onChange={(e) =>
-                                                                        handleReturnQtyChange(key, e.target.value, item.quantity)
+                                                                        handleReturnQtyChange(key, e.target.value, returnableQuantity)
                                                                     }
                                                                 />
                                                             </td>

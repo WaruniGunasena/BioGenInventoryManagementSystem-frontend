@@ -13,13 +13,28 @@ export const getSalesOrdersByCustomer = (customerId) =>
  * Backend: POST /product-returns/create  (to be implemented on the backend)
  */
 export const createProductReturn = (data) =>
-    api.post("/product-returns/create", data, {
+    api.post("/returns/process", data, {
         headers: { "Content-Type": "application/json" },
     });
 
 /**
- * Fetch all product returns (for listing/history page).
- * Backend: GET /product-returns/all
+ * Fetch all product returns (for listing/history page) with pagination.
+ * Backend: GET /api/returns/allReturns/{page}/{size}
  */
-export const getAllProductReturns = () =>
-    api.get("/product-returns/all");
+export const getAllReturns = (page = 0, size = 8) =>
+    api.get(`/returns/allReturns?page=${page}&size=${size}`);
+
+/**
+ * Fetch product return by ID.
+ * Backend: GET /api/returns/{id}
+ */
+export const getReturnById = (id) =>
+    api.get(`/returns/${id}`);
+
+/**
+ * Fetch customer return summary (Pending cash credit & reissue items)
+ * Backend: GET /api/returns/{customerId}
+ */
+export const getCustomerReturnSummary = (customerId) =>
+    api.get(`/returns/customer/${customerId}`);
+

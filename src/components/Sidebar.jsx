@@ -240,7 +240,14 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
           {(admin || inventoryManager) && <li className="nav-item">
             <Link to="/product-returns" className={`nav-link ${isActive('/product-returns') ? 'active' : ''}`}>
               <RotateCcw size={20} className="nav-icon" />
-              <span className="link-text">Returns</span>
+              <span className="link-text">Process Return</span>
+            </Link>
+          </li>}
+
+          {(admin || inventoryManager || salesRep) && <li className="nav-item">
+            <Link to="/credit-notes" className={`nav-link ${isActive('/credit-notes') ? 'active' : ''}`}>
+              <FileText size={20} className="nav-icon" />
+              <span className="link-text">Credit Notes</span>
             </Link>
           </li>}
 

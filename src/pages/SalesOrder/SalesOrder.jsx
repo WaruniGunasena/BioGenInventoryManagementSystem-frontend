@@ -9,12 +9,15 @@ import { useToast } from "../../context/ToastContext";
 import AddCustomerModal from "../../components/Customers/AddCustomerModal";
 import { AdditionalDiscountPopup } from "./AdditionalDiscountPopup";
 import { CourierChargesPopup } from "./CourierChargesPopup";
+import ReturnCreditsModal from "../../components/SalesOrder/ReturnCreditsModal";
 import { DiscountTypeEnum } from "../../enums/DiscountTypeEnum";
+import { getCustomerReturnSummary } from "../../api/returnService";
 import {
     PlusCircle,
     Trash2,
     Edit3,
-    FileText
+    FileText,
+    AlertCircle
 } from "lucide-react";
 import { getAllStock } from "../../api/stockService";
 import { getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
@@ -60,11 +63,21 @@ const SalesOrder = () => {
     const [showDiscountPopup, setShowDiscountPopup] = useState(false);
     const [showCourierPopup, setShowCourierPopup] = useState(false);
 
+    // Return Credits States
+    const [returnSummaryData, setReturnSummaryData] = useState(null);
+    const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+    const [appliedReturnCredit, setAppliedReturnCredit] = useState(0);
+    const [reissueItems, setReissueItems] = useState([]);
+
     useEffect(() => {
         fetchCustomers();
         fetchProducts();
         fetchUserId();
     }, []);
+
+    useEffect(()=>{
+        console.log("Applied return Credit",appliedReturnCredit)
+    },[appliedReturnCredit])
 
     const fetchUserId = async () => {
         try {
@@ -112,7 +125,7 @@ const SalesOrder = () => {
         }
     };
 
-    const handleCustomerChange = (e) => {
+    const handleCustomerChange = async (e) => {
         const id = e.target.value;
         const customer = customers.find((c) => (c.id || c._id).toString() === id.toString());
         setSelectedCustomerData(customer);
@@ -121,6 +134,25 @@ const SalesOrder = () => {
             customerId: id,
             creditTerm: customer ? customer.creditPeriod || "Not Specified" : "",
         }));
+
+        // Reset return states when customer changes
+        setReturnSummaryData(null);
+        setAppliedReturnCredit(0);
+        setReissueItems([]);
+
+        if (id) {
+            try {
+                const res = await getCustomerReturnSummary(id);
+                const data = res.data?.customerWiseReturnItemDTO || res.data?.data || res.data;
+                const hasCredits = (data?.customerCurrentDue > 0) || (data?.returnProducts?.length > 0);
+                if (hasCredits) {
+                    setReturnSummaryData(data);
+                    showToast("info", "Customer has available return credits or reissues!");
+                }
+            } catch (error) {
+                console.error("Error fetching return summary:", error);
+            }
+        }
     };
 
     const handleProductChange = (e) => {
@@ -277,7 +309,9 @@ const SalesOrder = () => {
     };
 
     const calculateTotal = () => {
-        return addedItems.reduce((acc, item) => acc + parseFloat(item.totalAmount), 0);
+        const regularTotal = addedItems.reduce((acc, item) => acc + parseFloat(item.totalAmount || 0), 0);
+        const reissueTotal = reissueItems.reduce((acc, item) => acc + parseFloat(item.totalAmount || 0), 0);
+        return regularTotal + reissueTotal;
     };
 
     const getAdditionalDiscountValue = () => {
@@ -293,7 +327,7 @@ const SalesOrder = () => {
         const total = calculateTotal();
         const discountAmount = getAdditionalDiscountValue();
         const courier = parseFloat(courierCharges) || 0;
-        return (total - discountAmount + courier).toFixed(2);
+        return (total - discountAmount - appliedReturnCredit + courier).toFixed(2);
     };
 
     const handleIssueBill = async () => {
@@ -322,7 +356,8 @@ const SalesOrder = () => {
                     quantity: qty,
                     discountPercent: item.discountPercent,
                     discountedPrice: item.discountedPrice,
-                    totalAmount: calculateGrandTotal()
+                    totalAmount: item.totalAmount,
+                    isReissue: false
                 });
             }
 
@@ -335,9 +370,25 @@ const SalesOrder = () => {
                     quantity: preIssue,
                     discountPercent: 0,
                     discountedPrice: 0,
-                    totalAmount: 0
+                    totalAmount: 0,
+                    isReissue: false
                 });
             }
+        });
+
+        reissueItems.forEach(item => {
+            mappedItems.push({
+                productId: item.productId,
+                productName: item.productName,
+                unit: item.unit,
+                packSize: item.packSize,
+                sellingPrice: item.sellingPrice, // 0
+                quantity: item.quantity,
+                discountPercent: 0,
+                discountedPrice: 0,
+                totalAmount: 0,
+                isReissue: true
+            });
         });
 
         const salesOrderData = {
@@ -348,6 +399,7 @@ const SalesOrder = () => {
             additionalDiscountType: additionalDiscount.type,
             additionalDiscountValue: additionalDiscount.value || 0,
             courierCharges: courierCharges || 0,
+            returnCredits: appliedReturnCredit || 0,
             grandTotal: calculateTotal()
         };
 
@@ -377,6 +429,9 @@ const SalesOrder = () => {
             setSelectedCustomerData(null);
             setAdditionalDiscount({ type: DiscountTypeEnum.cash, value: "" });
             setCourierCharges("");
+            setAppliedReturnCredit(0);
+            setReissueItems([]);
+            setReturnSummaryData(null);
         } catch (error) {
             console.error("Error creating Sales Order:", error);
             showToast('error', error.response?.data?.message || "Failed to issue bill. Please try again.");
@@ -456,6 +511,19 @@ const SalesOrder = () => {
                                 </div>
 
                             </div>
+
+                            {returnSummaryData && (
+                                <div className="return-credits-banner" onClick={() => setIsReturnModalOpen(true)}>
+                                    <div className="rc-banner-content">
+                                        <AlertCircle size={20} />
+                                        <span>
+                                            <strong>Action Required:</strong> This customer has pending return credits (Rs. {returnSummaryData.customerCurrentDue}) 
+                                            or reissue items available!
+                                        </span>
+                                    </div>
+                                    <button className="rc-banner-btn">Review & Apply</button>
+                                </div>
+                            )}
 
                             <div className="sales-order-row">
                                 <div className="sales-order-field">
@@ -721,6 +789,33 @@ const SalesOrder = () => {
                                                 )}
                                             </React.Fragment>
                                         ))}
+
+                                        {reissueItems.map((item, index) => (
+                                            <tr key={`reissue-${index}`} className="bonus-row" style={{ backgroundColor: "#e0f2fe", fontStyle: "italic", opacity: 0.9 }}>
+                                                <td>*</td>
+                                                <td>
+                                                    <div className="product-desc-cell">
+                                                        <span className="main-desc" style={{ color: "#0369a1" }}>{item.productName} (Re-issue)</span>
+                                                        <span className="sub-desc">Return Replacement</span>
+                                                    </div>
+                                                </td>
+                                                <td>{item.packSize} {item.unit}</td>
+                                                <td>{item.quantity}</td>
+                                                <td>0.00</td>
+                                                <td>0.00%</td>
+                                                <td>0.00</td>
+                                                <td>0.00</td>
+                                                <td className="action-col">
+                                                    <Trash2
+                                                        size={16}
+                                                        className="delete-icon"
+                                                        onClick={() => {
+                                                            setReissueItems(prev => prev.filter((_, i) => i !== index));
+                                                        }}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
 
@@ -756,6 +851,12 @@ const SalesOrder = () => {
                                                 />
                                             )}
                                         </div>
+                                        {appliedReturnCredit > 0 && (
+                                            <div className="totals-line">
+                                                <span className="line-label" style={{ color: '#059669' }}>Applied Return Credit (LKR)</span>
+                                                <span className="line-value" style={{ color: '#059669' }}>- {appliedReturnCredit.toFixed(2)}</span>
+                                            </div>
+                                        )}
                                         <div className="totals-line" style={{ position: 'relative' }}>
                                             <span 
                                                 className="line-label" 
@@ -799,6 +900,29 @@ const SalesOrder = () => {
                         onCustomerAdded={() => {
                             fetchCustomers();
                             setIsAddCustomerModalOpen(false);
+                        }}
+                    />
+                    <ReturnCreditsModal
+                        isOpen={isReturnModalOpen}
+                        onClose={() => setIsReturnModalOpen(false)}
+                        summaryData={returnSummaryData}
+                        onApply={(credit, items) => {
+                            setAppliedReturnCredit(credit);
+                            console.log("applied return credit", credit);
+                            console.log("applied return appliedCredit", appliedReturnCredit);
+                            
+                            // Merge new re-issue items without deleting existing ones unless they share the same productId (replace logic)
+                            setReissueItems(prev => {
+                                const newArray = [...prev];
+                                items.forEach(newItem => {
+                                    const existingIndex = newArray.findIndex(x => x.productId === newItem.productId);
+                                    if(existingIndex >= 0) newArray[existingIndex] = newItem;
+                                    else newArray.push(newItem);
+                                });
+                                return newArray;
+                            });
+
+                            showToast("success", `Return Credits Applied (Rs. ${credit}) with ${items.reduce((s,i) => s + i.quantity, 0)} reissue items!`);
                         }}
                     />
                 </div>
