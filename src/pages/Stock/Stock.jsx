@@ -28,7 +28,7 @@ const Stock = () => {
             try {
                 const response = searchQuery.trim()
                     ? await searchStock(searchQuery, currentPage, 5, filter, { signal: controller.signal })
-                    : await getPaginatedStock(currentPage, 5, filter, { signal: controller.signal });
+                    : await getPaginatedStock(currentPage, 8, filter, { signal: controller.signal });
 
                 if (controller.signal.aborted) return;
 
@@ -63,8 +63,8 @@ const Stock = () => {
         { header: "Product Name", accessor: "productName" },
         { header: "Product ID", accessor: "itemCode" },
         { header: "Quantity", accessor: "totalQuantity", align: "right" },
-        { 
-            header: "Selling Price", 
+        {
+            header: "Selling Price",
             accessor: "sellingPrice",
             align: "right",
             render: (row) => row.sellingPrice != null ? Number(row.sellingPrice).toFixed(2) : "-"
