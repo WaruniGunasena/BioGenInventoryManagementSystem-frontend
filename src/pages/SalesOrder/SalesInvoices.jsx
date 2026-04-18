@@ -506,7 +506,7 @@ const SalesInvoices = () => {
                                                     <td>
                                                         <div className="product-desc-cell">
                                                             <span className="main-desc">{item.productName || item.product?.name || "Product N/A"}</span>
-                                                            <span className="sub-desc">* B/N & (Exp Date): Default (30/11/2027)</span>
+                                                            <span className="sub-desc">{item.isReissue ? "Reissue" : ""} </span>
                                                         </div>
                                                     </td>
                                                     <td>{item.unit || "-"}</td>
@@ -529,6 +529,7 @@ const SalesInvoices = () => {
                                                 <span className="line-label">Total (LKR)</span>
                                                 <span className="line-value">{parseFloat(selectedInvoice.grandTotal).toFixed(2)}</span>
                                             </div>
+                                            {selectedInvoice.additionalDiscountValue > 0 && (
                                             <div className="totals-line">
                                                 <span className="line-label">Additional Discount (LKR)</span>
                                                 <span className="line-value">{selectedInvoice.additionalDiscountValue > 0 ? (
@@ -537,10 +538,17 @@ const SalesInvoices = () => {
                                                         : `${parseFloat(selectedInvoice.additionalDiscountValue).toFixed(2)}`
                                                 ) : "0.00"}</span>
                                             </div>
+                                                )}
                                             {selectedInvoice.courierCharges > 0 && (
                                                 <div className="totals-line">
                                                     <span className="line-label">Courier Charges (LKR)</span>
                                                     <span className="line-value">{parseFloat(selectedInvoice.courierCharges).toFixed(2)}</span>
+                                                </div>
+                                            )}
+                                            {selectedInvoice.returnCredits > 0 && (
+                                                <div className="totals-line">
+                                                    <span className="line-label">Return Credits (LKR)</span>
+                                                    <span className="line-value"> - {parseFloat(selectedInvoice.returnCredits).toFixed(2)}</span>
                                                 </div>
                                             )}
                                             <div className="totals-line grand-due">
