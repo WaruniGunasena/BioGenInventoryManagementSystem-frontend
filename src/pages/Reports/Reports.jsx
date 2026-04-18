@@ -22,6 +22,9 @@ import {
     Layers,
     Timer,
     LayoutList,
+    DollarSign,
+    RotateCcw,
+    ShieldAlert,
 } from "lucide-react";
 import "./Reports.css";
 
@@ -361,12 +364,95 @@ const CUSTOMER_REPORTS = [
     },
 ];
 
+const FINANCIAL_REPORTS = [
+    {
+        reportType: "PROFIT_LOSS",
+        reportName: "Profit & Loss Statement",
+        description: "Summarises total revenue, total expenses, and net operating profit for a selected period.",
+        icon: <TrendingUp size={22} />,
+        params: [
+            { key: "startDate", label: "From Date", type: "date", required: true, defaultValue: firstOfMonth },
+            { key: "endDate",   label: "To Date",   type: "date", required: true, defaultValue: lastOfMonth  },
+        ],
+    },
+    {
+        reportType: "EXPENSE_REPORT",
+        reportName: "Expense Report (GRN Payments)",
+        description: "Chronological list of all GRN-related payments (cash outflows) for the selected date range.",
+        icon: <Receipt size={22} />,
+        params: [
+            { key: "startDate", label: "From Date", type: "date", required: true, defaultValue: firstOfMonth },
+            { key: "endDate",   label: "To Date",   type: "date", required: true, defaultValue: lastOfMonth  },
+        ],
+    },
+    {
+        reportType: "CASH_FLOW_DETAILED",
+        reportName: "Detailed Cash Flow Report",
+        description: "Chronological list of every money movement (inflows and outflows) for the selected date range.",
+        icon: <DollarSign size={22} />,
+        params: [
+            { key: "startDate", label: "From Date", type: "date", required: true, defaultValue: firstOfMonth },
+            { key: "endDate",   label: "To Date",   type: "date", required: true, defaultValue: lastOfMonth  },
+        ],
+    },
+    {
+        reportType: "DAILY_CASH_BALANCE",
+        reportName: "Daily Cash Balance Report",
+        description: "Opening balance, today's inflow/outflow, and closing balance for a specific day.",
+        icon: <CalendarDays size={22} />,
+        params: [
+            { key: "date", label: "Date", type: "date", required: true, defaultValue: today },
+        ],
+    },
+];
+
+const RETURNS_REPORTS = [
+    {
+        reportType: "SALES_RETURN",
+        reportName: "Sales Return Report",
+        description: "Total value of products returned by customers within the selected date range.",
+        icon: <RotateCcw size={22} />,
+        params: [
+            { key: "startDate", label: "From Date", type: "date", required: true, defaultValue: firstOfMonth },
+            { key: "endDate",   label: "To Date",   type: "date", required: true, defaultValue: lastOfMonth  },
+        ],
+    },
+    {
+        reportType: "DAMAGED_ITEMS",
+        reportName: "Damaged Items Report",
+        description: "Lists all returned items marked as non-reusable (damaged/unsellable) within the date range.",
+        icon: <ShieldAlert size={22} />,
+        params: [
+            { key: "startDate", label: "From Date", type: "date", required: true, defaultValue: firstOfMonth },
+            { key: "endDate",   label: "To Date",   type: "date", required: true, defaultValue: lastOfMonth  },
+        ],
+    },
+    {
+        reportType: "EXPIRY_REPORT",
+        reportName: "Expired Items Report",
+        description: "Products that are expired or expiring within the specified number of months. Enter 0 for already-expired only.",
+        icon: <Timer size={22} />,
+        params: [
+            {
+                key: "months",
+                label: "Expiring within (months)",
+                type: "number",
+                required: false,
+                placeholder: "e.g. 3  (0 = already expired)",
+                defaultValue: "3",
+            },
+        ],
+    },
+];
+
 const ALL_REPORTS = [
     ...SALES_REPORTS,
     ...GENERAL_REPORTS,
     ...INVENTORY_REPORTS,
     ...ORDER_REPORTS,
     ...CUSTOMER_REPORTS,
+    ...FINANCIAL_REPORTS,
+    ...RETURNS_REPORTS,
 ];
 
 /* ── Collapsible section ── */
@@ -440,6 +526,8 @@ const Reports = () => {
                         <Section title="📦 Inventory Reports"               reports={INVENTORY_REPORTS} />
                         <Section title="🗂️ Order Reports"                   reports={ORDER_REPORTS} />
                         <Section title="👥 Customer Reports"                reports={CUSTOMER_REPORTS} />
+                        <Section title="💰 Financial Reports"               reports={FINANCIAL_REPORTS} />
+                        <Section title="🔄 Returns & Damage Reports"         reports={RETURNS_REPORTS} />
                     </div>
                 </div>
             </div>

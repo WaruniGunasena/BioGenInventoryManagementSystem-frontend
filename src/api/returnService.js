@@ -38,3 +38,17 @@ export const getReturnById = (id) =>
 export const getCustomerReturnSummary = (customerId) =>
     api.get(`/returns/customer/${customerId}`);
 
+/**
+ * Delete a return invoice (soft delete).
+ * Backend: POST /returns/delete?returnInvoiceId={id}&userId={userId}
+ */
+export const deleteReturnInvoice = (returnInvoiceId, userId) =>
+    api.post(`/returns/delete`, null, { params: { returnInvoiceId, userId } });
+
+/**
+ * Approve a return invoice.
+ * Backend: POST /returns/approveRtnInvoice?returnInvoiceId={id}&userId={userId}
+ */
+export const approveReturnInvoice = (returnInvoiceId, userId) =>
+    api.post(`/returns/approveRtnInvoice`, null, { params: { returnInvoiceId, userId } });
+

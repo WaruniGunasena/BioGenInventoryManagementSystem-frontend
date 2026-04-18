@@ -6,7 +6,7 @@ import { X, FileText, Printer, Download, Share2, Trash2, Check, Edit } from "luc
 import { useReactToPrint } from "react-to-print";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { getAllReturns, getReturnById } from "../../api/returnService";
+import { getAllReturns, getReturnById, deleteReturnInvoice, approveReturnInvoice } from "../../api/returnService";
 import { getUserId, getUserRole } from "../../components/common/Utils/userUtils/userUtils";
 import { useToast } from "../../context/ToastContext";
 import { useNavigate } from "react-router-dom";
@@ -84,32 +84,32 @@ const CreditNotes = () => {
         }
     };
 
-    const handleApproval = async (status) => {
+    const handleApproval = async () => {
         if (!selectedReturn) return;
+        const returnInvoiceId = selectedReturn.returnNumber;
+        if (!returnInvoiceId) { showToast("error", "Cannot determine return invoice ID"); return; }
         try {
-            // Placeholder: Call backend approve endpoint here. Adjust to actual API method when ready.
-            // await api.put(`/returns/${selectedReturn.returnNumber}/status`, { status });
-            showToast("info", `${status} action registered (Backend integration pending)`);
-
-            // Optimistic update locally
-            setSelectedReturn(prev => ({ ...prev, status }));
+            await approveReturnInvoice(returnInvoiceId, currentUserId);
+            showToast("success", `Return invoice ${selectedReturn.returnNumber} approved successfully`);
+            setSelectedReturn(prev => ({ ...prev, status: "Approved" }));
             fetchReturns(currentPage);
             setIsModalOpen(false);
         } catch (error) {
-            showToast("error", `Failed to ${status.toLowerCase()} credit note`);
+            showToast("error", error?.response?.data?.message || "Failed to approve return invoice");
         }
     };
 
     const handleSoftDelete = async (ret) => {
-        if (!window.confirm(`Delete credit note ${ret.returnNumber}? This action cannot be undone.`)) return;
+        if (!window.confirm(`Delete return invoice ${ret.returnNumber}? This action cannot be undone.`)) return;
+        const returnInvoiceId = ret.returnNumber;
+        if (!returnInvoiceId) { showToast("error", "Cannot determine return invoice ID"); return; }
         try {
-            // Placeholder for real delete functionality
-            // await api.delete(`/returns/${ret.returnNumber}`);
-            showToast("info", `Credit note ${ret.returnNumber} deleted (Backend integration pending)`);
+            await deleteReturnInvoice(returnInvoiceId, currentUserId);
+            showToast("success", `Return invoice ${ret.returnNumber} deleted successfully`);
             fetchReturns(currentPage);
             setIsModalOpen(false);
         } catch (error) {
-            showToast("error", "Failed to delete credit note");
+            showToast("error", error?.response?.data?.message || "Failed to delete return invoice");
         }
     };
 
@@ -263,7 +263,7 @@ const CreditNotes = () => {
                             <div className="sales-order-summary-section" ref={componentRef}>
                                 <div className="invoice-header">
                                     <div className="company-info">
-                                        <h1 className="company-name">BioGenHoldings Pvt Ltd</h1>
+                                        <h3 className="company-name">BioGenHoldings Pvt Ltd</h3>
                                         <p className="company-subtitle">The Future of Healthcare</p>
                                         <p className="company-web">www.biogenholdings.com</p>
                                         <p>Tangalle Road, Meddawaththa, Matara</p>
@@ -271,7 +271,7 @@ const CreditNotes = () => {
                                         <p>Email: info@biogenholdings.com</p>
                                     </div>
                                     <div className="invoice-title">
-                                        <h1>Credit Note</h1>
+                                        <h3>Credit Note</h3>
                                     </div>
                                 </div>
 
@@ -353,8 +353,8 @@ const CreditNotes = () => {
 
                                     <div>
                                         <p>Processed By: {selectedReturn.processedBy || "N/A"}
-                                            <span style={{ marginLeft: "40px" }}>Checked By: ..............................</span>
-                                            <span style={{ marginLeft: "40px" }}>Approved By: ..............................</span>
+                                            <span style={{ marginLeft: "30px" }}>Checked By: .........................</span>
+                                            <span style={{ marginLeft: "30px" }}>Approved By: ........................</span>
                                         </p>
                                     </div>
                                 </div>
@@ -364,18 +364,13 @@ const CreditNotes = () => {
                             <div className="modal-footer-actions">
                                 {(userRole === "ADMIN" || userRole === "INVENTORY_MANAGER") && selectedReturn.status === "Pending" && (
                                     <>
-                                        <button className="action-btn btn-approve" onClick={() => handleApproval("Approved")}>
+                                        <button className="action-btn btn-approve" onClick={() => handleApproval()}>
                                             <Check size={18} /> Approve
                                         </button>
-                                        <button className="action-btn btn-reject" onClick={() => handleApproval("Rejected")}>
+                                        <button className="action-btn btn-reject" onClick={() => handleSoftDelete(selectedReturn)}>
                                             <X size={18} /> Reject
                                         </button>
                                     </>
-                                )}
-                                {selectedReturn.status === "Pending" && (
-                                    <button className="action-btn btn-edit" onClick={() => handleEditOpen(selectedReturn)}>
-                                        <Edit size={18} /> Edit
-                                    </button>
                                 )}
                                 {selectedReturn.status !== "Deleted" && (
                                     <button className="action-btn btn-delete" onClick={() => handleSoftDelete(selectedReturn)}>

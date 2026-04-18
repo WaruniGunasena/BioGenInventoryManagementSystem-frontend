@@ -44,6 +44,8 @@ const EditSalesRepOrder = () => {
     const [showProductSearch, setShowProductSearch] = useState(false);
 
     const [addedItems, setAddedItems] = useState([]);
+    const [reissueItems, setReissueItems] = useState([]);
+    const [returnCredits, setReturnCredits] = useState(0);
     const addedItemsRef = useRef([]);
     useEffect(() => { addedItemsRef.current = addedItems; }, [addedItems]);
     const [stockData, setStockData] = useState([]);
@@ -104,8 +106,8 @@ const EditSalesRepOrder = () => {
                 if (fromAdded) return { q: fromAdded.quantity, b: fromAdded.bonus };
 
                 if (addedItemsRef.current.length === 0 && invoice?.items) {
-                    const saleLine = invoice.items.find(i => String(i.productId || i.product?.id) === String(pid) && parseFloat(i.sellingPrice) > 0);
-                    const bonusLine = invoice.items.find(i => String(i.productId || i.product?.id) === String(pid) && parseFloat(i.sellingPrice) === 0);
+                    const saleLine = invoice.items.find(i => String(i.productId || i.product?.id) === String(pid) && parseFloat(i.sellingPrice) > 0 && !i.isReissue);
+                    const bonusLine = invoice.items.find(i => String(i.productId || i.product?.id) === String(pid) && parseFloat(i.sellingPrice) === 0 && !i.isReissue);
                     if (saleLine || bonusLine) {
                         return { q: saleLine?.quantity || 0, b: bonusLine?.quantity || 0 };
                     }
@@ -164,11 +166,11 @@ const EditSalesRepOrder = () => {
             setCustomerSearch(invoice.customerName);
         }
 
-        const salelines = (invoice.items || []).filter(i => parseFloat(i.sellingPrice) > 0);
+        const salelines = (invoice.items || []).filter(i => parseFloat(i.sellingPrice) > 0 && !i.isReissue);
         const preloadedItems = salelines.map(item => {
             const bonusLine = (invoice.items || []).find(
                 b => (b.productId === item.productId || b.product?.id === item.productId) &&
-                    parseFloat(b.sellingPrice) === 0
+                    parseFloat(b.sellingPrice) === 0 && !b.isReissue
             );
             return {
                 productId: item.productId || item.product?.id,
@@ -182,6 +184,17 @@ const EditSalesRepOrder = () => {
             };
         });
         setAddedItems(preloadedItems);
+
+        const reissues = (invoice.items || []).filter(i => i.isReissue).map(item => ({
+            productId: item.productId || item.product?.id,
+            productName: item.productName || item.product?.name || "",
+            unit: item.unit || "",
+            quantity: item.quantity,
+            isReissue: true,
+            totalAmount: 0
+        }));
+        setReissueItems(reissues);
+        setReturnCredits(invoice.returnCredits || 0);
 
         setAdditionalDiscount({
             type: invoice.additionalDiscountType || DiscountTypeEnum.cash,
@@ -272,7 +285,7 @@ const EditSalesRepOrder = () => {
 
     const totalBeforeExtras = addedItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
     const discountAmount = getAdditionalDiscountValue();
-    const netTotal = totalBeforeExtras - discountAmount;
+    const netTotal = totalBeforeExtras - discountAmount - parseFloat(returnCredits || 0);
     const grandTotal = netTotal; // for backward compatibility if needed, but UI uses netTotal
     const availableCredit = selectedCustomer ? (selectedCustomer.creditLimit - (selectedCustomer.dueBalance || 0)) : 0;
     const isOverCredit = selectedCustomer && netTotal > availableCredit;
@@ -314,6 +327,20 @@ const EditSalesRepOrder = () => {
             }
         });
 
+        reissueItems.forEach(item => {
+            mappedItems.push({
+                productId: item.productId,
+                productName: item.productName,
+                unit: item.unit || "",
+                quantity: item.quantity,
+                sellingPrice: 0,
+                totalAmount: 0,
+                discountPercent: 0,
+                discountedPrice: 0,
+                isReissue: true
+            });
+        });
+
         const payload = {
             customerId: selectedCustomer.id || selectedCustomer._id,
             userId: currentUserId,
@@ -321,6 +348,7 @@ const EditSalesRepOrder = () => {
             grandTotal: totalBeforeExtras,
             additionalDiscountType: additionalDiscount.type,
             additionalDiscountValue: parseFloat(additionalDiscount.value) || 0,
+            returnCredits: returnCredits || 0,
             items: mappedItems
         };
 
@@ -645,6 +673,24 @@ const EditSalesRepOrder = () => {
                                                 </tr>
                                             ))
                                         )}
+                                        {reissueItems.map((item, idx) => (
+                                            <tr key={`reissue-${idx}`} data-label={`reissue-${idx}`} style={{ backgroundColor: "#e8f5e9", fontStyle: "italic", opacity: 0.9 }}>
+                                                <td data-label="#">Bonus</td>
+                                                <td data-label="Product">
+                                                    <div>
+                                                        <div className="asi-inv-prod-name" style={{ color: "#2e7d32" }}>{item.productName} (Reissue)</div>
+                                                    </div>
+                                                </td>
+                                                <td data-label="Unit">{item.unit || "-"}</td>
+                                                <td data-label="Qty">{item.quantity}</td>
+                                                <td data-label="Bonus">-</td>
+                                                <td className="asi-mrp-inv-cell" data-label="MRP"><span className="asi-no-mrp">—</span></td>
+                                                <td data-label="Price">0.00</td>
+                                                <td data-label="Amount">0.00</td>
+                                                <td className="asi-bci-cell" data-label="BCI">-</td>
+                                                <td data-label="Action"></td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
@@ -677,6 +723,12 @@ const EditSalesRepOrder = () => {
                                             />
                                         )}
                                     </div>
+                                    {parseFloat(returnCredits) > 0 && (
+                                        <div className="asi-total-row">
+                                            <span><b>Return Credits</b> (LKR)</span>
+                                            <span style={{ color: "var(--asi-primary)" }}>- {parseFloat(returnCredits).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        </div>
+                                    )}
                                     <div className={`asi-total-row asi-grand-total ${isOverCredit ? "over" : ""}`}>
                                         <span><b>Due</b> (LKR)</span>
                                         <span>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
