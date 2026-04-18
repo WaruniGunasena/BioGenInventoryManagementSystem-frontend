@@ -559,10 +559,11 @@ const SalesInvoices = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <p>Prepared By: {selectedInvoice.user?.name}
+                                        <p style={{marginBottom:"100px"}}>Prepared By: {selectedInvoice.user?.name}
                                             <span style={{ marginLeft: "40px" }}>Checked By: ..............................</span>
                                             <span style={{ marginLeft: "40px" }}>Approved By: ..............................</span>
                                         </p>
+                                        
                                         <p>Cheques to drawn in Favour of <b>BioGen Holdings (pvt) Ltd</b> & Crossed Account Payee Only</p>
                                         <p style={{ textAlign: "center" }}><b>Thank you for your business!</b></p>
                                     </div>

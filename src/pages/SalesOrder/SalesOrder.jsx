@@ -592,7 +592,7 @@ const SalesOrder = () => {
                                 <div className="sales-order-field">
                                     <label>Free Issue</label>
                                     <input
-                                        type="number"
+                                        type="text"
                                         name="preIssue"
                                         className="sales-order-input"
                                         placeholder="Free Issue"

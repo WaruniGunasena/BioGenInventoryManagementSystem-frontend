@@ -404,7 +404,7 @@ const ProductReturns = () => {
                                                             <td>{parseFloat(item.sellingPrice).toFixed(2)}</td>
                                                             <td>
                                                                 <input
-                                                                    type="number"
+                                                                    type="text"
                                                                     className="pr-qty-input"
                                                                     min="0"
                                                                     max={returnableQuantity}
