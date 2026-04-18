@@ -6,7 +6,9 @@ import {
   Calendar,
   TrendingDown,
   TrendingUp,
-  Activity
+  Activity,
+  ArrowDownRight,
+  ArrowUpRight
 } from "lucide-react";
 import "./CashFlow.css";
 import {
@@ -29,7 +31,18 @@ const CashFlow = () => {
   const [summaryData, setSummaryData] = useState({
     totalIncome: 0,
     totalExpense: 0,
-    profitOrLoss: 0
+    profitOrLoss: 0,
+    netCashInflow: 0,
+    inflowPercentageChange: 0,
+    totalSalesCount: 0,
+    netCashOutflow: 0,
+    outflowPercentageChange: 0,
+    totalGrnCount: 0,
+    operatingCashFlow: 0,
+    accountsReceivable: 0,
+    pendingSalesCount: 0,
+    accountsPayable: 0,
+    pendingPurchaseCount: 0
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,7 +53,14 @@ const CashFlow = () => {
         setPendingCredits([]);
         setCompletedDebits([]);
         setCompletedCredits([]);
-        setSummaryData({ totalIncome: 0, totalExpense: 0, profitOrLoss: 0 });
+        setSummaryData({
+          totalIncome: 0, totalExpense: 0, profitOrLoss: 0,
+          netCashInflow: 0, inflowPercentageChange: 0, totalSalesCount: 0,
+          netCashOutflow: 0, outflowPercentageChange: 0, totalGrnCount: 0,
+          operatingCashFlow: 0,
+          accountsReceivable: 0, pendingSalesCount: 0,
+          accountsPayable: 0, pendingPurchaseCount: 0
+        });
         return;
       }
       setIsLoading(true);
@@ -57,10 +77,23 @@ const CashFlow = () => {
           setCompletedCredits(res.data?.credits || []);
         } else if (activeTab === "summary") {
           const res = await getCashFlowSummary(startDate, endDate);
+          console.log("summary cash in flow", res);
+          const summary = res.data?.cashFlowSummary || {};
           setSummaryData({
             totalIncome: res.data?.totalIncome || 0,
             totalExpense: res.data?.totalExpense || 0,
-            profitOrLoss: res.data?.profitOrLoss || 0
+            profitOrLoss: res.data?.profitOrLoss || 0,
+            netCashInflow: summary.netCashInflow || 0,
+            inflowPercentageChange: summary.inflowPercentageChange || 0,
+            totalSalesCount: summary.totalSalesCount || 0,
+            netCashOutflow: summary.netCashOutflow || 0,
+            outflowPercentageChange: summary.outflowPercentageChange || 0,
+            totalGrnCount: summary.totalGrnCount || 0,
+            operatingCashFlow: summary.operatingCashFlow || 0,
+            accountsReceivable: summary.accountsReceivable || 0,
+            pendingSalesCount: summary.pendingSalesCount || 0,
+            accountsPayable: summary.accountsPayable || 0,
+            pendingPurchaseCount: summary.pendingPurchaseCount || 0
           });
         }
       } catch (error) {
@@ -299,44 +332,113 @@ const CashFlow = () => {
 
               {activeTab === "summary" && (
                 <div className="tab-pane fade-in">
-                  <div className="summary-widgets">
-
-                    <div className="widget-card income">
-                      <div className="widget-icon">
-                        <TrendingUp size={28} />
+                  <div className="summary-overview-grid">
+                    <div className="summary-card-modern inflow-modern">
+                      <div className="card-header-modern">
+                        <div className="card-title-modern">
+                          Income
+                        </div>
+                        <div className="icon-wrapper-modern green">
+                          <TrendingUp size={24} strokeWidth={2.5} />
+                        </div>
                       </div>
-                      <div className="widget-info">
-                        <p className="widget-label">Total Income</p>
-                        <h3 className="widget-value">
-                          {isLoading ? "Loading..." : `Rs. ${summaryData.totalIncome || "0.00"}`}
-                        </h3>
+                      <div className="card-body-modern">
+                        <h3 className="card-amount-modern">Rs. {summaryData.netCashInflow.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                        <p className="card-subtitle-modern">
+                          <span style={{ color: summaryData.inflowPercentageChange >= 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>
+                            {summaryData.inflowPercentageChange > 0 ? '+' : ''}{summaryData.inflowPercentageChange}%
+                          </span>
+                          Total from {summaryData.totalSalesCount.toLocaleString()} {summaryData.totalSalesCount === 1 ? 'Sale' : 'Sales'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="summary-card-modern outflow-modern">
+                      <div className="card-header-modern">
+                        <div className="card-title-modern">
+                          Expense
+                        </div>
+                        <div className="icon-wrapper-modern red">
+                          <TrendingDown size={24} strokeWidth={2.5} />
+                        </div>
+                      </div>
+                      <div className="card-body-modern">
+                        <h3 className="card-amount-modern">Rs. {summaryData.netCashOutflow.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                        <p className="card-subtitle-modern">
+                          <span style={{ color: summaryData.outflowPercentageChange >= 0 ? '#ef4444' : '#10b981', fontWeight: 600 }}>
+                            {summaryData.outflowPercentageChange > 0 ? '+' : ''}{summaryData.outflowPercentageChange}%
+                          </span>
+                          Paid for {summaryData.totalGrnCount.toLocaleString()} {summaryData.totalGrnCount === 1 ? 'Order' : 'Orders'}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="widget-card expense">
-                      <div className="widget-icon">
-                        <TrendingDown size={28} />
+                    {/* Operating Card */}
+                    <div className="summary-card-modern operating-modern">
+                      <div className="card-header-modern">
+                        <div className="card-title-modern">
+                          Profit / Loss
+                        </div>
+                        <div className="icon-wrapper-modern blue">
+                          <Activity size={24} strokeWidth={2.5} />
+                        </div>
                       </div>
-                      <div className="widget-info">
-                        <p className="widget-label">Total Expense</p>
-                        <h3 className="widget-value">
-                          {isLoading ? "Loading..." : `Rs. ${summaryData.totalExpense || "0.00"}`}
-                        </h3>
-                      </div>
-                    </div>
-
-                    <div className="widget-card profit">
-                      <div className="widget-icon">
-                        <Activity size={28} />
-                      </div>
-                      <div className="widget-info">
-                        <p className="widget-label">Profit / Loss</p>
-                        <h3 className="widget-value">
-                          {isLoading ? "Loading..." : `Rs. ${summaryData.profitOrLoss || "0.00"}`}
-                        </h3>
+                      <div className="card-body-modern">
+                        <h3 className="card-amount-modern">Rs. {summaryData.operatingCashFlow.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                        <p className="card-subtitle-modern">
+                          <span style={{ color: '#3b82f6', fontWeight: 600 }}>Net</span>
+                          Income - Expense
+                        </p>
                       </div>
                     </div>
+                  </div>
 
+                  <div className="pending-payments-modern-section">
+                    <div className="pending-payments-header">
+                      <h2>Pending Payments</h2>
+                      <p>Overview of expected incomes and expenses</p>
+                    </div>
+
+                    <div className="pending-cards-grid">
+                      <div className="pending-card receivable">
+                        <div className="pending-icon-wrapper blue">
+                          <ArrowUpRight size={24} strokeWidth={2.5} />
+                        </div>
+                        <div className="pending-details">
+                          <h3 className="pending-title">Accounts Receivable</h3>
+                          <p className="pending-subtitle">
+                            Total from unpaid/partial sales
+                          </p>
+                        </div>
+                        <div className="pending-amount-wrapper">
+                          <div className="pending-amount text-blue">
+                            Rs. {summaryData.accountsReceivable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
+                          <div className="pending-count">
+                            {summaryData.pendingSalesCount} Pending {summaryData.pendingSalesCount === 1 ? 'Invoice' : 'Invoices'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pending-card payable">
+                        <div className="pending-icon-wrapper red">
+                          <ArrowDownRight size={24} strokeWidth={2.5} />
+                        </div>
+                        <div className="pending-details">
+                          <h3 className="pending-title">Accounts Payable</h3>
+                          <p className="pending-subtitle">
+                            Total owed on supplier orders
+                          </p>
+                        </div>
+                        <div className="pending-amount-wrapper">
+                          <div className="pending-amount text-red">
+                            Rs. {summaryData.accountsPayable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
+                          <div className="pending-count">
+                            {summaryData.pendingPurchaseCount} Pending {summaryData.pendingPurchaseCount === 1 ? 'Order' : 'Orders'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
