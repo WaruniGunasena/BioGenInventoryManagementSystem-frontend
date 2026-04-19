@@ -471,7 +471,7 @@ const EditSalesOrder = () => {
             setCourierCharges("");
         } catch (error) {
             console.error("Error creating Sales Order:", error);
-            showToast('error', error.response?.data?.message || "Failed to issue bill. Please try again.");
+            showToast('error', error.response?.data?.message || "Failed to Confirm Order. Please try again.");
         }
     };
 
