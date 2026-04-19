@@ -370,7 +370,6 @@ const GRN = () => {
                 await updateGRN(formData.invoiceId, grnData);
                 showToast('success', "Stock updated successfully!");
             } else {
-                console.log(grnData);
                 await createGRN(grnData);
                 showToast('success', "Stock added successfully!");
             }

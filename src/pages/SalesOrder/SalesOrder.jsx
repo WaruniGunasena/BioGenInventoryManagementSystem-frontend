@@ -75,7 +75,6 @@ const SalesOrder = () => {
     }, []);
 
     useEffect(()=>{
-        console.log("Applied return Credit",appliedReturnCredit)
     },[appliedReturnCredit])
 
     const fetchUserId = async () => {
@@ -905,10 +904,7 @@ const SalesOrder = () => {
                         onClose={() => setIsReturnModalOpen(false)}
                         summaryData={returnSummaryData}
                         onApply={(credit, items) => {
-                            setAppliedReturnCredit(credit);
-                            console.log("applied return credit", credit);
-                            console.log("applied return appliedCredit", appliedReturnCredit);
-                            
+                            setAppliedReturnCredit(credit);  
                             setReissueItems(prev => {
                                 const newArray = [...prev];
                                 items.forEach(newItem => {

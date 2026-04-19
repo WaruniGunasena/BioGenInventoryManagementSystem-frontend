@@ -65,7 +65,6 @@ const SalesRepOrder = () => {
     const fetchCustomers = useCallback(async () => {
         try {
             const res = await getAllCustomers();
-            console.log(res.data);
             const data = (res.data?.customers || res.data || []);
             setCustomers(Array.isArray(data) && data.length > 0 ? data : []);
         } catch (error) {

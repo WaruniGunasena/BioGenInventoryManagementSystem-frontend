@@ -96,7 +96,6 @@ const ProductReturns = () => {
         setLoadingItems(true);
         try {
             const res = await getSalesOrderById(id);
-            console.log("invoice data", res);
             const invoice = res.data?.salesOrder || res.data;
             setSelectedInvoice(invoice);
 
