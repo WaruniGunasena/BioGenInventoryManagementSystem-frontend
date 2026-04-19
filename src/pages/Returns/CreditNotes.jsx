@@ -9,7 +9,7 @@ import html2canvas from "html2canvas";
 import { getAllReturns, getReturnById, deleteReturnInvoice, approveReturnInvoice } from "../../api/returnService";
 import { getUserId, getUserRole } from "../../components/common/Utils/userUtils/userUtils";
 import { useToast } from "../../context/ToastContext";
-import "../SalesOrder/SalesInvoices.css";
+import "../SalesOrder/SalesInvoices.css"; // Reuse styling template
 
 const CreditNotes = () => {
     const { showToast } = useToast();
@@ -33,16 +33,16 @@ const CreditNotes = () => {
         getUserRole().then(setUserRole).catch(console.error);
     }, []);
 
-    const fetchReturns = React.useCallback(async (page) => {
+    const fetchReturns = async (page) => {
+        setLoading(true);
         try {
             const res = await getAllReturns(page, pageSize);
             if (res.data) {
                 const dataList = res.data.productReturnList || [];
                 const mappedData = dataList.map(item => ({
                     ...item,
-                    status: item.status || "Pending", // Assuming default status if none
+                    status: item.status || "Pending",
                 }));
-
                 setReturns(mappedData);
                 setTotalPages(res.data.totalPages || 1);
             }
@@ -54,6 +54,11 @@ const CreditNotes = () => {
     useEffect(() => {
         fetchReturns(currentPage);
     }, [currentPage, fetchReturns]);
+
+    useEffect(() => {
+        fetchReturns(currentPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage]);
 
     const handleViewDetails = async (ret) => {
         try {
@@ -106,6 +111,11 @@ const CreditNotes = () => {
             showToast("error", error?.response?.data?.message || "Failed to delete return invoice");
         }
     };
+
+    // const handleEditOpen = (ret) => {
+    //     showToast("info", "Edit functionality is pending backend support for Returns");
+    //     // navigate("/credit-notes/edit", { state: { returnData: ret } });
+    // };
 
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
@@ -212,17 +222,26 @@ const CreditNotes = () => {
                         </header>
 
                         <div className="sales-invoices-table-section">
-                            <DataTable
-                                columns={columns}
-                                data={returns}
-                                showAddButton={false}
-                                showStatusToggle={false}
-                                showActions={false}
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={(page) => setCurrentPage(page)}
-                                onSearch={() => { /* No search backend ready */ }}
-                            />
+                            {loading ? (
+                                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "60px 0", gap: "12px", color: "#6b7280" }}>
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
+                                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                                    </svg>
+                                    <span style={{ fontSize: "14px" }}>Loading credit notes...</span>
+                                </div>
+                            ) : (
+                                <DataTable
+                                    columns={columns}
+                                    data={returns}
+                                    showAddButton={false}
+                                    showStatusToggle={false}
+                                    showActions={false}
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={(page) => setCurrentPage(page)}
+                                    onSearch={() => { /* No search backend ready */ }}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
