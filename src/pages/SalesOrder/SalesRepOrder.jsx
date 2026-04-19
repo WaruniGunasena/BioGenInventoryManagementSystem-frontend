@@ -524,7 +524,7 @@ const SalesRepOrder = () => {
                                                         <td className="asi-price-cell" data-label="Price">{p.sellingPrice?.toFixed(2)}</td>
                                                         <td data-label="Qty">
                                                             <input
-                                                                type="number" min="0"
+                                                                type="text" min="0"
                                                                 className="asi-num-input"
                                                                 value={p.inputQty}
                                                                 placeholder="0"
@@ -533,7 +533,7 @@ const SalesRepOrder = () => {
                                                         </td>
                                                         <td data-label="Bonus">
                                                             <input
-                                                                type="number" min="0"
+                                                                type="text" min="0"
                                                                 className="asi-num-input"
                                                                 value={p.inputBonus}
                                                                 placeholder="0"
