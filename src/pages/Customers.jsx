@@ -54,7 +54,7 @@ const Customers = () => {
     const fetchCustomers = async () => {
         setIsLoading(true);
         try {
-            const response = await getPaginatedCustomers(currentPage, 5, filter);
+            const response = await getPaginatedCustomers(currentPage, 8, filter);
             const raw = response.data;
 
             if (!raw || typeof raw !== 'object') {

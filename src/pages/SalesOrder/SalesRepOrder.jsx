@@ -11,6 +11,8 @@ import { useToast } from "../../context/ToastContext";
 import { getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
 import { DiscountTypeEnum } from "../../enums/DiscountTypeEnum";
 import { AdditionalDiscountPopup } from "./AdditionalDiscountPopup";
+import ReturnCreditsModal from "../../components/SalesOrder/ReturnCreditsModal";
+import { getCustomerReturnSummary } from "../../api/returnService";
 import "./SalesRepOrder.css";
 
 const SalesRepOrder = () => {
@@ -32,8 +34,6 @@ const SalesRepOrder = () => {
     const [productSearch, setProductSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(0);
 
-    // eslint-disable-next-line no-unused-vars
-    const [totalPages, setTotalPages] = useState(0);
     const [pageSize] = useState(5);
     const [loadingProducts, setLoadingProducts] = useState(false);
     const [showProductSearch, setShowProductSearch] = useState(false);
@@ -45,6 +45,11 @@ const SalesRepOrder = () => {
 
     const [additionalDiscount, setAdditionalDiscount] = useState({ type: DiscountTypeEnum.cash, value: "" });
     const [showDiscountPopup, setShowDiscountPopup] = useState(false);
+
+    const [returnSummaryData, setReturnSummaryData] = useState(null);
+    const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+    const [appliedReturnCredit, setAppliedReturnCredit] = useState(0);
+    const [reissueItems, setReissueItems] = useState([]);
 
     const fetchUserId = useCallback(async () => {
         try {
@@ -60,7 +65,6 @@ const SalesRepOrder = () => {
     const fetchCustomers = useCallback(async () => {
         try {
             const res = await getAllCustomers();
-            console.log(res.data);
             const data = (res.data?.customers || res.data || []);
             setCustomers(Array.isArray(data) && data.length > 0 ? data : []);
         } catch (error) {
@@ -108,12 +112,12 @@ const SalesRepOrder = () => {
                     ...p,
                     sellingPrice: resolvedPrice,
                     inputQty: p.inputQty || "",
-                    inputBonus: p.inputBonus || ""
+                    inputBonus: p.inputBonus || "",
+                    availableQuantity: stockItem?.totalQuantity || 0
                 };
             });
 
             setProducts(prev => append ? [...prev, ...productsWithInputs] : productsWithInputs);
-            setTotalPages(total);
             setHasMore(page < total - 1);
         } catch (error) {
             console.error("Failed to fetch products:", error);
@@ -164,10 +168,28 @@ const SalesRepOrder = () => {
         setShowCustomerDropdown(true);
     };
 
-    const selectCustomer = (customer) => {
+    const selectCustomer = async (customer) => {
         setSelectedCustomer(customer);
         setCustomerSearch(customer.name);
         setShowCustomerDropdown(false);
+        
+        setReturnSummaryData(null);
+        setAppliedReturnCredit(0);
+        setReissueItems([]);
+
+        if (customer && (customer.id || customer._id)) {
+            try {
+                const res = await getCustomerReturnSummary(customer.id || customer._id);
+                const data = res.data?.customerWiseReturnItemDTO || res.data?.data || res.data;
+                const hasCredits = (data?.customerCurrentDue > 0) || (data?.returnProducts?.length > 0);
+                if (hasCredits) {
+                    setReturnSummaryData(data);
+                    showToast("info", "Customer has available return credits or reissues!");
+                }
+            } catch (error) {
+                console.error("Error fetching return summary:", error);
+            }
+        }
     };
 
     const handleScroll = (e) => {
@@ -214,6 +236,10 @@ const SalesRepOrder = () => {
             showToast("warning", "Please enter a valid quantity or bonus");
             return;
         }
+        if (qty + bonus > (product.availableQuantity || 0)) {
+            showToast("error", `Only ${product.availableQuantity || 0} units of "${product.name}" are available in stock.`);
+            return;
+        }
         addToOrder(product, qty, bonus);
         showToast("success", `Added ${product.name} to Order`);
     };
@@ -241,9 +267,9 @@ const SalesRepOrder = () => {
         return value;
     };
 
-    const totalBeforeExtras = addedItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+    const totalBeforeExtras = addedItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0) + reissueItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
     const discountAmount = getAdditionalDiscountValue();
-    const grandTotal = totalBeforeExtras - discountAmount;
+    const grandTotal = totalBeforeExtras - discountAmount - appliedReturnCredit;
     const availableCredit = selectedCustomer ? (selectedCustomer.creditLimit - (selectedCustomer.dueBalance || 0)) : 0;
     const isOverCredit = selectedCustomer && grandTotal > availableCredit;
 
@@ -262,7 +288,8 @@ const SalesRepOrder = () => {
                 sellingPrice: item.sellingPrice,
                 totalAmount: item.totalAmount,
                 discountPercent: item.discountPercent ?? 0,
-                discountedPrice: item.discountedPrice ?? 0
+                discountedPrice: item.discountedPrice ?? 0,
+                isReissue: false
             });
 
             if (item.bonus > 0) {
@@ -274,9 +301,25 @@ const SalesRepOrder = () => {
                     sellingPrice: 0,
                     totalAmount: 0,
                     discountPercent: 0,
-                    discountedPrice: 0
+                    discountedPrice: 0,
+                    isReissue: false
                 });
             }
+        });
+
+        reissueItems.forEach(item => {
+            mappedItems.push({
+                productId: item.productId,
+                productName: item.productName,
+                unit: item.unit,
+                packSize: item.packSize || "",
+                sellingPrice: 0,
+                quantity: item.quantity,
+                discountPercent: 0,
+                discountedPrice: 0,
+                totalAmount: 0,
+                isReissue: true
+            });
         });
 
         const payload = {
@@ -286,6 +329,7 @@ const SalesRepOrder = () => {
             grandTotal: totalBeforeExtras,
             additionalDiscountType: additionalDiscount.type,
             additionalDiscountValue: parseFloat(additionalDiscount.value) || 0,
+            returnCredits: appliedReturnCredit || 0,
             items: mappedItems
         };
 
@@ -296,6 +340,9 @@ const SalesRepOrder = () => {
             setAddedItems([]);
             setSelectedCustomer(null);
             setCustomerSearch("");
+            setAppliedReturnCredit(0);
+            setReissueItems([]);
+            setReturnSummaryData(null);
             setProducts(prev => prev.map(p => ({ ...p, inputQty: "", inputBonus: "" })));
         } catch (error) {
             const msg = error?.response?.data?.message || "Failed to create Sales Order";
@@ -334,7 +381,6 @@ const SalesRepOrder = () => {
                             </div>
                             <div className="asi-header-actions">
                                 <button className="asi-btn-back" onClick={() => window.history.back()}>Back</button>
-                                <button className="asi-btn-confirm" onClick={handleSubmitInvoice} disabled={isOverCredit}>Confirm Order</button>
                             </div>
                         </header>
 
@@ -396,6 +442,18 @@ const SalesRepOrder = () => {
                                         </div>
                                     )}
                                 </div>
+                                {returnSummaryData && (
+                                    <div className="return-credits-banner" style={{ margin: "16px 20px" }} onClick={() => setIsReturnModalOpen(true)}>
+                                        <div className="rc-banner-content">
+                                            <AlertCircle size={20} />
+                                            <span>
+                                                <strong>Action Required:</strong> This customer has pending return credits (Rs. {returnSummaryData.customerCurrentDue}) 
+                                                or reissue items available!
+                                            </span>
+                                        </div>
+                                        <button className="rc-banner-btn">Review & Apply</button>
+                                    </div>
+                                )}
 
                                 <hr className="asi-section-divider" />
 
@@ -450,11 +508,16 @@ const SalesRepOrder = () => {
                                                         <td className="asi-product-name-cell" data-label="Product">
                                                             <div className="asi-prod-name">{p.name}</div>
                                                             <div className="asi-prod-unit">{p.unit}</div>
+                                                            {((parseFloat(p.inputQty) || 0) + (parseFloat(p.inputBonus) || 0) > (p.availableQuantity || 0)) && (
+                                                                <span style={{ color: "red", fontSize: "11px", marginTop: "4px", display: "block" }}>
+                                                                    Only {p.availableQuantity || 0} {p.unit} in stock
+                                                                </span>
+                                                            )}
                                                         </td>
                                                         <td className="asi-price-cell" data-label="Price">{p.sellingPrice?.toFixed(2)}</td>
                                                         <td data-label="Qty">
                                                             <input
-                                                                type="number" min="0"
+                                                                type="text" min="0"
                                                                 className="asi-num-input"
                                                                 value={p.inputQty}
                                                                 placeholder="0"
@@ -463,7 +526,7 @@ const SalesRepOrder = () => {
                                                         </td>
                                                         <td data-label="Bonus">
                                                             <input
-                                                                type="number" min="0"
+                                                                type="text" min="0"
                                                                 className="asi-num-input"
                                                                 value={p.inputBonus}
                                                                 placeholder="0"
@@ -474,6 +537,8 @@ const SalesRepOrder = () => {
                                                             <button
                                                                 className={`asi-add-btn ${addedItems.some(i => i.productId === (p.id || p._id)) ? "asi-added" : ""}`}
                                                                 onClick={() => handleAddClick(p)}
+                                                                disabled={(parseFloat(p.inputQty) || 0) + (parseFloat(p.inputBonus) || 0) > (p.availableQuantity || 0)}
+                                                                style={(parseFloat(p.inputQty) || 0) + (parseFloat(p.inputBonus) || 0) > (p.availableQuantity || 0) ? { cursor: 'not-allowed', opacity: 0.6 } : {}}
                                                             >
                                                                 {addedItems.some(i => i.productId === (p.id || p._id)) ? "✓" : "+"}
                                                             </button>
@@ -617,6 +682,30 @@ const SalesRepOrder = () => {
                                                 </tr>
                                             ))
                                         )}
+
+                                        {reissueItems.map((item, idx) => (
+                                            <tr key={`reissue-${idx}`} style={{ backgroundColor: "#e0f2fe", fontStyle: "italic", opacity: 0.9 }}>
+                                                <td data-label="#">*</td>
+                                                <td data-label="Product">
+                                                    <div>
+                                                        <div className="asi-inv-prod-name" style={{ color: "#0369a1" }}>{item.productName} (Re-issue)</div>
+                                                        <div className="asi-inv-prod-sub">* Return Replacement</div>
+                                                    </div>
+                                                </td>
+                                                <td data-label="Unit">{item.unit || "-"}</td>
+                                                <td data-label="Qty">{item.quantity}</td>
+                                                <td data-label="Bonus">-</td>
+                                                <td className="asi-mrp-inv-cell" data-label="MRP"><span className="asi-no-mrp">—</span></td>
+                                                <td data-label="Price">0.00</td>
+                                                <td data-label="Amount">0.00</td>
+                                                <td className="asi-bci-cell" data-label="BCI">0.00</td>
+                                                <td data-label="Action">
+                                                    <Trash2 size={15} className="asi-delete-icon" onClick={() => {
+                                                        setReissueItems(prev => prev.filter((_, i) => i !== idx));
+                                                    }} />
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
@@ -650,15 +739,47 @@ const SalesRepOrder = () => {
                                         )}
                                     </div>
 
+                                    {appliedReturnCredit > 0 && (
+                                        <div className="asi-total-row">
+                                            <span style={{ color: '#059669' }}>Applied Return Credit (LKR)</span>
+                                            <span style={{ color: '#059669', fontWeight: 600 }}>- {appliedReturnCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        </div>
+                                    )}
+
                                     <div className={`asi-total-row asi-grand-total ${isOverCredit ? "over" : ""}`}>
                                         <span><b>Due</b> (LKR)</span>
                                         <span>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 </div>
                             )}
+                            {addedItems.length > 0 && (
+                                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "20px" }}>
+                                    <button className="asi-btn-confirm" onClick={handleSubmitInvoice} disabled={isOverCredit}>Confirm Order</button>
+                                </div>
+                            )}
                         </div>
 
                     </div>
+                    <ReturnCreditsModal
+                        isOpen={isReturnModalOpen}
+                        onClose={() => setIsReturnModalOpen(false)}
+                        summaryData={returnSummaryData}
+                        onApply={(credit, items) => {
+                            setAppliedReturnCredit(credit);
+                            
+                            setReissueItems(prev => {
+                                const newArray = [...prev];
+                                items.forEach(newItem => {
+                                    const existingIndex = newArray.findIndex(x => x.productId === newItem.productId);
+                                    if(existingIndex >= 0) newArray[existingIndex] = newItem;
+                                    else newArray.push(newItem);
+                                });
+                                return newArray;
+                            });
+
+                            showToast("success", `Return Credits Applied (Rs. ${credit}) with ${items.reduce((s,i) => s + i.quantity, 0)} reissue items!`);
+                        }}
+                    />
                 </div>
             </div>
         </Layout>

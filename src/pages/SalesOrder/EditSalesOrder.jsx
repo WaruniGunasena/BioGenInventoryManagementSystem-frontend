@@ -54,6 +54,8 @@ const EditSalesOrder = () => {
 
     const [selectedCustomerData, setSelectedCustomerData] = useState(null);
     const [addedItems, setAddedItems] = useState([]);
+    const [reissueItems, setReissueItems] = useState([]);
+    const [returnCredits, setReturnCredits] = useState(0);
     const [editingItemId, setEditingItemId] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [currentUserName, setCurrentUserName] = useState("");
@@ -94,13 +96,30 @@ const EditSalesOrder = () => {
                 value: invoice.additionalDiscountValue || ""
             });
             setCourierCharges(invoice.courierCharges || "");
+            setReturnCredits(invoice.returnCredits || 0);
+
+            const reissues = (invoice.items || []).filter(i => i.isReissue).map(item => ({
+                id: item.id || Date.now() + Math.random(),
+                productId: item.productId || item.product?.id,
+                productName: item.productName || item.product?.name || "",
+                productCode: item.productCode || item.itemCode || "",
+                quantity: item.quantity,
+                packSize: item.packSize || "",
+                unit: item.unit || "",
+                sellingPrice: 0,
+                discountPercent: 0,
+                discountedPrice: 0,
+                totalAmount: 0,
+                isReissue: true
+            }));
+            setReissueItems(reissues);
 
             // Map items
-            const salelines = (invoice.items || []).filter(i => parseFloat(i.sellingPrice) > 0);
+            const salelines = (invoice.items || []).filter(i => parseFloat(i.sellingPrice) > 0 && !i.isReissue);
             const preloadedItems = salelines.map((item, index) => {
                 const bonusLine = (invoice.items || []).find(
                     b => (b.productId === item.productId || b.product?.id === item.productId) &&
-                        parseFloat(b.sellingPrice) === 0
+                        parseFloat(b.sellingPrice) === 0 && !b.isReissue
                 );
                 return {
                     id: Date.now() + index,
@@ -348,7 +367,7 @@ const EditSalesOrder = () => {
         const total = calculateTotal();
         const discountAmount = getAdditionalDiscountValue();
         const courier = parseFloat(courierCharges) || 0;
-        return (total - discountAmount + courier).toFixed(2);
+        return (total - discountAmount + courier - parseFloat(returnCredits || 0)).toFixed(2);
     };
 
     const handleUpdateBill = async () => {
@@ -395,6 +414,21 @@ const EditSalesOrder = () => {
             }
         });
 
+        reissueItems.forEach(item => {
+            mappedItems.push({
+                productId: item.productId,
+                productName: item.productName,
+                unit: item.unit,
+                packSize: item.packSize,
+                sellingPrice: 0,
+                quantity: item.quantity,
+                discountPercent: 0,
+                discountedPrice: 0,
+                totalAmount: 0,
+                isReissue: true
+            });
+        });
+
         const salesOrderData = {
             customerId: formData.customerId,
             userId: currentUserId,
@@ -403,6 +437,7 @@ const EditSalesOrder = () => {
             additionalDiscountType: additionalDiscount.type,
             additionalDiscountValue: additionalDiscount.value || 0,
             courierCharges: courierCharges || 0,
+            returnCredits: returnCredits || 0,
             grandTotal: calculateTotal()
         };
 
@@ -436,7 +471,7 @@ const EditSalesOrder = () => {
             setCourierCharges("");
         } catch (error) {
             console.error("Error creating Sales Order:", error);
-            showToast('error', error.response?.data?.message || "Failed to issue bill. Please try again.");
+            showToast('error', error.response?.data?.message || "Failed to Confirm Order. Please try again.");
         }
     };
 
@@ -778,6 +813,24 @@ const EditSalesOrder = () => {
                                                 )}
                                             </React.Fragment>
                                         ))}
+                                        {reissueItems.map((item, idx) => (
+                                            <tr key={`reissue-${idx}`} className="bonus-row" style={{ backgroundColor: "#e8f5e9", fontStyle: "italic", opacity: 0.9 }}>
+                                                <td></td>
+                                                <td>
+                                                    <div className="product-desc-cell">
+                                                        <span className="main-desc" style={{ color: "#2e7d32" }}>{item.productName} (Reissue)</span>
+                                                        <span className="sub-desc">{item.productCode}</span>
+                                                    </div>
+                                                </td>
+                                                <td>{item.packSize} {item.unit}</td>
+                                                <td>{item.quantity}</td>
+                                                <td>0.00</td>
+                                                <td>0.00%</td>
+                                                <td>0.00</td>
+                                                <td>0.00</td>
+                                                <td className="action-col"></td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
 
@@ -813,6 +866,12 @@ const EditSalesOrder = () => {
                                                 />
                                             )}
                                         </div>
+                                        {parseFloat(returnCredits) > 0 && (
+                                            <div className="totals-line">
+                                                <span className="line-label">Return Credits (LKR)</span>
+                                                <span className="line-value">- {parseFloat(returnCredits).toFixed(2)}</span>
+                                            </div>
+                                        )}
                                         <div className="totals-line" style={{ position: 'relative' }}>
                                             <span 
                                                 className="line-label" 

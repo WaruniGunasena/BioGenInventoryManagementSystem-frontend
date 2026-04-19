@@ -56,7 +56,7 @@ const Employees = () => {
     const fetchEmployees = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await getPaginatedEmployeeResults(currentPage, 5, filter);
+            const response = await getPaginatedEmployeeResults(currentPage, 8, filter);
             if (response.data && response.data.users && Array.isArray(response.data.users)) {
                 setEmployees(response.data.users);
                 setTotalPages(response.data.totalPages);

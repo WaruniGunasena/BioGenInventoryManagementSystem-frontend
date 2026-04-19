@@ -22,7 +22,9 @@ import {
   ChevronRight,
   Menu,
   FileText,
-  TrendingUp
+  TrendingUp,
+  RotateCcw,
+  BarChart2
 } from "lucide-react";
 import "./Sidebar.css";
 import { getUserName, getUserRole } from "./common/Utils/userUtils/userUtils";
@@ -235,10 +237,17 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
             </li>
           )}
 
-          {admin && <li className="nav-item">
-            <Link to="/roles" className={`nav-link ${isActive('/roles') ? 'active' : ''}`}>
-              <Layers size={20} className="nav-icon" />
-              <span className="link-text">Roles</span>
+          {(admin || inventoryManager) && <li className="nav-item">
+            <Link to="/product-returns" className={`nav-link ${isActive('/product-returns') ? 'active' : ''}`}>
+              <RotateCcw size={20} className="nav-icon" />
+              <span className="link-text">Process Return</span>
+            </Link>
+          </li>}
+
+          {(admin || inventoryManager || salesRep) && <li className="nav-item">
+            <Link to="/credit-notes" className={`nav-link ${isActive('/credit-notes') ? 'active' : ''}`}>
+              <FileText size={20} className="nav-icon" />
+              <span className="link-text">Credit Notes</span>
             </Link>
           </li>}
 
@@ -246,6 +255,13 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
             <Link to="/cash-flow" className={`nav-link ${isActive('/cash-flow') ? 'active' : ''}`}>
               <TrendingUp size={20} className="nav-icon" />
               <span className="link-text">Cash Flow</span>
+            </Link>
+          </li>}
+
+          {(admin || inventoryManager) && <li className="nav-item">
+            <Link to="/reports" className={`nav-link ${isActive('/reports') ? 'active' : ''}`}>
+              <BarChart2 size={20} className="nav-icon" />
+              <span className="link-text">Reports</span>
             </Link>
           </li>}
 

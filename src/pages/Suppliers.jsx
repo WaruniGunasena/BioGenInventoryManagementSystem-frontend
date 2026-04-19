@@ -44,7 +44,7 @@ const Suppliers = () => {
     const fetchSuppliers = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await getPaginatedSupplierResults(currentPage, 5, filter);
+            const response = await getPaginatedSupplierResults(currentPage, 8, filter);
             if (response.data && response.data.suppliers && Array.isArray(response.data.suppliers)) {
                 setSuppliers(response.data.suppliers);
                 setTotalPages(response.data.totalPages);

@@ -4,8 +4,10 @@ import './AddProductModal.css';
 import { addProduct } from '../../api/productService';
 import { getAllCategory } from '../../api/categoryService';
 import AddCategoryModal from '../Category/AddCategoryModal';
+import { useToast } from '../../context/ToastContext';
 
 const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
+    const { showToast } = useToast();
     const [formData, setFormData] = useState({
         name: '',
         categoryId: '',
@@ -92,6 +94,12 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (formData.sellingPrice !== '' && Number(formData.sellingPrice) < 0) {
+            showToast('error', 'Selling price must be a positive value');
+            return;
+        }
+
         try {
             const data = new FormData();
             data.append('name', formData.name);
@@ -131,7 +139,8 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
             setIsCustomUnit(false);
         } catch (error) {
             console.error("Error adding product:", error);
-            alert("Failed to add product");
+            const errorMessage = error.response?.data?.message || "Failed to add product";
+            showToast('error', errorMessage);
         }
 
     };
@@ -295,6 +304,7 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }) => {
                                 className="form-input"
                                 placeholder="0.00"
                                 step="0.01"
+                                min="0"
                                 value={formData.sellingPrice}
                                 onChange={handleChange}
                             />

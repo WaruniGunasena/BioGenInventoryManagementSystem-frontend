@@ -1,0 +1,486 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   ProductReturns.css — Matches the project's SalesOrder color theme
+   ═══════════════════════════════════════════════════════════════════════
+
+   Color palette (mirrors SalesOrder.css):
+     --pr-primary    #6366f1  →  indigo  (main brand / CTA)
+     --pr-secondary  #4f46e5  →  indigo dark  (hover / header accent)
+     --pr-tertiary   #2b0958  →  deep purple  (headings / badge text)
+═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+    --pr-primary:   #6366f1;
+    --pr-secondary: #4f46e5;
+    --pr-tertiary:  #2b0958;
+
+    /* Neutrals reused from project */
+    --pr-bg:        #f9fafb;
+    --pr-white:     #ffffff;
+    --pr-border:    #e5e7eb;
+    --pr-text:      #374151;
+    --pr-muted:     #6b7280;
+    --pr-tint:      #e5eef9;   /* light indigo tint used in SalesOrder info bars */
+}
+
+/* ── Layout ── */
+.pr-page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
+    min-height: 100vh;
+    background-color: var(--pr-bg);
+}
+
+/* ── Header ── */
+.pr-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, var(--pr-primary), var(--pr-secondary));
+    color: var(--pr-white);
+    padding: 18px 24px;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+}
+
+.pr-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.pr-header-icon {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pr-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.pr-subtitle {
+    font-size: 13px;
+    opacity: 0.85;
+    margin: 2px 0 0;
+}
+
+/* ── Primary CTA button ── */
+.pr-btn-submit {
+    background: var(--pr-white);
+    color: var(--pr-primary);
+    border: none;
+    padding: 10px 28px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.18s;
+}
+
+.pr-btn-submit:hover:not(:disabled) {
+    background: var(--pr-tint);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.pr-btn-submit:disabled {
+    background: var(--pr-border);
+    color: var(--pr-muted);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    opacity: 0.65;
+}
+
+/* ── Card ── */
+.pr-card {
+    background: var(--pr-white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    padding: 20px 24px;
+}
+
+.pr-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--pr-tertiary);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--pr-tint);
+}
+
+.pr-icon-primary {
+    color: var(--pr-primary);
+}
+
+/* Keep the amber class name working (used in JSX) but point to primary */
+.pr-icon-amber {
+    color: var(--pr-primary);
+}
+
+/* ── Selection grid ── */
+.pr-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.pr-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pr-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--pr-text);
+}
+
+.pr-required {
+    color: #ef4444;
+    margin-left: 2px;
+}
+
+.pr-select,
+.pr-input {
+    padding: 9px 12px;
+    border: 1.5px solid var(--pr-border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--pr-bg);
+    color: #111827;
+    transition: border-color 0.15s;
+    appearance: auto;
+}
+
+.pr-select:focus,
+.pr-input:focus {
+    outline: none;
+    border-color: var(--pr-primary);
+    background: var(--pr-white);
+}
+
+.pr-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pr-input-readonly {
+    background: #f3f4f6;
+    cursor: default;
+    color: var(--pr-muted);
+}
+
+/* ── Customer info chips ── */
+.pr-customer-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--pr-border);
+}
+
+.pr-info-chip {
+    background: var(--pr-tint);
+    color: var(--pr-tertiary);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+/* ── Product return table ── */
+.pr-table-wrap {
+    overflow-x: auto;
+}
+
+.pr-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.pr-table th {
+    background: var(--pr-tint);
+    color: var(--pr-tertiary);
+    font-weight: 600;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--pr-primary);
+}
+
+.pr-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--pr-border);
+    vertical-align: middle;
+    color: var(--pr-text);
+}
+
+.pr-table tr:hover td {
+    background-color: var(--pr-tint);
+}
+
+.pr-row-selected td {
+    background-color: #eef2ff !important;   /* indigo-50 */
+}
+
+.pr-product-name {
+    font-weight: 500;
+    color: #111827;
+}
+
+.pr-qty-input {
+    width: 80px;
+    padding: 6px 8px;
+    border: 1.5px solid var(--pr-border);
+    border-radius: 6px;
+    font-size: 14px;
+    text-align: center;
+    transition: border-color 0.15s;
+}
+
+.pr-qty-input:focus {
+    outline: none;
+    border-color: var(--pr-primary);
+}
+
+.pr-refund-cell {
+    font-weight: 600;
+    color: var(--pr-secondary);
+}
+
+/* ── Reusable checkbox ── */
+.pr-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.pr-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--pr-primary);
+}
+
+.pr-reusable-badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pr-reusable-badge.yes {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.pr-reusable-badge.no {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* ── Notes textarea ── */
+.pr-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--pr-border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+}
+
+.pr-textarea:focus {
+    outline: none;
+    border-color: var(--pr-primary);
+}
+
+/* ── Status messages ── */
+.pr-loading,
+.pr-empty {
+    text-align: center;
+    color: var(--pr-muted);
+    font-size: 14px;
+    padding: 20px 0;
+}
+
+/* ── Invoice preview / Credit Note ── */
+.pr-invoice-section {
+    background: var(--pr-white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    padding: 28px;
+    border-top: 4px solid var(--pr-primary);
+}
+
+.pr-inv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.pr-company-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--pr-tertiary);
+    margin: 0 0 4px;
+}
+
+.pr-company-sub {
+    font-size: 13px;
+    color: var(--pr-muted);
+    margin: 2px 0;
+}
+
+.pr-company-web {
+    color: var(--pr-primary);
+    font-size: 13px;
+    margin: 2px 0;
+}
+
+.pr-inv-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--pr-secondary);
+    text-align: right;
+    margin: 0;
+}
+
+.pr-inv-title-block {
+    text-align: right;
+}
+
+.pr-divider {
+    border: none;
+    border-top: 1.5px solid var(--pr-border);
+    margin: 14px 0;
+}
+
+.pr-inv-info-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    background: var(--pr-tint);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.pr-inv-info-item {
+    display: flex;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.pr-inv-info-label {
+    font-weight: 600;
+    color: var(--pr-muted);
+}
+
+.pr-inv-info-value {
+    color: #111827;
+    font-weight: 500;
+}
+
+.pr-inv-table-wrap {
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+.pr-inv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.pr-inv-table th {
+    background: var(--pr-tint);
+    color: var(--pr-tertiary);
+    font-weight: 600;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 2px solid var(--pr-primary);
+}
+
+.pr-inv-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--pr-border);
+    color: var(--pr-text);
+}
+
+/* ── Totals ── */
+.pr-totals {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.pr-total-row {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    background: var(--pr-tint);
+    padding: 14px 24px;
+    border-radius: 10px;
+    min-width: 340px;
+}
+
+.pr-total-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--pr-secondary);
+    margin-left: auto;
+}
+
+.pr-invoice-footer-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .pr-page {
+        padding: 12px;
+    }
+
+    .pr-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .pr-selection-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pr-inv-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .pr-inv-info-bar {
+        flex-direction: column;
+    }
+
+    .pr-total-row {
+        min-width: unset;
+        width: 100%;
+    }
+}

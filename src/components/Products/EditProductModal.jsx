@@ -3,8 +3,10 @@ import { X, Upload } from 'lucide-react';
 import './AddProductModal.css';
 import { updateProduct } from '../../api/productService';
 import { getAllCategory } from '../../api/categoryService';
+import { useToast } from '../../context/ToastContext';
 
 const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
+    const { showToast } = useToast();
     const [formData, setFormData] = useState({
         name: '',
         categoryId: '',
@@ -119,7 +121,8 @@ const EditProductModal = ({ isOpen, onClose, onProductUpdated, product }) => {
             onClose();
         } catch (error) {
             console.error("Error updating product:", error);
-            alert("Failed to update product");
+            const errorMessage = error.response?.data?.message || "Failed to update product";
+            showToast('error', errorMessage);
         }
     };
 
