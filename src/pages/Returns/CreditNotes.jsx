@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Layout from "../../components/Layout";
 import Sidebar from "../../components/Sidebar";
 import DataTable from "../../components/common/DataTable";
@@ -27,13 +27,14 @@ const CreditNotes = () => {
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [pageSize] = useState(8);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         getUserId().then(setCurrentUserId).catch(console.error);
         getUserRole().then(setUserRole).catch(console.error);
     }, []);
 
-    const fetchReturns = async (page) => {
+    const fetchReturns = useCallback(async (page) => {
         setLoading(true);
         try {
             const res = await getAllReturns(page, pageSize);
@@ -48,17 +49,14 @@ const CreditNotes = () => {
             }
         } catch (error) {
             console.error("Error fetching returns:", error);
+        } finally {
+            setLoading(false);
         }
     }, [pageSize]);
 
     useEffect(() => {
         fetchReturns(currentPage);
     }, [currentPage, fetchReturns]);
-
-    useEffect(() => {
-        fetchReturns(currentPage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage]);
 
     const handleViewDetails = async (ret) => {
         try {
