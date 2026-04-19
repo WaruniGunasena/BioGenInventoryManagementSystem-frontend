@@ -5,7 +5,7 @@ import { getAllCustomers } from "../../api/customerService";
 import { getSalesOrdersByCustomer, createProductReturn } from "../../api/returnService";
 import { getSalesOrderById } from "../../api/salesOrderService";
 import { useToast } from "../../context/ToastContext";
-import { getCurrentUser, getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
+import { getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
 import { RotateCcw, ShoppingCart, FileText } from "lucide-react";
 import "./ProductReturns.css";
 
@@ -16,34 +16,26 @@ const ProductReturns = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-    // ── User ──────────────────────────────────────────────────────────────
     const [currentUserId, setCurrentUserId] = useState(null);
     const [currentUserName, setCurrentUserName] = useState("");
 
-    // ── Customer state ────────────────────────────────────────────────────
     const [customers, setCustomers] = useState([]);
     const [selectedCustomerId, setSelectedCustomerId] = useState("");
     const [selectedCustomerData, setSelectedCustomerData] = useState(null);
 
-    // ── Invoice state ─────────────────────────────────────────────────────
     const [customerInvoices, setCustomerInvoices] = useState([]);
     const [selectedInvoiceId, setSelectedInvoiceId] = useState("");
     const [selectedInvoice, setSelectedInvoice] = useState(null);
-    const [invoiceItems, setInvoiceItems] = useState([]);   // original items from the invoice
+    const [invoiceItems, setInvoiceItems] = useState([]);   
     const [loadingInvoices, setLoadingInvoices] = useState(false);
     const [loadingItems, setLoadingItems] = useState(false);
 
-    // ── Return items state ────────────────────────────────────────────────
-    // returnItems maps productId → { returnQty, reusable }
     const [returnItems, setReturnItems] = useState({});
     const [notes, setNotes] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const returnDate = new Date().toLocaleDateString("en-CA");
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Init
-    // ─────────────────────────────────────────────────────────────────────
     useEffect(() => {
         const init = async () => {
             try {
@@ -65,9 +57,6 @@ const ProductReturns = () => {
         init();
     }, []);
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Customer selected → fetch their invoices
-    // ─────────────────────────────────────────────────────────────────────
     const handleCustomerChange = async (e) => {
         const id = e.target.value;
         setSelectedCustomerId(id);
@@ -95,9 +84,6 @@ const ProductReturns = () => {
         }
     };
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Invoice selected → fetch its items
-    // ─────────────────────────────────────────────────────────────────────
     const handleInvoiceChange = async (e) => {
         const id = e.target.value;
         setSelectedInvoiceId(id);
@@ -110,17 +96,14 @@ const ProductReturns = () => {
         setLoadingItems(true);
         try {
             const res = await getSalesOrderById(id);
-            // Backend returns { salesOrder: {...} } — unwrap accordingly
             const invoice = res.data?.salesOrder || res.data;
             setSelectedInvoice(invoice);
 
-            // Only show items with a selling price > 0 (exclude bonus/free-issue lines)
             const items = (invoice?.items || []).filter(
                 (item) => parseFloat(item.sellingPrice) > 0
             );
             setInvoiceItems(items);
 
-            // Initialise returnItems state with qty=0 and reusable=true for each item
             const init = {};
             items.forEach((item) => {
                 const key = item.productId || item.id;
@@ -135,9 +118,6 @@ const ProductReturns = () => {
         }
     };
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Return qty / reusable change
-    // ─────────────────────────────────────────────────────────────────────
     const handleReturnQtyChange = (productKey, value, maxQty) => {
         let qty = value;
         if (qty !== "" && parseFloat(qty) > maxQty) qty = maxQty.toString();
@@ -155,16 +135,17 @@ const ProductReturns = () => {
         }));
     };
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Calculated totals
-    // ─────────────────────────────────────────────────────────────────────
     const returnedItemsForPreview = invoiceItems
         .map((item) => {
             const key = item.productId || item.id;
-            const qty = parseFloat(returnItems[key]?.returnQty) || 0;
+            const state = returnItems[key];
+
+            const qty = parseFloat(state?.returnQty) || 0;
             if (qty <= 0) return null;
             return {
                 ...item,
+                productId: item.productId || item.product?.id || item.id,
+                productName: item.productName || item.product?.name,
                 returnQty: qty,
                 reusable: returnItems[key]?.reusable ?? true,
                 refundAmount: qty * parseFloat(item.sellingPrice),
@@ -177,9 +158,6 @@ const ProductReturns = () => {
         0
     );
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Submit
-    // ─────────────────────────────────────────────────────────────────────
     const handleSubmitReturn = async () => {
         if (!selectedCustomerId) {
             showToast("error", "Please select a customer.");
@@ -202,8 +180,8 @@ const ProductReturns = () => {
             notes: notes.trim() || null,
             totalRefundAmount: parseFloat(totalRefundAmount.toFixed(2)),
             items: returnedItemsForPreview.map((item) => ({
-                productId: item.productId || item.product?.id,
-                productName: item.productName || item.product?.name,
+                productId: item.productId,
+                productName: item.productName,
                 unit: item.unit || "",
                 quantity: item.returnQty,
                 sellingPrice: parseFloat(item.sellingPrice),
@@ -216,7 +194,6 @@ const ProductReturns = () => {
         try {
             await createProductReturn(payload);
             showToast("success", "Product return submitted successfully!");
-            // Reset
             setSelectedCustomerId("");
             setSelectedCustomerData(null);
             setCustomerInvoices([]);
@@ -233,9 +210,6 @@ const ProductReturns = () => {
         }
     };
 
-    // ─────────────────────────────────────────────────────────────────────
-    // JSX
-    // ─────────────────────────────────────────────────────────────────────
     return (
         <Layout>
             <div className={`dashboard-container ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
@@ -249,7 +223,6 @@ const ProductReturns = () => {
                 <div className="dashboard-content">
                     <div className="pr-page">
 
-                        {/* ── Header ── */}
                         <header className="pr-header">
                             <div className="pr-header-left">
                                 <div className="pr-header-icon">
@@ -260,18 +233,8 @@ const ProductReturns = () => {
                                     <p className="pr-subtitle">Process a product return against an existing sales invoice</p>
                                 </div>
                             </div>
-                            <div className="pr-header-actions">
-                                <button
-                                    className="pr-btn-submit"
-                                    onClick={handleSubmitReturn}
-                                    disabled={isSubmitting || returnedItemsForPreview.length === 0}
-                                >
-                                    {isSubmitting ? "Submitting…" : "Submit Return"}
-                                </button>
-                            </div>
                         </header>
 
-                        {/* ── Selection Card ── */}
                         <div className="pr-card">
                             <div className="pr-card-header">
                                 <ShoppingCart size={18} className="pr-icon-amber" />
@@ -279,7 +242,6 @@ const ProductReturns = () => {
                             </div>
 
                             <div className="pr-selection-grid">
-                                {/* Customer */}
                                 <div className="pr-field-group">
                                     <label className="pr-label">Customer <span className="pr-required">*</span></label>
                                     <select
@@ -296,7 +258,6 @@ const ProductReturns = () => {
                                     </select>
                                 </div>
 
-                                {/* Invoice */}
                                 <div className="pr-field-group">
                                     <label className="pr-label">Invoice <span className="pr-required">*</span></label>
                                     <select
@@ -320,7 +281,6 @@ const ProductReturns = () => {
                                     </select>
                                 </div>
 
-                                {/* Date (read-only) */}
                                 <div className="pr-field-group">
                                     <label className="pr-label">Return Date</label>
                                     <input
@@ -332,7 +292,6 @@ const ProductReturns = () => {
                                 </div>
                             </div>
 
-                            {/* Customer credit info */}
                             {selectedCustomerData && (
                                 <div className="pr-customer-info">
                                     <span className="pr-info-chip">
@@ -354,7 +313,6 @@ const ProductReturns = () => {
                             )}
                         </div>
 
-                        {/* ── Product Return Table ── */}
                         {selectedInvoiceId && (
                             <div className="pr-card">
                                 <div className="pr-card-header">
@@ -388,7 +346,7 @@ const ProductReturns = () => {
                                                     const returnState = returnItems[key] || { returnQty: "", reusable: true };
                                                     const returnQty = parseFloat(returnState.returnQty) || 0;
                                                     const refund = returnQty * parseFloat(item.sellingPrice);
-                                                    const returnableQuantity = item.quantity - item.returnQty;
+                                                    const returnableQuantity = item.quantity - (item.returnQty || 0);
 
                                                     return (
                                                         <tr key={key} className={returnQty > 0 ? "pr-row-selected" : ""}>
@@ -446,7 +404,6 @@ const ProductReturns = () => {
                             </div>
                         )}
 
-                        {/* ── Notes ── */}
                         {selectedInvoiceId && (
                             <div className="pr-card">
                                 <label className="pr-label">Notes (optional)</label>
@@ -460,7 +417,6 @@ const ProductReturns = () => {
                             </div>
                         )}
 
-                        {/* ── Invoice Preview ── */}
                         {returnedItemsForPreview.length > 0 && (
                             <div className="pr-invoice-section" ref={invoicePreviewRef}>
                                 <div className="pr-inv-header">

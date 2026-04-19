@@ -2,19 +2,17 @@ import React, { useState, useEffect, useRef } from "react";
 import Layout from "../../components/Layout";
 import Sidebar from "../../components/Sidebar";
 import DataTable from "../../components/common/DataTable";
-import { X, FileText, Printer, Download, Share2, Trash2, Check, Edit } from "lucide-react";
+import { X, FileText, Printer, Download, Share2, Trash2, Check } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { getAllReturns, getReturnById, deleteReturnInvoice, approveReturnInvoice } from "../../api/returnService";
 import { getUserId, getUserRole } from "../../components/common/Utils/userUtils/userUtils";
 import { useToast } from "../../context/ToastContext";
-import { useNavigate } from "react-router-dom";
-import "../SalesOrder/SalesInvoices.css"; // Reuse styling template
+import "../SalesOrder/SalesInvoices.css";
 
 const CreditNotes = () => {
     const { showToast } = useToast();
-    const navigate = useNavigate();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [selectedReturn, setSelectedReturn] = useState(null);
@@ -26,7 +24,6 @@ const CreditNotes = () => {
     const componentRef = useRef();
 
     const [returns, setReturns] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [pageSize] = useState(8);
@@ -36,12 +33,7 @@ const CreditNotes = () => {
         getUserRole().then(setUserRole).catch(console.error);
     }, []);
 
-    useEffect(() => {
-        fetchReturns(currentPage);
-    }, [currentPage]);
-
-    const fetchReturns = async (page) => {
-        setLoading(true);
+    const fetchReturns = React.useCallback(async (page) => {
         try {
             const res = await getAllReturns(page, pageSize);
             if (res.data) {
@@ -56,10 +48,12 @@ const CreditNotes = () => {
             }
         } catch (error) {
             console.error("Error fetching returns:", error);
-        } finally {
-            setLoading(false);
         }
-    };
+    }, [pageSize]);
+
+    useEffect(() => {
+        fetchReturns(currentPage);
+    }, [currentPage, fetchReturns]);
 
     const handleViewDetails = async (ret) => {
         try {
@@ -111,11 +105,6 @@ const CreditNotes = () => {
         } catch (error) {
             showToast("error", error?.response?.data?.message || "Failed to delete return invoice");
         }
-    };
-
-    const handleEditOpen = (ret) => {
-        showToast("info", "Edit functionality is pending backend support for Returns");
-        // navigate("/credit-notes/edit", { state: { returnData: ret } });
     };
 
     const handlePrint = useReactToPrint({
@@ -178,7 +167,11 @@ const CreditNotes = () => {
         { header: "Return Number", accessor: "returnNumber" },
         { header: "Original Invoice", accessor: "originalInvoiceNumber" },
         { header: "Customer", accessor: "customerName" },
-        { header: "Return Date", accessor: "returnDate" },
+        {
+            header: "Return Date",
+            accessor: "returnDate",
+            render: (row) => row.returnDate ? row.returnDate.split('T')[0] : '-'
+        },
         {
             header: "Total (RS.)",
             accessor: "totalReturnAmount",
@@ -281,7 +274,7 @@ const CreditNotes = () => {
                                             <td><strong>Return No. : </strong>{selectedReturn.returnNumber}</td>
                                             <td></td>
 
-                                            <td><strong>Return Date : </strong>{selectedReturn.returnDate}</td>
+                                            <td><strong>Return Date : </strong>{selectedReturn.returnDate ? selectedReturn.returnDate.split('T')[0] : "-"}</td>
                                             <td></td>
                                         </tr>
                                     </tbody>

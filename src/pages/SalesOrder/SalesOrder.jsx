@@ -63,7 +63,6 @@ const SalesOrder = () => {
     const [showDiscountPopup, setShowDiscountPopup] = useState(false);
     const [showCourierPopup, setShowCourierPopup] = useState(false);
 
-    // Return Credits States
     const [returnSummaryData, setReturnSummaryData] = useState(null);
     const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
     const [appliedReturnCredit, setAppliedReturnCredit] = useState(0);
@@ -76,7 +75,6 @@ const SalesOrder = () => {
     }, []);
 
     useEffect(()=>{
-        console.log("Applied return Credit",appliedReturnCredit)
     },[appliedReturnCredit])
 
     const fetchUserId = async () => {
@@ -135,7 +133,6 @@ const SalesOrder = () => {
             creditTerm: customer ? customer.creditPeriod || "Not Specified" : "",
         }));
 
-        // Reset return states when customer changes
         setReturnSummaryData(null);
         setAppliedReturnCredit(0);
         setReissueItems([]);
@@ -382,7 +379,7 @@ const SalesOrder = () => {
                 productName: item.productName,
                 unit: item.unit,
                 packSize: item.packSize,
-                sellingPrice: item.sellingPrice, // 0
+                sellingPrice: item.sellingPrice, 
                 quantity: item.quantity,
                 discountPercent: 0,
                 discountedPrice: 0,
@@ -434,7 +431,7 @@ const SalesOrder = () => {
             setReturnSummaryData(null);
         } catch (error) {
             console.error("Error creating Sales Order:", error);
-            showToast('error', error.response?.data?.message || "Failed to issue bill. Please try again.");
+            showToast('error', error.response?.data?.message || "Failed to Confirm Order. Please try again.");
         }
     };
 
@@ -889,7 +886,7 @@ const SalesOrder = () => {
                                 </div>
 
                                 <div className="invoice-footer-actions">
-                                    <button className="issue-bill-btn" onClick={handleIssueBill} disabled={isOverLimit}>Issue Bill</button>
+                                    <button className="issue-bill-btn" onClick={handleIssueBill} disabled={isOverLimit}>Confirm Order</button>
                                 </div>
                             </div>
                         </div>
@@ -907,11 +904,7 @@ const SalesOrder = () => {
                         onClose={() => setIsReturnModalOpen(false)}
                         summaryData={returnSummaryData}
                         onApply={(credit, items) => {
-                            setAppliedReturnCredit(credit);
-                            console.log("applied return credit", credit);
-                            console.log("applied return appliedCredit", appliedReturnCredit);
-                            
-                            // Merge new re-issue items without deleting existing ones unless they share the same productId (replace logic)
+                            setAppliedReturnCredit(credit);  
                             setReissueItems(prev => {
                                 const newArray = [...prev];
                                 items.forEach(newItem => {
