@@ -24,7 +24,6 @@ const CreditNotes = () => {
     const componentRef = useRef();
 
     const [returns, setReturns] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [pageSize] = useState(8);
@@ -49,10 +48,12 @@ const CreditNotes = () => {
             }
         } catch (error) {
             console.error("Error fetching returns:", error);
-        } finally {
-            setLoading(false);
         }
-    };
+    }, [pageSize]);
+
+    useEffect(() => {
+        fetchReturns(currentPage);
+    }, [currentPage, fetchReturns]);
 
     useEffect(() => {
         fetchReturns(currentPage);
@@ -176,7 +177,11 @@ const CreditNotes = () => {
         { header: "Return Number", accessor: "returnNumber" },
         { header: "Original Invoice", accessor: "originalInvoiceNumber" },
         { header: "Customer", accessor: "customerName" },
-        { header: "Return Date", accessor: "returnDate" },
+        {
+            header: "Return Date",
+            accessor: "returnDate",
+            render: (row) => row.returnDate ? row.returnDate.split('T')[0] : '-'
+        },
         {
             header: "Total (RS.)",
             accessor: "totalReturnAmount",
@@ -288,7 +293,7 @@ const CreditNotes = () => {
                                             <td><strong>Return No. : </strong>{selectedReturn.returnNumber}</td>
                                             <td></td>
 
-                                            <td><strong>Return Date : </strong>{selectedReturn.returnDate}</td>
+                                            <td><strong>Return Date : </strong>{selectedReturn.returnDate ? selectedReturn.returnDate.split('T')[0] : "-"}</td>
                                             <td></td>
                                         </tr>
                                     </tbody>

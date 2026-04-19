@@ -67,17 +67,14 @@ const CashFlow = () => {
       try {
         if (activeTab === "pending") {
           const res = await getPendingCashFlow(startDate, endDate);
-          console.log(res.data);
           setPendingDebits(res.data?.debits || []);
           setPendingCredits(res.data?.credits || []);
         } else if (activeTab === "complete") {
           const res = await getCompletedCashFlow(startDate, endDate);
-          console.log(res.data);
           setCompletedDebits(res.data?.debits || []);
           setCompletedCredits(res.data?.credits || []);
         } else if (activeTab === "summary") {
           const res = await getCashFlowSummary(startDate, endDate);
-          console.log("summary cash in flow", res);
           const summary = res.data?.cashFlowSummary || {};
           setSummaryData({
             totalIncome: res.data?.totalIncome || 0,

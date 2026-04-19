@@ -34,8 +34,6 @@ const SalesRepOrder = () => {
     const [productSearch, setProductSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(0);
 
-    // eslint-disable-next-line no-unused-vars
-    const [totalPages, setTotalPages] = useState(0);
     const [pageSize] = useState(5);
     const [loadingProducts, setLoadingProducts] = useState(false);
     const [showProductSearch, setShowProductSearch] = useState(false);
@@ -48,7 +46,6 @@ const SalesRepOrder = () => {
     const [additionalDiscount, setAdditionalDiscount] = useState({ type: DiscountTypeEnum.cash, value: "" });
     const [showDiscountPopup, setShowDiscountPopup] = useState(false);
 
-    // Return Credits States
     const [returnSummaryData, setReturnSummaryData] = useState(null);
     const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
     const [appliedReturnCredit, setAppliedReturnCredit] = useState(0);
@@ -68,7 +65,6 @@ const SalesRepOrder = () => {
     const fetchCustomers = useCallback(async () => {
         try {
             const res = await getAllCustomers();
-            console.log(res.data);
             const data = (res.data?.customers || res.data || []);
             setCustomers(Array.isArray(data) && data.length > 0 ? data : []);
         } catch (error) {
@@ -122,7 +118,6 @@ const SalesRepOrder = () => {
             });
 
             setProducts(prev => append ? [...prev, ...productsWithInputs] : productsWithInputs);
-            setTotalPages(total);
             setHasMore(page < total - 1);
         } catch (error) {
             console.error("Failed to fetch products:", error);
@@ -178,7 +173,6 @@ const SalesRepOrder = () => {
         setCustomerSearch(customer.name);
         setShowCustomerDropdown(false);
         
-        // Reset states
         setReturnSummaryData(null);
         setAppliedReturnCredit(0);
         setReissueItems([]);
@@ -387,7 +381,6 @@ const SalesRepOrder = () => {
                             </div>
                             <div className="asi-header-actions">
                                 <button className="asi-btn-back" onClick={() => window.history.back()}>Back</button>
-                                <button className="asi-btn-confirm" onClick={handleSubmitInvoice} disabled={isOverCredit}>Confirm Order</button>
                             </div>
                         </header>
 
@@ -759,6 +752,11 @@ const SalesRepOrder = () => {
                                     </div>
                                 </div>
                             )}
+                            {addedItems.length > 0 && (
+                                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "20px" }}>
+                                    <button className="asi-btn-confirm" onClick={handleSubmitInvoice} disabled={isOverCredit}>Confirm Order</button>
+                                </div>
+                            )}
                         </div>
 
                     </div>
@@ -769,7 +767,6 @@ const SalesRepOrder = () => {
                         onApply={(credit, items) => {
                             setAppliedReturnCredit(credit);
                             
-                            // Merge new re-issue items without deleting existing ones unless they share the same productId (replace logic)
                             setReissueItems(prev => {
                                 const newArray = [...prev];
                                 items.forEach(newItem => {
