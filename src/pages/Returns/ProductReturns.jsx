@@ -5,7 +5,7 @@ import { getAllCustomers } from "../../api/customerService";
 import { getSalesOrdersByCustomer, createProductReturn } from "../../api/returnService";
 import { getSalesOrderById } from "../../api/salesOrderService";
 import { useToast } from "../../context/ToastContext";
-import { getCurrentUser, getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
+import { getUserId, getUserName } from "../../components/common/Utils/userUtils/userUtils";
 import { RotateCcw, ShoppingCart, FileText } from "lucide-react";
 import "./ProductReturns.css";
 
