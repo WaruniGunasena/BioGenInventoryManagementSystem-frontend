@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import Layout from "../../components/Layout";
 import Sidebar from "../../components/Sidebar";
 import DataTable from "../../components/common/DataTable";
-import { X, FileText, Printer, Download, Share2, Trash2, Check, Edit } from "lucide-react";
+import { X, FileText, Printer, Download, Share2, Trash2, Check, Edit, Truck } from "lucide-react";
+import ConfirmationModal from "../../components/common/ConfirmationModal";
 import { useReactToPrint } from "react-to-print";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { getPaginatedSalesOrders, searchSalesOrder, softDeleteSalesOrder, approveSalesOrder, submitSalesOrderPayment } from "../../api/salesOrderService";
+import { getPaginatedSalesOrders, searchSalesOrder, softDeleteSalesOrder, approveSalesOrder, submitSalesOrderPayment, updateSalesOrderDeliveryStatus } from "../../api/salesOrderService";
 import { getUserId, getUserRole } from "../../components/common/Utils/userUtils/userUtils";
 import { useToast } from "../../context/ToastContext";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +26,10 @@ const SalesInvoices = () => {
 
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [selectedPaymentInvoice, setSelectedPaymentInvoice] = useState(null);
+
+    const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+    const [deliveryInvoice, setDeliveryInvoice] = useState(null);
+
     const [paymentFormData, setPaymentFormData] = useState({
         paymentMethod: "cash",
         amount: "",
@@ -150,6 +155,28 @@ const SalesInvoices = () => {
             fetchInvoices(currentPage);
         } catch (error) {
             showToast("error", error?.response?.data?.message || `Failed to ${status} invoice`);
+        }
+    };
+
+    const handleMarkAsDelivered = (invoice) => {
+        setDeliveryInvoice(invoice);
+        setIsDeliveryModalOpen(true);
+    };
+
+    const confirmDelivery = async () => {
+        if (!deliveryInvoice) return;
+        const orderId = deliveryInvoice.salesOrderId || deliveryInvoice.id;
+        if (!orderId) return;
+
+        try {
+            await updateSalesOrderDeliveryStatus(orderId);
+            showToast("success", `Invoice ${deliveryInvoice.invoiceNumber} marked as Delivered`);
+            setIsDeliveryModalOpen(false);
+            setDeliveryInvoice(null);
+            fetchInvoices(currentPage);
+        } catch (error) {
+            console.error("Error updating delivery status:", error);
+            showToast("error", error?.response?.data?.message || "Failed to update delivery status");
         }
     };
 
@@ -347,6 +374,35 @@ const SalesInvoices = () => {
                                 title="Pay"
                             >
                                 Pay
+                            </button>
+                        )}
+                    </div>
+                );
+            }
+        },
+        {
+            header: "Delivery Status",
+            accessor: "isDelivered",
+            render: (row) => {
+                const isDelivered = row.isDelivered === true || (typeof row.isDelivered === 'string' && row.isDelivered.toUpperCase() === 'DELIVERED');
+
+                return (
+                    <div className="status-container">
+                        {isDelivered ? (
+                            <span className="status-badge status-paid">
+                                Delivered
+                            </span>
+                        ) : (
+                            <button
+                                className="mark-paid-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMarkAsDelivered(row);
+                                }}
+                                title="Mark as Delivered"
+                                style={{ background: '#6366f1' }} // Emerald green for delivery
+                            >
+                                Mark Delivered
                             </button>
                         )}
                     </div>
@@ -702,6 +758,16 @@ const SalesInvoices = () => {
                     </div>
                 </div>
             )}
+            <ConfirmationModal
+                isOpen={isDeliveryModalOpen}
+                onClose={() => setIsDeliveryModalOpen(false)}
+                onConfirm={confirmDelivery}
+                title="Confirm Delivery"
+                message={`Are you sure you want to mark Invoice ${deliveryInvoice?.invoiceNumber} as Delivered?`}
+                confirmLabel="Yes, Delivered"
+                cancelLabel="Cancel"
+                icon={Truck}
+            />
         </Layout>
     );
 };
