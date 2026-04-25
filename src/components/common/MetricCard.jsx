@@ -24,7 +24,7 @@ const MetricCard = ({
                         {trend.isPositive ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
                     </span>
                     <span className="trend-value">{trend.value}</span>
-                    <span className="trend-label">vs last month</span>
+                    <span className="trend-label">{trend.label || 'vs last month'}</span>
                 </div>
             )}
         </div>
