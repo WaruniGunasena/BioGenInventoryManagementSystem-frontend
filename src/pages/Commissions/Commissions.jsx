@@ -3,7 +3,8 @@ import DataTable from '../../components/common/DataTable';
 import MetricCard from '../../components/common/MetricCard';
 import Sidebar from '../../components/Sidebar';
 import Layout from '../../components/Layout';
-import { getCommissions, getMyCommissions, submitCommissionPayment, getCommissionInvoiceDetails } from '../../api/commissionService';
+import { submitCommissionPayment, getCommissionInvoiceDetails, getPaginatedCommissions, getPaginatedMyCommissions, getPaginatedCommissionsHistory } from '../../api/commissionService';
+import { getUserId } from '../../components/common/Utils/userUtils/userUtils';
 import { useToast } from "../../context/ToastContext";
 import { X, Printer, Download, Share2 } from 'lucide-react';
 import { useReactToPrint } from "react-to-print";
@@ -21,7 +22,10 @@ const Commissions = ({ role = 'salesRep' }) => {
     const [totalCommission, setTotalCommission] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Payment Modal State
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [pageSize] = useState(5);
+
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [selectedPaymentInvoice, setSelectedPaymentInvoice] = useState(null);
     const [paymentFormData, setPaymentFormData] = useState({
@@ -33,40 +37,76 @@ const Commissions = ({ role = 'salesRep' }) => {
         chequeNumber: ""
     });
 
-    // View Modal State
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [selectedViewInvoice, setSelectedViewInvoice] = useState(null);
     const [invoiceDetails, setInvoiceDetails] = useState([]);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const componentRef = useRef();
 
-    const fetchCommissions = async () => {
+    const [isViewingHistory, setIsViewingHistory] = useState(false);
+    const [commissionHistory, setCommissionHistory] = useState([]);
+
+    const fetchCommissions = async (page = 0) => {
         setIsLoading(true);
         try {
             if (role === 'salesRep') {
-                const response = await getMyCommissions();
-                const responseData = response.data;
-                const data = Array.isArray(responseData) ? responseData : (responseData?.data || []);
-                setCommissions(data);
+                if (isViewingHistory) {
+                    try {
+                        const userId = await getUserId();
+                        const response = await getPaginatedCommissionsHistory(userId, page, pageSize);
+                        if (response.data) {
+                            const data = response.data.historyList || response.data.content || response.data.data || [];
+                            const total = response.data.totalPages || 1;
+                            setCommissionHistory(data);
+                            setTotalPages(total);
+                        }
+                    } catch (e) {
+                        console.warn("API failed for history commissions.", e);
+                        setCommissionHistory([]);
+                        setTotalPages(1);
+                    }
+                } else {
+                    try {
+                        const response = await getPaginatedMyCommissions(page, pageSize);
+                        console.log("response", response);
+                        if (response.data) {
+                            const data = response.data.commissionList || response.data.content || response.data.data || [];
+                            const total = response.data.totalPages || 1;
+                            setCommissions(data);
+                            setTotalPages(total);
 
-                const total = data.reduce((acc, curr) => acc + (curr.totalCommission || 0), 0);
-                setTotalCommission(total);
+                            if (response.data.totalAmountCommissionSalesRep !== undefined) {
+                                setTotalCommission(response.data.totalAmountCommissionSalesRep);
+                            } else if (response.data.totalCommissionSum !== undefined) {
+                                setTotalCommission(response.data.totalCommissionSum);
+                            } else {
+                                const pageTotal = data.reduce((acc, curr) => acc + (curr.totalCommission || 0), 0);
+                                if (total === 1) setTotalCommission(pageTotal);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn("API failed for my paginated commissions.", e);
+                        setCommissions([]);
+                        setTotalPages(1);
+                    }
+                }
             } else {
-                // Admin role
-                let data = [];
                 try {
-                    const response = await getCommissions();
-                    let responseData = response.data;
-                    data = Array.isArray(responseData) ? responseData : (responseData?.data || []);
+                    const response = await getPaginatedCommissions(page, pageSize);
+                    if (response.data) {
+                        const data = response.data.commissionList || response.data.content || response.data.data || [];
+                        const total = response.data.totalPages || 1;
+                        setCommissions(data);
+                        setTotalPages(total);
+                    }
                 } catch (e) {
                     console.warn("API failed for admin commissions.", e);
+                    setCommissions([]);
+                    setTotalPages(1);
                 }
-
-                setCommissions(data);
             }
         } catch (error) {
             console.error("Failed to fetch commissions:", error);
-            // Fallback to empty state only for salesRep errors (since Admin handles its own)
             if (role === 'salesRep') {
                 setCommissions([]);
                 setTotalCommission(0);
@@ -77,9 +117,9 @@ const Commissions = ({ role = 'salesRep' }) => {
     };
 
     useEffect(() => {
-        fetchCommissions();
+        fetchCommissions(currentPage);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [role]);
+    }, [role, isViewingHistory, currentPage]);
 
     const handleMarkAsPaid = (row) => {
         setSelectedPaymentInvoice(row);
@@ -142,7 +182,6 @@ const Commissions = ({ role = 'salesRep' }) => {
             fetchCommissions();
         } catch (error) {
             console.error("Error submitting payment:", error);
-            // If the backend endpoint isn't ready and throws an error, we show success for UI demo
             showToast("success", `(Mock) Payment submitted for Invoice ${selectedPaymentInvoice.invoiceNumber}`);
             setIsPaymentModalOpen(false);
         }
@@ -151,7 +190,7 @@ const Commissions = ({ role = 'salesRep' }) => {
     const handleViewInvoice = async (row) => {
         setSelectedViewInvoice(row);
         setIsViewModalOpen(true);
-        setInvoiceDetails([]); // Reset details while loading
+        setInvoiceDetails([]);
 
         try {
             const response = await getCommissionInvoiceDetails(row.invoiceNumber);
@@ -258,7 +297,7 @@ const Commissions = ({ role = 'salesRep' }) => {
             render: (row) => {
                 const pStatus = (row.paymentStatus || 'pending').toUpperCase();
                 let statusLabel = "Pending";
-                let statusClass = "status-unpaid"; // Using existing class
+                let statusClass = "status-unpaid"; 
 
                 if (pStatus === 'PAID') {
                     statusLabel = "Paid";
@@ -310,7 +349,79 @@ const Commissions = ({ role = 'salesRep' }) => {
         }
     ];
 
-    const columns = role === 'salesRep' ? salesRepColumns : adminColumns;
+    const salesRepHistoryColumns = [
+        { header: "Invoice Number", accessor: "invoiceNumber" },
+        { header: "Month Year", accessor: "monthYear" },
+        {
+            header: "Monthly Commission Amount",
+            accessor: "monthlyCommissionAmount",
+            render: (row) => `Rs. ${(row.monthlyCommissionAmount || 0).toFixed(2)}`,
+            align: 'right'
+        },
+        {
+            header: "Due Balance (RS.)",
+            accessor: "dueBalance",
+            render: (row) => {
+                const pStatus = (row.paymentStatus || 'pending').toUpperCase();
+
+                if (pStatus === 'PAID') return '0.00';
+
+                const due = row.dueBalance !== undefined && row.dueBalance !== null
+                    ? row.dueBalance
+                    : (pStatus === 'PENDING' || pStatus === 'UNPAID' ? row.monthlyCommissionAmount : 0);
+
+                return parseFloat(due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+            },
+            align: 'right'
+        },
+        {
+            header: "Payment Status",
+            accessor: "paymentStatus",
+            render: (row) => {
+                const pStatus = (row.paymentStatus || 'pending').toUpperCase();
+                let statusLabel = "Pending";
+                let statusClass = "status-unpaid"; 
+
+                if (pStatus === 'PAID') {
+                    statusLabel = "Paid";
+                    statusClass = "status-paid";
+                } else if (pStatus === 'PARTIAL') {
+                    statusLabel = "Partial";
+                    statusClass = "status-partial";
+                } else if (pStatus === 'UNPAID') {
+                    statusLabel = "Unpaid";
+                    statusClass = "status-unpaid";
+                }
+
+                return (
+                    <div className="status-container" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span className={`status-badge ${statusClass}`} style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '0.85rem' }}>
+                            {statusLabel}
+                        </span>
+                    </div>
+                );
+            }
+        },
+        {
+            header: "Action",
+            accessor: "action",
+            render: (row) => (
+                <div style={{ display: "flex", gap: "8px", justifyContent: 'flex-end' }}>
+                    <button
+                        style={{ padding: '4px 8px', background: 'transparent', color: '#4f46e5', border: '1px solid #4f46e5', borderRadius: '4px', cursor: 'pointer' }}
+                        onClick={(e) => { e.stopPropagation(); handleViewInvoice(row); }}
+                    >
+                        View
+                    </button>
+                </div>
+            ),
+            align: 'right'
+        }
+    ];
+
+    const columns = role === 'salesRep'
+        ? (isViewingHistory ? salesRepHistoryColumns : salesRepColumns)
+        : adminColumns;
     const todayDate = new Date().toISOString().split('T')[0].replace(/-/g, '.');
 
     return (
@@ -330,33 +441,56 @@ const Commissions = ({ role = 'salesRep' }) => {
                     {isLoading && <div className="loading-overlay">Loading...</div>}
 
                     {role === 'salesRep' && (
-                        <div className="metrics-grid" style={{ marginBottom: '24px' }}>
-                            <MetricCard
-                                title="Total commission (current)"
-                                value={`Rs. ${totalCommission.toFixed(2)}`}
-                                isPrimary={true}
-                                trend={{
-                                    value: `Date ${todayDate}`,
-                                    isPositive: true,
-                                    label: ' '
+                        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px' }}>
+                            <div className="metrics-grid" style={{ width: '800px', margin: 0 }}>
+                                <MetricCard
+                                    title="Total commission (current)"
+                                    value={`Rs. ${totalCommission.toFixed(2)}`}
+                                    isPrimary={true}
+                                    trend={{
+                                        value: `Date ${todayDate}`,
+                                        isPositive: true,
+                                        label: ' '
+                                    }}
+                                />
+                            </div>
+                            <button
+                                onClick={() => { setIsViewingHistory(!isViewingHistory); setCurrentPage(0); }}
+                                style={{
+                                    padding: '12px 24px',
+                                    backgroundColor: isViewingHistory ? '#f3f4f6' : '#4f46e5',
+                                    color: isViewingHistory ? '#4b5563' : 'white',
+                                    border: isViewingHistory ? '1px solid #d1d5db' : 'none',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    transition: 'all 0.2s',
+                                    whiteSpace: 'nowrap'
                                 }}
-                            />
+                            >
+                                {isViewingHistory ? 'Back to Current Commissions' : 'See My Commission History'}
+                            </button>
                         </div>
                     )}
 
                     <div className="table-container-section">
                         <h3 className="section-title">
-                            {role === 'salesRep' ? 'Commissionable invoices' : 'Monthly Commission Invoices'}
+                            {role === 'salesRep'
+                                ? (isViewingHistory ? 'My Monthly Commission History' : 'Current Commissionable Invoices')
+                                : 'Monthly Commission Invoices'}
                         </h3>
                         <DataTable
                             columns={columns}
-                            data={commissions}
+                            data={role === 'salesRep' && isViewingHistory ? commissionHistory : commissions}
                             showActions={false}
                             showAddButton={false}
                             showSearch={true}
                             showFilter={false}
                             showExport={true}
                             onExportCSV={() => console.log('Export CSV')}
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={(page) => setCurrentPage(page)}
                         />
                     </div>
                 </div>
@@ -511,7 +645,7 @@ const Commissions = ({ role = 'salesRep' }) => {
                                         <h1 style={{ fontSize: '32px' }}>Commission Invoice</h1>
                                     </div>
                                 </div>
- 
+
                                 <table className="invoice-info-table">
                                     <tbody>
                                         <tr>
