@@ -331,16 +331,89 @@ const SalesInvoices = () => {
         {
             header: "Due Balance (RS.)",
             accessor: "dueBalance",
-            render: (row) => {
-                const pStatus = (row.paymentStatus || 'pending').toUpperCase();
+            //     render: (row) => {
+            //         const pStatus = (row.paymentStatus || 'PENDING').toUpperCase();
+            //         const creditPeriod = (row.creditPeriod || "").toUpperCase();
+            //         const invoiceDate = row.invoiceDate ? new Date(row.invoiceDate) : null;
 
-                if (pStatus === 'PAID') return '0.00';
+            //         // If PAID → no due
+            //         if (pStatus === 'PAID') return '0.00';
+
+            //         const due = row.dueBalance !== undefined && row.dueBalance !== null
+            //             ? row.dueBalance
+            //             : (pStatus === 'PENDING' ? row.netTotal : 0);
+
+            //         let label = "";
+
+            //         // Only calculate if not CASH and invoice date exists
+            //         if (creditPeriod !== "CASH" && invoiceDate) {
+            //             const creditDays = row.daysRemaining
+
+            //             if (creditDays < 0) {
+            //                 label = " 🔴 OVERDUE";
+            //             } else {
+            //                 label = ` 🟡 ${creditDays}days`;
+            //             }
+            //         }
+
+            //         return (
+            //             parseFloat(due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) + label
+            //         );
+            //     }
+            // },
+            render: (row) => {
+                const pStatus = (row.paymentStatus || 'PENDING').toUpperCase();
+                const creditPeriod = (row.creditPeriod || "").toUpperCase();
+                const invoiceDate = row.invoiceDate ? new Date(row.invoiceDate) : null;
+
+                if (pStatus === 'PAID') {
+                    return parseFloat(0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+                }
 
                 const due = row.dueBalance !== undefined && row.dueBalance !== null
                     ? row.dueBalance
                     : (pStatus === 'PENDING' ? row.netTotal : 0);
 
-                return parseFloat(due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+                let label = null;
+                let dotColor = "green";
+
+                if (creditPeriod !== "CASH" && invoiceDate && pStatus !== "PAID") {
+                    const remaining = row.daysRemaining
+
+                    if (remaining === 0) {
+                        label = "TODAY";
+                        dotColor = "red";
+                    } else if (remaining < 10) {
+                        label = `${remaining}d left`;
+                        dotColor = "orange"; // amber
+                    } else {
+                        label = `${remaining}d left`;
+                        dotColor = "green";
+                    }
+                }
+
+                return (
+                    <div>
+                        <div>
+                            {parseFloat(due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </div>
+
+                        {label && (
+                            <div style={{ fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
+                                <span
+                                    style={{
+                                        width: "8px",
+                                        height: "8px",
+                                        borderRadius: "50%",
+                                        backgroundColor: dotColor,
+                                        display: "inline-block"
+                                    }}
+                                />
+                                {label}
+                            </div>
+                        )}
+                    </div>
+                );
             }
         },
         {
@@ -586,15 +659,15 @@ const SalesInvoices = () => {
                                                 <span className="line-value">{parseFloat(selectedInvoice.grandTotal).toFixed(2)}</span>
                                             </div>
                                             {selectedInvoice.additionalDiscountValue > 0 && (
-                                            <div className="totals-line">
-                                                <span className="line-label">Additional Discount (LKR)</span>
-                                                <span className="line-value">{selectedInvoice.additionalDiscountValue > 0 ? (
-                                                    selectedInvoice.additionalDiscountType === 'percentage'
-                                                        ? `${handlePercentageValueCalculation(selectedInvoice.grandTotal, selectedInvoice.additionalDiscountValue).toFixed(2)} (${selectedInvoice.additionalDiscountValue}%)`
-                                                        : `${parseFloat(selectedInvoice.additionalDiscountValue).toFixed(2)}`
-                                                ) : "0.00"}</span>
-                                            </div>
-                                                )}
+                                                <div className="totals-line">
+                                                    <span className="line-label">Additional Discount (LKR)</span>
+                                                    <span className="line-value">{selectedInvoice.additionalDiscountValue > 0 ? (
+                                                        selectedInvoice.additionalDiscountType === 'percentage'
+                                                            ? `${handlePercentageValueCalculation(selectedInvoice.grandTotal, selectedInvoice.additionalDiscountValue).toFixed(2)} (${selectedInvoice.additionalDiscountValue}%)`
+                                                            : `${parseFloat(selectedInvoice.additionalDiscountValue).toFixed(2)}`
+                                                    ) : "0.00"}</span>
+                                                </div>
+                                            )}
                                             {selectedInvoice.courierCharges > 0 && (
                                                 <div className="totals-line">
                                                     <span className="line-label">Courier Charges (LKR)</span>
@@ -615,11 +688,11 @@ const SalesInvoices = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <p style={{marginBottom:"100px"}}>Prepared By: {selectedInvoice.user?.name}
+                                        <p style={{ marginBottom: "100px" }}>Prepared By: {selectedInvoice.user?.name}
                                             <span style={{ marginLeft: "40px" }}>Checked By: ..............................</span>
                                             <span style={{ marginLeft: "40px" }}>Approved By: ..............................</span>
                                         </p>
-                                        
+
                                         <p>Cheques to drawn in Favour of <b>BioGen Holdings (pvt) Ltd</b> & Crossed Account Payee Only</p>
                                         <p style={{ textAlign: "center" }}><b>Thank you for your business!</b></p>
                                     </div>
