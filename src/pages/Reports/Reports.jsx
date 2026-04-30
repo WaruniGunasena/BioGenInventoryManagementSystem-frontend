@@ -45,10 +45,9 @@ const lastOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1
 // ── Section 3: Sales Reports ─────────────────────────────────────────
 const SALES_REPORTS = [
     {
-        reportType: "SALES_REPORT",
-        reportName: "Daily Sales Report",
-        description:
-            "All approved sales invoices for a specific day.",
+        reportType: "DAILY_SALES_REPORT",
+        reportName: "Daily Sales Activity Report",
+        description: "Gross sales, net sales and total invoices summary for a specific day.",
         icon: <CalendarDays size={22} />,
         params: [
             {
@@ -63,10 +62,9 @@ const SALES_REPORTS = [
         beforeSubmit: (v) => ({ startDate: v.reportDate, endDate: v.reportDate }),
     },
     {
-        reportType: "SALES_REPORT",
-        reportName: "Monthly Sales Report",
-        description:
-            "All approved sales invoices within a selected month range.",
+        reportType: "MONTHLY_SALES_REPORT",
+        reportName: "Monthly Sales Activity Report",
+        description: "Gross sales, net sales and total invoices summary for a selected month range.",
         icon: <CalendarRange size={22} />,
         params: [
             {
@@ -154,10 +152,16 @@ const SALES_REPORTS = [
             },
         ],
     },
+     {
+        reportType: "DAILY_CUSTOMER_SUMMARY",
+        reportName: "Customer-wise Sales Credit Details Summary",
+        description: "Customer-wise total invoices, amounts, payments and outstanding balances for a specific date.",
+        icon: <CalendarDays size={22} />,
+    },
     {
         reportType: "INDIVIDUAL_CUSTOMER",
-        reportName: "Customer Account Statement",
-        description: "Invoice history and outstanding balance statement for a specific customer.",
+        reportName: "Customer Sales Credit Report",
+        description: "Invoice history, paid amounts, balances and aging details for a specific customer.",
         icon: <UserCheck size={22} />,
         params: [
             {
