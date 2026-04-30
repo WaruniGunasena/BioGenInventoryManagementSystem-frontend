@@ -24,7 +24,8 @@ import {
   FileText,
   TrendingUp,
   RotateCcw,
-  BarChart2
+  BarChart2,
+  DollarSign
 } from "lucide-react";
 import "./Sidebar.css";
 import { getUserName, getUserRole } from "./common/Utils/userUtils/userUtils";
@@ -250,6 +251,24 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
               <span className="link-text">Credit Notes</span>
             </Link>
           </li>}
+
+          {salesRep && (
+            <li className="nav-item">
+              <Link to="/my-commissions" className={`nav-link ${isActive('/my-commissions') ? 'active' : ''}`}>
+                <DollarSign size={20} className="nav-icon" />
+                <span className="link-text">My Commissions</span>
+              </Link>
+            </li>
+          )}
+
+          {admin && (
+            <li className="nav-item">
+              <Link to="/commissions" className={`nav-link ${isActive('/commissions') ? 'active' : ''}`}>
+                <DollarSign size={20} className="nav-icon" />
+                <span className="link-text">Commissions</span>
+              </Link>
+            </li>
+          )}
 
           {admin && <li className="nav-item">
             <Link to="/cash-flow" className={`nav-link ${isActive('/cash-flow') ? 'active' : ''}`}>
