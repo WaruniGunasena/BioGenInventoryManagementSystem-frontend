@@ -365,6 +365,7 @@ const SalesInvoices = () => {
                 const pStatus = (row.paymentStatus || 'PENDING').toUpperCase();
                 const creditPeriod = (row.creditPeriod || "").toUpperCase();
                 const invoiceDate = row.invoiceDate ? new Date(row.invoiceDate) : null;
+                const overDueOn = row.overDueOn;
 
                 if (pStatus === 'PAID') {
                     return parseFloat(0).toLocaleString('en-US', { minimumFractionDigits: 2 });
@@ -377,7 +378,7 @@ const SalesInvoices = () => {
                 let label = null;
                 let dotColor = "green";
 
-                if (creditPeriod !== "CASH" && invoiceDate && pStatus !== "PAID") {
+                if (creditPeriod !== "CASH" && invoiceDate && pStatus !== "PAID" && overDueOn) {
                     const remaining = row.daysRemaining
 
                     if (remaining === 0) {
@@ -390,6 +391,9 @@ const SalesInvoices = () => {
                         label = `${remaining}d left`;
                         dotColor = "green";
                     }
+                }
+                else if(creditPeriod === "cash"){
+                    label = ""
                 }
 
                 return (
