@@ -31,3 +31,7 @@ export const submitSalesOrderPayment = (paymentData) =>
     api.post("/sales-orders/payment", paymentData, {
         headers: { "Content-Type": "application/json" },
     });
+
+export const updateSalesOrderDeliveryStatus = (orderId) =>
+    api.get(`/sales-orders/updateDelivery/${orderId}`);
+

@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import Layout from "../../components/Layout";
 import Sidebar from "../../components/Sidebar";
 import DataTable from "../../components/common/DataTable";
-import { X, FileText, Printer, Download, Share2, Trash2, Check, Edit } from "lucide-react";
+import { X, FileText, Printer, Download, Share2, Trash2, Check, Edit, Truck } from "lucide-react";
+import ConfirmationModal from "../../components/common/ConfirmationModal";
 import { useReactToPrint } from "react-to-print";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { getPaginatedSalesOrders, searchSalesOrder, softDeleteSalesOrder, approveSalesOrder, submitSalesOrderPayment } from "../../api/salesOrderService";
+import { getPaginatedSalesOrders, searchSalesOrder, softDeleteSalesOrder, approveSalesOrder, submitSalesOrderPayment, updateSalesOrderDeliveryStatus } from "../../api/salesOrderService";
 import { getUserId, getUserRole } from "../../components/common/Utils/userUtils/userUtils";
 import { useToast } from "../../context/ToastContext";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +26,10 @@ const SalesInvoices = () => {
 
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [selectedPaymentInvoice, setSelectedPaymentInvoice] = useState(null);
+
+    const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+    const [deliveryInvoice, setDeliveryInvoice] = useState(null);
+
     const [paymentFormData, setPaymentFormData] = useState({
         paymentMethod: "cash",
         amount: "",
@@ -150,6 +155,28 @@ const SalesInvoices = () => {
             fetchInvoices(currentPage);
         } catch (error) {
             showToast("error", error?.response?.data?.message || `Failed to ${status} invoice`);
+        }
+    };
+
+    const handleMarkAsDelivered = (invoice) => {
+        setDeliveryInvoice(invoice);
+        setIsDeliveryModalOpen(true);
+    };
+
+    const confirmDelivery = async () => {
+        if (!deliveryInvoice) return;
+        const orderId = deliveryInvoice.salesOrderId || deliveryInvoice.id;
+        if (!orderId) return;
+
+        try {
+            await updateSalesOrderDeliveryStatus(orderId);
+            showToast("success", `Invoice ${deliveryInvoice.invoiceNumber} marked as Delivered`);
+            setIsDeliveryModalOpen(false);
+            setDeliveryInvoice(null);
+            fetchInvoices(currentPage);
+        } catch (error) {
+            console.error("Error updating delivery status:", error);
+            showToast("error", error?.response?.data?.message || "Failed to update delivery status");
         }
     };
 
@@ -304,16 +331,89 @@ const SalesInvoices = () => {
         {
             header: "Due Balance (RS.)",
             accessor: "dueBalance",
-            render: (row) => {
-                const pStatus = (row.paymentStatus || 'pending').toUpperCase();
+            //     render: (row) => {
+            //         const pStatus = (row.paymentStatus || 'PENDING').toUpperCase();
+            //         const creditPeriod = (row.creditPeriod || "").toUpperCase();
+            //         const invoiceDate = row.invoiceDate ? new Date(row.invoiceDate) : null;
 
-                if (pStatus === 'PAID') return '0.00';
+            //         // If PAID → no due
+            //         if (pStatus === 'PAID') return '0.00';
+
+            //         const due = row.dueBalance !== undefined && row.dueBalance !== null
+            //             ? row.dueBalance
+            //             : (pStatus === 'PENDING' ? row.netTotal : 0);
+
+            //         let label = "";
+
+            //         // Only calculate if not CASH and invoice date exists
+            //         if (creditPeriod !== "CASH" && invoiceDate) {
+            //             const creditDays = row.daysRemaining
+
+            //             if (creditDays < 0) {
+            //                 label = " 🔴 OVERDUE";
+            //             } else {
+            //                 label = ` 🟡 ${creditDays}days`;
+            //             }
+            //         }
+
+            //         return (
+            //             parseFloat(due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) + label
+            //         );
+            //     }
+            // },
+            render: (row) => {
+                const pStatus = (row.paymentStatus || 'PENDING').toUpperCase();
+                const creditPeriod = (row.creditPeriod || "").toUpperCase();
+                const invoiceDate = row.invoiceDate ? new Date(row.invoiceDate) : null;
+
+                if (pStatus === 'PAID') {
+                    return parseFloat(0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+                }
 
                 const due = row.dueBalance !== undefined && row.dueBalance !== null
                     ? row.dueBalance
                     : (pStatus === 'PENDING' ? row.netTotal : 0);
 
-                return parseFloat(due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+                let label = null;
+                let dotColor = "green";
+
+                if (creditPeriod !== "CASH" && invoiceDate && pStatus !== "PAID") {
+                    const remaining = row.daysRemaining
+
+                    if (remaining === 0) {
+                        label = "TODAY";
+                        dotColor = "red";
+                    } else if (remaining < 10) {
+                        label = `${remaining}d left`;
+                        dotColor = "orange"; // amber
+                    } else {
+                        label = `${remaining}d left`;
+                        dotColor = "green";
+                    }
+                }
+
+                return (
+                    <div>
+                        <div>
+                            {parseFloat(due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </div>
+
+                        {label && (
+                            <div style={{ fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
+                                <span
+                                    style={{
+                                        width: "8px",
+                                        height: "8px",
+                                        borderRadius: "50%",
+                                        backgroundColor: dotColor,
+                                        display: "inline-block"
+                                    }}
+                                />
+                                {label}
+                            </div>
+                        )}
+                    </div>
+                );
             }
         },
         {
@@ -347,6 +447,35 @@ const SalesInvoices = () => {
                                 title="Pay"
                             >
                                 Pay
+                            </button>
+                        )}
+                    </div>
+                );
+            }
+        },
+        {
+            header: "Delivery Status",
+            accessor: "isDelivered",
+            render: (row) => {
+                const isDelivered = row.isDelivered === true || (typeof row.isDelivered === 'string' && row.isDelivered.toUpperCase() === 'DELIVERED');
+
+                return (
+                    <div className="status-container">
+                        {isDelivered ? (
+                            <span className="status-badge status-paid">
+                                Delivered
+                            </span>
+                        ) : (
+                            <button
+                                className="mark-paid-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMarkAsDelivered(row);
+                                }}
+                                title="Mark as Delivered"
+                                style={{ background: '#6366f1' }} // Emerald green for delivery
+                            >
+                                Mark Delivered
                             </button>
                         )}
                     </div>
@@ -530,15 +659,15 @@ const SalesInvoices = () => {
                                                 <span className="line-value">{parseFloat(selectedInvoice.grandTotal).toFixed(2)}</span>
                                             </div>
                                             {selectedInvoice.additionalDiscountValue > 0 && (
-                                            <div className="totals-line">
-                                                <span className="line-label">Additional Discount (LKR)</span>
-                                                <span className="line-value">{selectedInvoice.additionalDiscountValue > 0 ? (
-                                                    selectedInvoice.additionalDiscountType === 'percentage'
-                                                        ? `${handlePercentageValueCalculation(selectedInvoice.grandTotal, selectedInvoice.additionalDiscountValue).toFixed(2)} (${selectedInvoice.additionalDiscountValue}%)`
-                                                        : `${parseFloat(selectedInvoice.additionalDiscountValue).toFixed(2)}`
-                                                ) : "0.00"}</span>
-                                            </div>
-                                                )}
+                                                <div className="totals-line">
+                                                    <span className="line-label">Additional Discount (LKR)</span>
+                                                    <span className="line-value">{selectedInvoice.additionalDiscountValue > 0 ? (
+                                                        selectedInvoice.additionalDiscountType === 'percentage'
+                                                            ? `${handlePercentageValueCalculation(selectedInvoice.grandTotal, selectedInvoice.additionalDiscountValue).toFixed(2)} (${selectedInvoice.additionalDiscountValue}%)`
+                                                            : `${parseFloat(selectedInvoice.additionalDiscountValue).toFixed(2)}`
+                                                    ) : "0.00"}</span>
+                                                </div>
+                                            )}
                                             {selectedInvoice.courierCharges > 0 && (
                                                 <div className="totals-line">
                                                     <span className="line-label">Courier Charges (LKR)</span>
@@ -559,11 +688,11 @@ const SalesInvoices = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <p style={{marginBottom:"100px"}}>Prepared By: {selectedInvoice.user?.name}
+                                        <p style={{ marginBottom: "100px" }}>Prepared By: {selectedInvoice.user?.name}
                                             <span style={{ marginLeft: "40px" }}>Checked By: ..............................</span>
                                             <span style={{ marginLeft: "40px" }}>Approved By: ..............................</span>
                                         </p>
-                                        
+
                                         <p>Cheques to drawn in Favour of <b>BioGen Holdings (pvt) Ltd</b> & Crossed Account Payee Only</p>
                                         <p style={{ textAlign: "center" }}><b>Thank you for your business!</b></p>
                                     </div>
@@ -702,6 +831,16 @@ const SalesInvoices = () => {
                     </div>
                 </div>
             )}
+            <ConfirmationModal
+                isOpen={isDeliveryModalOpen}
+                onClose={() => setIsDeliveryModalOpen(false)}
+                onConfirm={confirmDelivery}
+                title="Confirm Delivery"
+                message={`Are you sure you want to mark Invoice ${deliveryInvoice?.invoiceNumber} as Delivered?`}
+                confirmLabel="Yes, Delivered"
+                cancelLabel="Cancel"
+                icon={Truck}
+            />
         </Layout>
     );
 };

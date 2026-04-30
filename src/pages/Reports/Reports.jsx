@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { getAllCustomers } from "../../api/customerService";
 import Layout from "../../components/Layout";
 import Sidebar from "../../components/Sidebar";
 import ReportDownloader from "../../components/Reports/ReportDownloader";
@@ -44,10 +45,9 @@ const lastOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1
 // ── Section 3: Sales Reports ─────────────────────────────────────────
 const SALES_REPORTS = [
     {
-        reportType: "SALES_REPORT",
-        reportName: "Daily Sales Report",
-        description:
-            "All approved sales invoices for a specific day.",
+        reportType: "DAILY_SALES_REPORT",
+        reportName: "Daily Sales Activity Report",
+        description: "Gross sales, net sales and total invoices summary for a specific day.",
         icon: <CalendarDays size={22} />,
         params: [
             {
@@ -62,10 +62,9 @@ const SALES_REPORTS = [
         beforeSubmit: (v) => ({ startDate: v.reportDate, endDate: v.reportDate }),
     },
     {
-        reportType: "SALES_REPORT",
-        reportName: "Monthly Sales Report",
-        description:
-            "All approved sales invoices within a selected month range.",
+        reportType: "MONTHLY_SALES_REPORT",
+        reportName: "Monthly Sales Activity Report",
+        description: "Gross sales, net sales and total invoices summary for a selected month range.",
         icon: <CalendarRange size={22} />,
         params: [
             {
@@ -153,26 +152,24 @@ const SALES_REPORTS = [
             },
         ],
     },
+     {
+        reportType: "DAILY_CUSTOMER_SUMMARY",
+        reportName: "Customer-wise Sales Credit Details Summary",
+        description: "Customer-wise total invoices, amounts, payments and outstanding balances for a specific date.",
+        icon: <CalendarDays size={22} />,
+    },
     {
-        reportType: "SALES_REPORT",
-        reportName: "Sales Financial Summary",
-        description:
-            "Gross sales, net sales and total discount for approved orders in the date range.",
-        icon: <TrendingUp size={22} />,
+        reportType: "INDIVIDUAL_CUSTOMER",
+        reportName: "Customer Sales Credit Report",
+        description: "Invoice history, paid amounts, balances and aging details for a specific customer.",
+        icon: <UserCheck size={22} />,
         params: [
             {
-                key: "startDate",
-                label: "From Date",
-                type: "date",
+                key: "customerId",
+                label: "Customer Name",
+                type: "select",
                 required: true,
-                defaultValue: firstOfMonth,
-            },
-            {
-                key: "endDate",
-                label: "To Date",
-                type: "date",
-                required: true,
-                defaultValue: lastOfMonth,
+                options: [], // populated dynamically
             },
         ],
     },
@@ -263,7 +260,7 @@ const INVENTORY_REPORTS = [
                 required: false,
                 defaultValue: "",
                 options: [
-                    { label: "All Products",      value: "" },
+                    { label: "All Products", value: "" },
                     { label: "Out of Stock Only", value: "OUT_OF_STOCK" },
                 ],
             },
@@ -301,8 +298,8 @@ const ORDER_REPORTS = [
                 defaultValue: "",
                 options: [
                     { label: "All Statuses", value: "" },
-                    { label: "Pending",   value: "PENDING" },
-                    { label: "Approved",  value: "APPROVED" },
+                    { label: "Pending", value: "PENDING" },
+                    { label: "Approved", value: "APPROVED" },
                     { label: "Delivered", value: "DELIVERED" },
                     { label: "Cancelled", value: "CANCELLED" },
                 ],
@@ -372,7 +369,7 @@ const FINANCIAL_REPORTS = [
         icon: <TrendingUp size={22} />,
         params: [
             { key: "startDate", label: "From Date", type: "date", required: true, defaultValue: firstOfMonth },
-            { key: "endDate",   label: "To Date",   type: "date", required: true, defaultValue: lastOfMonth  },
+            { key: "endDate", label: "To Date", type: "date", required: true, defaultValue: lastOfMonth },
         ],
     },
     {
@@ -382,7 +379,7 @@ const FINANCIAL_REPORTS = [
         icon: <Receipt size={22} />,
         params: [
             { key: "startDate", label: "From Date", type: "date", required: true, defaultValue: firstOfMonth },
-            { key: "endDate",   label: "To Date",   type: "date", required: true, defaultValue: lastOfMonth  },
+            { key: "endDate", label: "To Date", type: "date", required: true, defaultValue: lastOfMonth },
         ],
     },
     {
@@ -392,7 +389,7 @@ const FINANCIAL_REPORTS = [
         icon: <DollarSign size={22} />,
         params: [
             { key: "startDate", label: "From Date", type: "date", required: true, defaultValue: firstOfMonth },
-            { key: "endDate",   label: "To Date",   type: "date", required: true, defaultValue: lastOfMonth  },
+            { key: "endDate", label: "To Date", type: "date", required: true, defaultValue: lastOfMonth },
         ],
     },
     {
@@ -414,7 +411,7 @@ const RETURNS_REPORTS = [
         icon: <RotateCcw size={22} />,
         params: [
             { key: "startDate", label: "From Date", type: "date", required: true, defaultValue: firstOfMonth },
-            { key: "endDate",   label: "To Date",   type: "date", required: true, defaultValue: lastOfMonth  },
+            { key: "endDate", label: "To Date", type: "date", required: true, defaultValue: lastOfMonth },
         ],
     },
     {
@@ -424,7 +421,7 @@ const RETURNS_REPORTS = [
         icon: <ShieldAlert size={22} />,
         params: [
             { key: "startDate", label: "From Date", type: "date", required: true, defaultValue: firstOfMonth },
-            { key: "endDate",   label: "To Date",   type: "date", required: true, defaultValue: lastOfMonth  },
+            { key: "endDate", label: "To Date", type: "date", required: true, defaultValue: lastOfMonth },
         ],
     },
     {
@@ -445,15 +442,14 @@ const RETURNS_REPORTS = [
     },
 ];
 
-const ALL_REPORTS = [
-    ...SALES_REPORTS,
-    ...GENERAL_REPORTS,
-    ...INVENTORY_REPORTS,
-    ...ORDER_REPORTS,
-    ...CUSTOMER_REPORTS,
-    ...FINANCIAL_REPORTS,
-    ...RETURNS_REPORTS,
-];
+const ALL_REPORTS_COUNT =
+    SALES_REPORTS.length +
+    GENERAL_REPORTS.length +
+    INVENTORY_REPORTS.length +
+    ORDER_REPORTS.length +
+    CUSTOMER_REPORTS.length +
+    FINANCIAL_REPORTS.length +
+    RETURNS_REPORTS.length;
 
 /* ── Collapsible section ── */
 const Section = ({ title, reports }) => {
@@ -482,13 +478,45 @@ const Section = ({ title, reports }) => {
 const Reports = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [customers, setCustomers] = useState([]);
+
+    useEffect(() => {
+        getAllCustomers()
+            .then(res => {
+                const raw = res.data;
+                // API returns { status, message, customers: [], timestamp }
+                const list = Array.isArray(raw?.customers)
+                    ? raw.customers
+                    : Array.isArray(raw)
+                        ? raw
+                        : Array.isArray(raw?.content)
+                            ? raw.content
+                            : [];
+                setCustomers(list);
+            })
+            .catch(() => {});
+    }, []);
+
+    // label = customer name shown to user; value = numeric ID sent to backend
+    const customerOptions = useMemo(() => [
+        { label: "--- Select Customer ---", value: "" },
+        ...(Array.isArray(customers) ? customers : []).map(c => ({ label: c.name, value: String(c.id) })),
+    ], [customers]);
+
+    // inject dynamic options only into the INDIVIDUAL_CUSTOMER card
+    const salesReportsWithCustomers = useMemo(() =>
+        SALES_REPORTS.map(r =>
+            r.reportType === "INDIVIDUAL_CUSTOMER"
+                ? { ...r, params: r.params.map(p => p.key === "customerId" ? { ...p, options: customerOptions } : p) }
+                : r
+        ),
+    [customerOptions]);
 
     return (
         <Layout>
             <div
-                className={`dashboard-container ${
-                    isSidebarCollapsed ? "sidebar-collapsed" : ""
-                }`}
+                className={`dashboard-container ${isSidebarCollapsed ? "sidebar-collapsed" : ""
+                    }`}
             >
                 <Sidebar
                     isCollapsed={isSidebarCollapsed}
@@ -516,18 +544,18 @@ const Reports = () => {
                                 </div>
                             </div>
                             <div className="rp-badge">
-                                {ALL_REPORTS.length} reports available
+                                {ALL_REPORTS_COUNT} reports available
                             </div>
                         </header>
 
                         {/* ── Report sections ── */}
-                        <Section title="📈 Sales Reports (Approved Orders)" reports={SALES_REPORTS} />
-                        <Section title="📊 General Reports"                 reports={GENERAL_REPORTS} />
-                        <Section title="📦 Inventory Reports"               reports={INVENTORY_REPORTS} />
-                        <Section title="🗂️ Order Reports"                   reports={ORDER_REPORTS} />
-                        <Section title="👥 Customer Reports"                reports={CUSTOMER_REPORTS} />
-                        <Section title="💰 Financial Reports"               reports={FINANCIAL_REPORTS} />
-                        <Section title="🔄 Returns & Damage Reports"         reports={RETURNS_REPORTS} />
+                        <Section title="📈 Sales Reports (Approved Orders)" reports={salesReportsWithCustomers} />
+                        <Section title="📊 General Reports" reports={GENERAL_REPORTS} />
+                        <Section title="📦 Inventory Reports" reports={INVENTORY_REPORTS} />
+                        <Section title="🗂️ Order Reports" reports={ORDER_REPORTS} />
+                        <Section title="👥 Customer Reports" reports={CUSTOMER_REPORTS} />
+                        <Section title="💰 Financial Reports" reports={FINANCIAL_REPORTS} />
+                        <Section title="🔄 Returns & Damage Reports" reports={RETURNS_REPORTS} />
                     </div>
                 </div>
             </div>
