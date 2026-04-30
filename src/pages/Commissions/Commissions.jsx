@@ -3,7 +3,7 @@ import DataTable from '../../components/common/DataTable';
 import MetricCard from '../../components/common/MetricCard';
 import Sidebar from '../../components/Sidebar';
 import Layout from '../../components/Layout';
-import { submitCommissionPayment, getCommissionInvoiceDetails, getPaginatedCommissions, getPaginatedMyCommissions, getPaginatedCommissionsHistory } from '../../api/commissionService';
+import { submitCommissionPayment, getCommissionInvoiceDetails, getPaginatedCommissions, getPaginatedMyCommissions, getPaginatedCommissionsHistory, getPaginatedMyCommissionReversals } from '../../api/commissionService';
 import { getUserId } from '../../components/common/Utils/userUtils/userUtils';
 import { useToast } from "../../context/ToastContext";
 import { X, Printer, Download, Share2 } from 'lucide-react';
@@ -20,7 +20,10 @@ const Commissions = ({ role = 'salesRep' }) => {
 
     const [commissions, setCommissions] = useState([]);
     const [totalCommission, setTotalCommission] = useState(0);
+    const [totalCommissionReversal, setTotalCommissionReversal] = useState(0);
+    const [netPayout, setNetPayout] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+    const [activeSubTab, setActiveSubTab] = useState('commissions'); 
 
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
@@ -39,7 +42,7 @@ const Commissions = ({ role = 'salesRep' }) => {
 
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [selectedViewInvoice, setSelectedViewInvoice] = useState(null);
-    const [invoiceDetails, setInvoiceDetails] = useState([]);
+    const [invoiceDetails, setInvoiceDetails] = useState({ commissions: [], reversals: [] });
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const componentRef = useRef();
 
@@ -67,22 +70,25 @@ const Commissions = ({ role = 'salesRep' }) => {
                     }
                 } else {
                     try {
-                        const response = await getPaginatedMyCommissions(page, pageSize);
-                        console.log("response", response);
+                        const summaryResponse = await getPaginatedMyCommissions(0, 1);
+                        if (summaryResponse.data) {
+                            setTotalCommission(summaryResponse.data.totalAmountCommissionSalesRep || summaryResponse.data.totalCommissionSum || 0);
+                            setTotalCommissionReversal(summaryResponse.data.totalAmountCommissionReversal || 0);
+                            setNetPayout(summaryResponse.data.netPayout || 0);
+                        }
+
+                        let response;
+                        if (activeSubTab === 'commissions') {
+                            response = await getPaginatedMyCommissions(page, pageSize);
+                        } else {
+                            response = await getPaginatedMyCommissionReversals(page, pageSize);
+                        }
+
                         if (response.data) {
-                            const data = response.data.commissionList || response.data.content || response.data.data || [];
+                            const data = response.data.commissionList || response.data.reversalList || response.data.content || response.data.data || [];
                             const total = response.data.totalPages || 1;
                             setCommissions(data);
                             setTotalPages(total);
-
-                            if (response.data.totalAmountCommissionSalesRep !== undefined) {
-                                setTotalCommission(response.data.totalAmountCommissionSalesRep);
-                            } else if (response.data.totalCommissionSum !== undefined) {
-                                setTotalCommission(response.data.totalCommissionSum);
-                            } else {
-                                const pageTotal = data.reduce((acc, curr) => acc + (curr.totalCommission || 0), 0);
-                                if (total === 1) setTotalCommission(pageTotal);
-                            }
                         }
                     } catch (e) {
                         console.warn("API failed for my paginated commissions.", e);
@@ -119,7 +125,7 @@ const Commissions = ({ role = 'salesRep' }) => {
     useEffect(() => {
         fetchCommissions(currentPage);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [role, isViewingHistory, currentPage]);
+    }, [role, isViewingHistory, activeSubTab, currentPage]);
 
     const handleMarkAsPaid = (row) => {
         setSelectedPaymentInvoice(row);
@@ -190,16 +196,22 @@ const Commissions = ({ role = 'salesRep' }) => {
     const handleViewInvoice = async (row) => {
         setSelectedViewInvoice(row);
         setIsViewModalOpen(true);
-        setInvoiceDetails([]);
+        setInvoiceDetails({ commissions: [], reversals: [] });
 
         try {
             const response = await getCommissionInvoiceDetails(row.invoiceNumber);
-            const data = response.data?.data || response.data || [];
-            setInvoiceDetails(Array.isArray(data) ? data : []);
+            const resData = response.data;
+
+            if (resData) {
+                setInvoiceDetails({
+                    commissions: resData.data || [],
+                    reversals: resData.reversalData || []
+                });
+            }
         } catch (error) {
             console.error("Error fetching commission details:", error);
-            showToast("error", "Failed to fetch invoice details. (Backend may not be ready)");
-            setInvoiceDetails([]);
+            showToast("error", "Failed to fetch invoice details.");
+            setInvoiceDetails({ commissions: [], reversals: [] });
         }
     };
 
@@ -265,18 +277,40 @@ const Commissions = ({ role = 'salesRep' }) => {
         }
     ];
 
+    const salesRepReversalColumns = [
+        { header: "Invoice Number", accessor: "invoiceNumber" },
+        { header: "Customer", accessor: "customerName" },
+        {
+            header: "Date",
+            accessor: "invoiceDate",
+            render: (row) => row.invoiceDate ? row.invoiceDate.split('T')[0] : "-"
+        },
+        {
+            header: "Total Return Amount",
+            accessor: "totalReturnAmount",
+            render: (row) => `Rs. ${(row.totalReturnAmount || 0).toFixed(2)}`,
+            align: 'right'
+        },
+        {
+            header: "Total Commission Reversal",
+            accessor: "totalCommissionReversal",
+            render: (row) => `Rs. ${(row.totalCommissionReversal || 0).toFixed(2)}`,
+            align: 'right'
+        }
+    ];
+
     const adminColumns = [
         { header: "Invoice Number", accessor: "invoiceNumber" },
         { header: "Month Year", accessor: "monthYear" },
         { header: "Sales Rep", accessor: "salesRep" },
         {
-            header: "Monthly Commission Amount",
-            accessor: "monthlyCommissionAmount",
-            render: (row) => `Rs. ${(row.monthlyCommissionAmount || 0).toFixed(2)}`,
+            header: "Monthly Net Payout",
+            accessor: "netPayout",
+            render: (row) => `Rs. ${(row.netPayout || 0).toFixed(2)}`,
             align: 'right'
         },
         {
-            header: "Due Balance (RS.)",
+            header: "Due Balance",
             accessor: "dueBalance",
             render: (row) => {
                 const pStatus = (row.paymentStatus || 'pending').toUpperCase();
@@ -297,7 +331,7 @@ const Commissions = ({ role = 'salesRep' }) => {
             render: (row) => {
                 const pStatus = (row.paymentStatus || 'pending').toUpperCase();
                 let statusLabel = "Pending";
-                let statusClass = "status-unpaid"; 
+                let statusClass = "status-unpaid";
 
                 if (pStatus === 'PAID') {
                     statusLabel = "Paid";
@@ -353,9 +387,9 @@ const Commissions = ({ role = 'salesRep' }) => {
         { header: "Invoice Number", accessor: "invoiceNumber" },
         { header: "Month Year", accessor: "monthYear" },
         {
-            header: "Monthly Commission Amount",
-            accessor: "monthlyCommissionAmount",
-            render: (row) => `Rs. ${(row.monthlyCommissionAmount || 0).toFixed(2)}`,
+            header: "Net Payout",
+            accessor: "netPayout",
+            render: (row) => `Rs. ${(row.netPayout || 0).toFixed(2)}`,
             align: 'right'
         },
         {
@@ -368,7 +402,7 @@ const Commissions = ({ role = 'salesRep' }) => {
 
                 const due = row.dueBalance !== undefined && row.dueBalance !== null
                     ? row.dueBalance
-                    : (pStatus === 'PENDING' || pStatus === 'UNPAID' ? row.monthlyCommissionAmount : 0);
+                    : (pStatus === 'PENDING' || pStatus === 'UNPAID' ? row.netPayout : 0);
 
                 return parseFloat(due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
             },
@@ -380,7 +414,7 @@ const Commissions = ({ role = 'salesRep' }) => {
             render: (row) => {
                 const pStatus = (row.paymentStatus || 'pending').toUpperCase();
                 let statusLabel = "Pending";
-                let statusClass = "status-unpaid"; 
+                let statusClass = "status-unpaid";
 
                 if (pStatus === 'PAID') {
                     statusLabel = "Paid";
@@ -420,7 +454,7 @@ const Commissions = ({ role = 'salesRep' }) => {
     ];
 
     const columns = role === 'salesRep'
-        ? (isViewingHistory ? salesRepHistoryColumns : salesRepColumns)
+        ? (isViewingHistory ? salesRepHistoryColumns : (activeSubTab === 'commissions' ? salesRepColumns : salesRepReversalColumns))
         : adminColumns;
     const todayDate = new Date().toISOString().split('T')[0].replace(/-/g, '.');
 
@@ -442,13 +476,34 @@ const Commissions = ({ role = 'salesRep' }) => {
 
                     {role === 'salesRep' && (
                         <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px' }}>
-                            <div className="metrics-grid" style={{ width: '800px', margin: 0 }}>
+                            <div className="metrics-grid" style={{ width: '100%', margin: 0, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                                 <MetricCard
-                                    title="Total commission (current)"
+                                    title="Total Commission"
                                     value={`Rs. ${totalCommission.toFixed(2)}`}
-                                    isPrimary={true}
+                                    isPrimary={false}
                                     trend={{
                                         value: `Date ${todayDate}`,
+                                        isPositive: true,
+                                        label: ' '
+                                    }}
+                                />
+                                <MetricCard
+                                    title="Commission Reversal"
+                                    value={`Rs. ${totalCommissionReversal.toFixed(2)}`}
+                                    isPrimary={false}
+                                    trend={{
+                                        value: `Current Month`,
+                                        isPositive: false,
+                                        label: ' '
+                                    }}
+                                />
+                                <MetricCard
+                                    title="Net Commission Payout"
+                                    value={`Rs. ${netPayout.toFixed(2)}`}
+                                    isPrimary={true}
+                                    style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}
+                                    trend={{
+                                        value: `Ready to Pay`,
                                         isPositive: true,
                                         label: ' '
                                     }}
@@ -476,9 +531,45 @@ const Commissions = ({ role = 'salesRep' }) => {
                     <div className="table-container-section">
                         <h3 className="section-title">
                             {role === 'salesRep'
-                                ? (isViewingHistory ? 'My Monthly Commission History' : 'Current Commissionable Invoices')
+                                ? (isViewingHistory ? 'My Monthly Commission History' : (activeSubTab === 'commissions' ? 'Current Commissionable Invoices' : 'Current Commission Reversal Invoices'))
                                 : 'Monthly Commission Invoices'}
                         </h3>
+
+                        {role === 'salesRep' && !isViewingHistory && (
+                            <div className="tabs-container" style={{ display: 'flex', gap: '20px', marginBottom: '20px', borderBottom: '1px solid #f3f4f6' }}>
+                                <button
+                                    onClick={() => { setActiveSubTab('commissions'); setCurrentPage(0); }}
+                                    style={{
+                                        padding: '10px 5px',
+                                        background: 'none',
+                                        border: 'none',
+                                        borderBottom: activeSubTab === 'commissions' ? '2px solid #4f46e5' : '2px solid transparent',
+                                        color: activeSubTab === 'commissions' ? '#4f46e5' : '#6b7280',
+                                        fontWeight: '600',
+                                        cursor: 'pointer',
+                                        fontSize: '0.95rem'
+                                    }}
+                                >
+                                    Commission Invoices
+                                </button>
+                                <button
+                                    onClick={() => { setActiveSubTab('reversals'); setCurrentPage(0); }}
+                                    style={{
+                                        padding: '10px 5px',
+                                        background: 'none',
+                                        border: 'none',
+                                        borderBottom: activeSubTab === 'reversals' ? '2px solid #4f46e5' : '2px solid transparent',
+                                        color: activeSubTab === 'reversals' ? '#4f46e5' : '#6b7280',
+                                        fontWeight: '600',
+                                        cursor: 'pointer',
+                                        fontSize: '0.95rem'
+                                    }}
+                                >
+                                    Commission Reversal Invoices
+                                </button>
+                            </div>
+                        )}
+
                         <DataTable
                             columns={columns}
                             data={role === 'salesRep' && isViewingHistory ? commissionHistory : commissions}
@@ -662,6 +753,7 @@ const Commissions = ({ role = 'salesRep' }) => {
                                 </table>
 
                                 <div className="sales-order-table-container" style={{ marginTop: '30px' }}>
+                                    <h4 style={{ marginBottom: '10px', color: '#4f46e5', borderBottom: '1px solid #e5e7eb', paddingBottom: '5px' }}>Commission Invoices</h4>
                                     <table className="sales-order-table invoice-table">
                                         <thead>
                                             <tr>
@@ -673,8 +765,8 @@ const Commissions = ({ role = 'salesRep' }) => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {invoiceDetails.length > 0 ? (
-                                                invoiceDetails.map((item, index) => (
+                                            {invoiceDetails.commissions && invoiceDetails.commissions.length > 0 ? (
+                                                invoiceDetails.commissions.map((item, index) => (
                                                     <tr key={index}>
                                                         <td>{item.invoiceNumber || "-"}</td>
                                                         <td>{item.customer || "-"}</td>
@@ -685,8 +777,40 @@ const Commissions = ({ role = 'salesRep' }) => {
                                                 ))
                                             ) : (
                                                 <tr>
-                                                    <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
-                                                        No commission details found
+                                                    <td colSpan="5" style={{ textAlign: 'center', padding: '15px', color: '#6b7280' }}>
+                                                        No commissionable invoices found
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+
+                                    <h4 style={{ marginTop: '30px', marginBottom: '10px', color: '#e11d48', borderBottom: '1px solid #e5e7eb', paddingBottom: '5px' }}>Reversal Invoices</h4>
+                                    <table className="sales-order-table invoice-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Invoice Number</th>
+                                                <th>Customer</th>
+                                                <th>Date</th>
+                                                <th style={{ textAlign: 'right' }}>Total Return Amount (LKR)</th>
+                                                <th style={{ textAlign: 'right' }}>Total Commission Reversal (LKR)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {invoiceDetails.reversals && invoiceDetails.reversals.length > 0 ? (
+                                                invoiceDetails.reversals.map((item, index) => (
+                                                    <tr key={index}>
+                                                        <td>{item.invoiceNumber || "-"}</td>
+                                                        <td>{item.customerName || item.customer || "-"}</td>
+                                                        <td>{item.invoiceDate ? item.invoiceDate.split('T')[0] : (item.date || "-")}</td>
+                                                        <td style={{ textAlign: 'right' }}>{parseFloat(item.totalReturnAmount || 0).toFixed(2)}</td>
+                                                        <td style={{ textAlign: 'right' }}>{parseFloat(item.totalCommissionReversal || 0).toFixed(2)}</td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="5" style={{ textAlign: 'center', padding: '15px', color: '#6b7280' }}>
+                                                        No reversal invoices found
                                                     </td>
                                                 </tr>
                                             )}
@@ -701,6 +825,14 @@ const Commissions = ({ role = 'salesRep' }) => {
                                             <div className="totals-line grand-due">
                                                 <span className="line-label">Total Commission (LKR)</span>
                                                 <span className="line-value">{parseFloat(selectedViewInvoice.monthlyCommissionAmount || 0).toFixed(2)}</span>
+                                            </div>
+                                            <div className="totals-line" style={{ marginTop: '5px' }}>
+                                                <span className="line-label">Total Reversal (LKR)</span>
+                                                <span className="line-value">-{parseFloat(selectedViewInvoice.totalReversalDeduction || 0).toFixed(2)}</span>
+                                            </div>
+                                            <div className="totals-line grand-due" style={{ marginTop: '10px', paddingTop: '10px', borderTop: '2px solid #e5e7eb' }}>
+                                                <span className="line-label" style={{ fontWeight: '800', color: '#111827' }}>Net Payout (LKR)</span>
+                                                <span className="line-value" style={{ fontWeight: '800', color: '#10b981' }}>{parseFloat(selectedViewInvoice.netPayout || 0).toFixed(2)}</span>
                                             </div>
                                         </div>
                                     </div>
