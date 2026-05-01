@@ -36,6 +36,13 @@ const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1
 const lastOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
     .toLocaleDateString("en-CA");
 
+/* ── Year helpers ── */
+const currentYear = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from(
+    { length: currentYear - 2020 + 1 },
+    (_, i) => ({ label: String(currentYear - i), value: String(currentYear - i) })
+);
+
 /* ─────────────────────────────────────────────────────────────────────
    Report definitions
    Each entry maps directly to ReportDownloader props.
@@ -152,7 +159,24 @@ const SALES_REPORTS = [
             },
         ],
     },
-     {
+    {
+        reportType: "ANNUAL_PRODUCT_SALES",
+        reportName: "Product-wise Sales Annual",
+        description:
+            "Monthly sales breakdown per product for an entire year — 12-column landscape report.",
+        icon: <TrendingUp size={22} />,
+        params: [
+            {
+                key: "year",
+                label: "Year",
+                type: "select",
+                required: true,
+                defaultValue: String(currentYear),
+                options: YEAR_OPTIONS,
+            },
+        ],
+    },
+    {
         reportType: "DAILY_CUSTOMER_SUMMARY",
         reportName: "Customer-wise Sales Credit Details Summary",
         description: "Customer-wise total invoices, amounts, payments and outstanding balances for a specific date.",
