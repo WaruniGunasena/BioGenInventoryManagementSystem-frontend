@@ -14,7 +14,6 @@ import {
   User,
   UserRound,
   Layers,
-  LifeBuoy,
   Settings,
   Search,
   LogOut,
