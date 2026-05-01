@@ -28,6 +28,7 @@ import EditSalesOrder from "./pages/SalesOrder/EditSalesOrder";
 import Reports from "./pages/Reports/Reports";
 import ProductReturns from "./pages/Returns/ProductReturns";
 import CreditNotes from "./pages/Returns/CreditNotes";
+import Commissions from "./pages/Commissions/Commissions";
 
 /**
  * FirstRunGuard — must live inside <Router> to use useLocation / useNavigate.
@@ -80,6 +81,8 @@ function App() {
                 <Route path="/credit-notes" element={<CreditNotes />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/product-returns" element={<ProductReturns />} />
+                <Route path="/my-commissions" element={<Commissions role="salesRep" />} />
+                <Route path="/commissions" element={<Commissions role="admin" />} />
               </Routes>
             </FirstRunGuard>
           </Router>
