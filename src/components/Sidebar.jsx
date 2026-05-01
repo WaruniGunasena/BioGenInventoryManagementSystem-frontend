@@ -287,13 +287,6 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar
           <div style={{ flex: 1 }}></div>
 
           <li className="nav-item">
-            <Link to="/support" className={`nav-link ${isActive('/support') ? 'active' : ''}`}>
-              <LifeBuoy size={20} className="nav-icon" />
-              <span className="link-text">Support</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
             <Link to="/settings" className={`nav-link ${isActive('/settings') ? 'active' : ''}`}>
               <Settings size={20} className="nav-icon" />
               <span className="link-text">Settings</span>
