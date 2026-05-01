@@ -157,6 +157,7 @@ const SALES_REPORTS = [
         reportName: "Customer-wise Sales Credit Details Summary",
         description: "Customer-wise total invoices, amounts, payments and outstanding balances for a specific date.",
         icon: <CalendarDays size={22} />,
+         
     },
     {
         reportType: "INDIVIDUAL_CUSTOMER",
