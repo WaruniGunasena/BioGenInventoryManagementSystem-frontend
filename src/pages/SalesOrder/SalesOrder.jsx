@@ -91,6 +91,7 @@ const SalesOrder = () => {
     const fetchCustomers = async () => {
         try {
             const res = await getAllCustomers();
+            console.log("customer",res);
             let data = [];
             if (res.data && Array.isArray(res.data)) data = res.data;
             else if (res.data && res.data.customers && Array.isArray(res.data.customers)) data = res.data.customers;
@@ -469,7 +470,7 @@ const SalesOrder = () => {
                                         <option value="">Select customer</option>
                                         {customers.map((c) => (
                                             <option key={c.id || c._id} value={c.id || c._id}>
-                                                {c.name}
+                                                {c.name} {c.address ? `- ${c.address}` : ''}
                                             </option>
                                         ))}
                                     </select>
