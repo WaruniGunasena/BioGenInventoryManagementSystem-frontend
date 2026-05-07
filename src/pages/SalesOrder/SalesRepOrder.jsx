@@ -409,7 +409,7 @@ const SalesRepOrder = () => {
                                                 {filteredCustomers.length > 0 ? (
                                                     filteredCustomers.map(c => (
                                                         <div key={c.id || c._id} className="asi-dropdown-item" onClick={() => selectCustomer(c)}>
-                                                            <span className="asi-drop-name">{c.name}</span>
+                                                            <span className="asi-drop-name">{c.name} {c.address ? `- ${c.address}` : ''}</span>
                                                             <span className="asi-drop-sub">{c.contact_No}</span>
                                                         </div>
                                                     ))
