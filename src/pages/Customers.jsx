@@ -29,6 +29,7 @@ const Customers = () => {
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
     const [customers, setCustomers] = useState([]);
+    const [allCustomers, setAllCustomers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
 
@@ -54,34 +55,41 @@ const Customers = () => {
     const fetchCustomers = async () => {
         setIsLoading(true);
         try {
-            const response = await getPaginatedCustomers(currentPage, 8, filter);
+            const [response, allResponse] = await Promise.all([
+                getPaginatedCustomers(currentPage, 8, filter),
+                getAllCustomers()
+            ]);
+            
             const raw = response.data;
+            const allRaw = allResponse.data;
 
             if (!raw || typeof raw !== 'object') {
                 setCustomers([]);
                 setTotalPages(0);
-                return;
-            }
-
-            let list = [];
-            if (Array.isArray(raw)) {
-                list = raw;
-            } else if (Array.isArray(raw.customers)) {
-                list = raw.customers;
             } else {
-                const arrayKey = Object.keys(raw).find(k => Array.isArray(raw[k]));
-                if (arrayKey) list = raw[arrayKey];
-            }
-            const pages =
-                raw.totalPages ??
-                raw.total_pages ??
-                raw.pageCount ??
-                raw.numberOfPages ??
-                raw.totalPage ??
-                0;
+                let list = [];
+                if (Array.isArray(raw)) {
+                    list = raw;
+                } else if (Array.isArray(raw.customers)) {
+                    list = raw.customers;
+                } else {
+                    const arrayKey = Object.keys(raw).find(k => Array.isArray(raw[k]));
+                    if (arrayKey) list = raw[arrayKey];
+                }
+                const pages =
+                    raw.totalPages ??
+                    raw.total_pages ??
+                    raw.pageCount ??
+                    raw.numberOfPages ??
+                    raw.totalPage ??
+                    0;
 
-            setCustomers(list);
-            setTotalPages(pages);
+                setCustomers(list);
+                setTotalPages(pages);
+            }
+
+            setAllCustomers(Array.isArray(allRaw) ? allRaw : (allRaw?.customers ?? []));
+
         } catch (err) {
             console.error('Failed to fetch customers:', err);
         } finally {
@@ -191,20 +199,20 @@ const Customers = () => {
     const metrics = [
         {
             title: 'Total Customers',
-            value: customers.length.toString(),
+            value: allCustomers.length.toString(),
             trend: { value: '0%', isPositive: true },
             icon: Users,
             isPrimary: true,
         },
         {
             title: 'Active Customers',
-            value: customers.filter(c => c.status !== 'inactive').length.toString(),
+            value: allCustomers.filter(c => c.status !== 'inactive').length.toString(),
             trend: { value: '0%', isPositive: true },
             icon: UserCheck,
         },
         {
             title: 'Inactive Customers',
-            value: customers.filter(c => c.status === 'inactive').length.toString(),
+            value: allCustomers.filter(c => c.status === 'inactive').length.toString(),
             trend: { value: '0%', isPositive: false },
             icon: UserX,
         },
