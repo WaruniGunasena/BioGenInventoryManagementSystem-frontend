@@ -691,14 +691,17 @@ const SalesInvoices = () => {
 
                                         </div>
                                     </div>
-                                    <div>
-                                        <p style={{ marginBottom: "100px" }}>Prepared By: {selectedInvoice.user?.name}
-                                            <span style={{ marginLeft: "40px" }}>Checked By: ..............................</span>
-                                            <span style={{ marginLeft: "40px" }}>Approved By: ..............................</span>
-                                        </p>
+                                    <div style={{ marginTop: "80px", marginBottom: "30px" }}>
+                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px" }}>
+                                            <p>Prepared By: {selectedInvoice.userName || selectedInvoice.user?.name}</p>
+                                            <p>Checked By: ..............................</p>
+                                            <p>Approved By: ..............................</p>
+                                        </div>
 
-                                        <p>Cheques to drawn in Favour of <b>BioGen Holdings (pvt) Ltd</b> & Crossed Account Payee Only</p>
-                                        <p style={{ textAlign: "center" }}><b>Thank you for your business!</b></p>
+                                        <div style={{ marginTop: "60px", textAlign: "center" }}>
+                                            <p>Cheques to drawn in Favour of <b>BioGen Holdings (pvt) Ltd</b> & Crossed Account Payee Only</p>
+                                            <p style={{ marginTop: "15px", color: "#2c1e4a" }}><b>Thank you for your business!</b></p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
