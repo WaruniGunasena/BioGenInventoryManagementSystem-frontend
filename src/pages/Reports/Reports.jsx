@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { getAllCustomers } from "../../api/customerService";
+import { getAllProducts } from "../../api/productService";
 import Layout from "../../components/Layout";
 import Sidebar from "../../components/Sidebar";
 import ReportDownloader from "../../components/Reports/ReportDownloader";
@@ -181,7 +182,7 @@ const SALES_REPORTS = [
         reportName: "Customer-wise Sales Credit Details Summary",
         description: "Customer-wise total invoices, amounts, payments and outstanding balances for a specific date.",
         icon: <CalendarDays size={22} />,
-         
+
     },
     {
         reportType: "INDIVIDUAL_CUSTOMER",
@@ -207,6 +208,21 @@ const GENERAL_REPORTS = [
         reportName: "Daily Activity Summary",
         description: "Full summary of all transactions and activity for a selected date.",
         icon: <BarChart2 size={22} />,
+        params: [
+            {
+                key: "date",
+                label: "Report Date",
+                type: "date",
+                required: true,
+                defaultValue: today,
+            },
+        ],
+    },
+    {
+        reportType: "MONTHLY_SUMMARY",
+        reportName: "Monthly Business Summary Report",
+        description: "Orders count, gross & approved sales, cash/cheque collections, supplier payments, and estimated net profit for a selected month.",
+        icon: <CalendarRange size={22} />,
         params: [
             {
                 key: "date",
@@ -248,6 +264,42 @@ const INVENTORY_REPORTS = [
                 defaultValue: lastOfMonth,
             },
         ],
+    },
+    {
+        reportType: "STOCK_MOVEMENT_PRODUCT_WISE",
+        reportName: "Stock In/Out Movement Log – Product Wise",
+        description: "Stock-in and stock-out movements grouped by product with running balance, filtered by date range.",
+        icon: <Layers size={22} />,
+        params: [
+            {
+                key: "start",
+                label: "From Date",
+                type: "date",
+                required: true,
+                defaultValue: firstOfMonth,
+            },
+            {
+                key: "end",
+                label: "To Date",
+                type: "date",
+                required: true,
+                defaultValue: lastOfMonth,
+            },
+            {
+                key: "productId",
+                label: "Product",
+                type: "select",
+                required: true,
+                options: [], // populated dynamically
+            },
+        ],
+    },
+    {
+        reportType: "STOCK_VALUE",
+        reportName: "Inventory Stock Value Report",
+        description: "Current stock value for all products — item code, unit, available balance, purchase price and total value.",
+        icon: <DollarSign size={22} />,
+        params: [],
     },
     {
         reportType: "BATCH_STOCK",
@@ -504,6 +556,7 @@ const Reports = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [customers, setCustomers] = useState([]);
+    const [products, setProducts] = useState([]);
 
     useEffect(() => {
         getAllCustomers()
@@ -519,14 +572,37 @@ const Reports = () => {
                             : [];
                 setCustomers(list);
             })
-            .catch(() => {});
+            .catch(() => { });
+
+        getAllProducts()
+            .then(res => {
+                const raw = res.data;
+                const list = Array.isArray(raw?.products)
+                    ? raw.products
+                    : Array.isArray(raw)
+                        ? raw
+                        : Array.isArray(raw?.content)
+                            ? raw.content
+                            : [];
+                setProducts(list);
+            })
+            .catch(() => { });
     }, []);
 
     // label = customer name shown to user; value = numeric ID sent to backend
     const customerOptions = useMemo(() => [
         { label: "--- Select Customer ---", value: "" },
-        ...(Array.isArray(customers) ? customers : []).map(c => ({ label: c.name, value: String(c.id) })),
+        ...(Array.isArray(customers) ? customers : []).map(c => ({
+            label: c.address ? `${c.name} - ${c.address}` : c.name,
+            value: String(c.id),
+        })),
     ], [customers]);
+
+    // label = product name shown to user; value = numeric ID sent to backend
+    const productOptions = useMemo(() => [
+        { label: "--- Select Product ---", value: "" },
+        ...(Array.isArray(products) ? products : []).map(p => ({ label: p.name, value: String(p.id) })),
+    ], [products]);
 
     // inject dynamic options only into the INDIVIDUAL_CUSTOMER card
     const salesReportsWithCustomers = useMemo(() =>
@@ -535,7 +611,16 @@ const Reports = () => {
                 ? { ...r, params: r.params.map(p => p.key === "customerId" ? { ...p, options: customerOptions } : p) }
                 : r
         ),
-    [customerOptions]);
+        [customerOptions]);
+
+    // inject dynamic product options into the STOCK_MOVEMENT_PRODUCT_WISE card
+    const inventoryReportsWithProducts = useMemo(() =>
+        INVENTORY_REPORTS.map(r =>
+            r.reportType === "STOCK_MOVEMENT_PRODUCT_WISE"
+                ? { ...r, params: r.params.map(p => p.key === "productId" ? { ...p, options: productOptions } : p) }
+                : r
+        ),
+        [productOptions]);
 
     return (
         <Layout>
@@ -576,7 +661,7 @@ const Reports = () => {
                         {/* ── Report sections ── */}
                         <Section title="📈 Sales Reports (Approved Orders)" reports={salesReportsWithCustomers} />
                         <Section title="📊 General Reports" reports={GENERAL_REPORTS} />
-                        <Section title="📦 Inventory Reports" reports={INVENTORY_REPORTS} />
+                        <Section title="📦 Inventory Reports" reports={inventoryReportsWithProducts} />
                         <Section title="🗂️ Order Reports" reports={ORDER_REPORTS} />
                         <Section title="👥 Customer Reports" reports={CUSTOMER_REPORTS} />
                         <Section title="💰 Financial Reports" reports={FINANCIAL_REPORTS} />
