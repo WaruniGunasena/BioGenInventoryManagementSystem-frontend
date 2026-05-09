@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { getAllCustomers } from "../../api/customerService";
 import { getAllProducts } from "../../api/productService";
+import { getAllSuppliers } from "../../api/supplierService";
 import Layout from "../../components/Layout";
 import Sidebar from "../../components/Sidebar";
 import ReportDownloader from "../../components/Reports/ReportDownloader";
@@ -27,6 +28,7 @@ import {
     DollarSign,
     RotateCcw,
     ShieldAlert,
+    Truck,
 } from "lucide-react";
 import "./Reports.css";
 
@@ -519,12 +521,54 @@ const RETURNS_REPORTS = [
     },
 ];
 
+// ── Section: Supplier Reports ─────────────────────────────────────────
+const SUPPLIER_REPORTS = [
+    {
+        reportType: "SUPPLIER_GRN",
+        reportName: "Supplier GRN Report",
+        description: "All GRN invoices per supplier with invoice number and value for the selected date range.",
+        icon: <Truck size={22} />,
+        params: [
+            {
+                key: "start",
+                label: "From Date",
+                type: "date",
+                required: true,
+                defaultValue: firstOfMonth,
+            },
+            {
+                key: "end",
+                label: "To Date",
+                type: "date",
+                required: true,
+                defaultValue: lastOfMonth,
+            },
+        ],
+    },
+    {
+        reportType: "SUPPLIER_CREDIT_SUMMARY",
+        reportName: "Supplier Credit Details Summary",
+        description: "Invoice history, paid amounts, balances and aging details for a specific supplier.",
+        icon: <Truck size={22} />,
+        params: [
+            {
+                key: "supplierId",
+                label: "Supplier Name",
+                type: "select",
+                required: true,
+                options: [], // populated dynamically
+            },
+        ],
+    },
+];
+
 const ALL_REPORTS_COUNT =
     SALES_REPORTS.length +
     GENERAL_REPORTS.length +
     INVENTORY_REPORTS.length +
     ORDER_REPORTS.length +
     CUSTOMER_REPORTS.length +
+    SUPPLIER_REPORTS.length +
     FINANCIAL_REPORTS.length +
     RETURNS_REPORTS.length;
 
@@ -557,6 +601,7 @@ const Reports = () => {
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [customers, setCustomers] = useState([]);
     const [products, setProducts] = useState([]);
+    const [suppliers, setSuppliers] = useState([]);
 
     useEffect(() => {
         getAllCustomers()
@@ -585,6 +630,20 @@ const Reports = () => {
                             ? raw.content
                             : [];
                 setProducts(list);
+            })
+            .catch(() => { });
+
+        getAllSuppliers()
+            .then(res => {
+                const raw = res.data;
+                const list = Array.isArray(raw?.suppliers)
+                    ? raw.suppliers
+                    : Array.isArray(raw)
+                        ? raw
+                        : Array.isArray(raw?.content)
+                            ? raw.content
+                            : [];
+                setSuppliers(list);
             })
             .catch(() => { });
     }, []);
@@ -621,6 +680,21 @@ const Reports = () => {
                 : r
         ),
         [productOptions]);
+
+    // label = supplier name shown to user; value = numeric ID sent to backend
+    const supplierOptions = useMemo(() => [
+        { label: "--- Select Supplier ---", value: "" },
+        ...(Array.isArray(suppliers) ? suppliers : []).map(s => ({ label: s.name, value: String(s.id) })),
+    ], [suppliers]);
+
+    // inject dynamic supplier options into the SUPPLIER_CREDIT_SUMMARY card
+    const supplierReportsWithSuppliers = useMemo(() =>
+        SUPPLIER_REPORTS.map(r =>
+            r.reportType === "SUPPLIER_CREDIT_SUMMARY"
+                ? { ...r, params: r.params.map(p => p.key === "supplierId" ? { ...p, options: supplierOptions } : p) }
+                : r
+        ),
+        [supplierOptions]);
 
     return (
         <Layout>
@@ -664,6 +738,7 @@ const Reports = () => {
                         <Section title="📦 Inventory Reports" reports={inventoryReportsWithProducts} />
                         <Section title="🗂️ Order Reports" reports={ORDER_REPORTS} />
                         <Section title="👥 Customer Reports" reports={CUSTOMER_REPORTS} />
+                        <Section title="🚚 Supplier Reports" reports={supplierReportsWithSuppliers} />
                         <Section title="💰 Financial Reports" reports={FINANCIAL_REPORTS} />
                         <Section title="🔄 Returns & Damage Reports" reports={RETURNS_REPORTS} />
                     </div>
