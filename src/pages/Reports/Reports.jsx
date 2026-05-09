@@ -223,15 +223,22 @@ const GENERAL_REPORTS = [
     {
         reportType: "MONTHLY_SUMMARY",
         reportName: "Monthly Business Summary Report",
-        description: "Orders count, gross & approved sales, cash/cheque collections, supplier payments, and estimated net profit for a selected month.",
+        description: "Orders count, gross & approved sales, cash/cheque collections, supplier payments, and estimated net profit for a selected date range.",
         icon: <CalendarRange size={22} />,
         params: [
             {
-                key: "date",
-                label: "Report Date",
+                key: "startDate",
+                label: "From Date",
                 type: "date",
                 required: true,
-                defaultValue: today,
+                defaultValue: firstOfMonth,
+            },
+            {
+                key: "endDate",
+                label: "To Date",
+                type: "date",
+                required: true,
+                defaultValue: lastOfMonth,
             },
         ],
     },
