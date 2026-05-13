@@ -7,7 +7,7 @@ import ConfirmationModal from "../../components/common/ConfirmationModal";
 import { useReactToPrint } from "react-to-print";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { getPaginatedSalesOrders, searchSalesOrder, softDeleteSalesOrder, approveSalesOrder, submitSalesOrderPayment, updateSalesOrderDeliveryStatus } from "../../api/salesOrderService";
+import { getPaginatedSalesOrders, searchSalesOrder, softDeleteSalesOrder, approveSalesOrder, submitSalesOrderPayment, updateSalesOrderDeliveryStatus, updateChequeStatus } from "../../api/salesOrderService";
 import { getUserId, getUserRole } from "../../components/common/Utils/userUtils/userUtils";
 import { useToast } from "../../context/ToastContext";
 import { useNavigate } from "react-router-dom";
@@ -29,6 +29,9 @@ const SalesInvoices = () => {
 
     const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
     const [deliveryInvoice, setDeliveryInvoice] = useState(null);
+
+    const [isChequeModalOpen, setIsChequeModalOpen] = useState(false);
+    const [selectedChequeInvoice, setSelectedChequeInvoice] = useState(null);
 
     const [paymentFormData, setPaymentFormData] = useState({
         paymentMethod: "cash",
@@ -230,13 +233,14 @@ const SalesInvoices = () => {
                 chequeNumber: paymentFormData.chequeNumber ? paymentFormData.chequeNumber.trim() : null
             };
 
+            console.log("paymentPayload", paymentPayload);
             await submitSalesOrderPayment(paymentPayload);
             showToast("success", `Payment submitted for Invoice ${selectedPaymentInvoice.invoiceNumber}`);
 
             setIsPaymentModalOpen(false);
             setPaymentFormData({
                 paymentMethod: "cash",
-                amount: "",
+                amount: "", 
                 chequeIssueDate: "",
                 chequeDueDate: "",
                 bank: "",
@@ -247,6 +251,27 @@ const SalesInvoices = () => {
         } catch (error) {
             console.error("Error submitting payment:", error);
             showToast("error", "Failed to submit payment");
+        }
+    };
+
+    const handleRealizeCheque = (invoice) => {
+        setSelectedChequeInvoice(invoice);
+        setIsChequeModalOpen(true);
+    };
+
+    const handleChequeStatusUpdate = async (status) => {
+        if (!selectedChequeInvoice) return;
+        const salesOrderId = selectedChequeInvoice.salesOrderId || selectedChequeInvoice.id;
+
+        try {
+            await updateChequeStatus(salesOrderId, status);
+            showToast("success", `Cheque status updated to ${status}`);
+            setIsChequeModalOpen(false);
+            setSelectedChequeInvoice(null);
+            fetchInvoices(currentPage);
+        } catch (error) {
+            console.error("Error updating cheque status:", error);
+            showToast("error", error?.response?.data?.message || "Failed to update cheque status");
         }
     };
 
@@ -434,6 +459,9 @@ const SalesInvoices = () => {
                 } else if (pStatus === 'PARTIAL') {
                     statusLabel = "Partial";
                     statusClass = "status-partial";
+                } else if (pStatus === 'REALIZING') {
+                    statusLabel = "Realizing";
+                    statusClass = "status-partial"; // Or a new class for realizing
                 }
 
                 return (
@@ -451,6 +479,19 @@ const SalesInvoices = () => {
                                 title="Pay"
                             >
                                 Pay
+                            </button>
+                        )}
+                        {row.status === "Approved" && pStatus === 'REALIZING' && (
+                            <button
+                                className="mark-paid-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRealizeCheque(row);
+                                }}
+                                title="Realize"
+                                style={{ background: '#059669' }} // Emerald green for realize
+                            >
+                                Realize
                             </button>
                         )}
                     </div>
@@ -834,6 +875,46 @@ const SalesInvoices = () => {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {isChequeModalOpen && selectedChequeInvoice && (
+                <div className="sales-invoice-modal-overlay">
+                    <div className="payment-modal-content" style={{ maxWidth: '400px' }}>
+                        <div className="modal-header">
+                            <h3>Cheque Realization - {selectedChequeInvoice.invoiceNumber}</h3>
+                            <button className="close-modal-btn" onClick={() => setIsChequeModalOpen(false)}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="modal-body" style={{ padding: '20px', textAlign: 'center' }}>
+                            <p style={{ marginBottom: '20px', fontSize: '16px' }}>
+                                Please select the status of the cheque for <strong>{selectedChequeInvoice.invoiceNumber}</strong>.
+                            </p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <button 
+                                    className="btn-primary" 
+                                    onClick={() => handleChequeStatusUpdate('PAID')}
+                                    style={{ background: '#059669', border: 'none', padding: '12px', borderRadius: '8px' }}
+                                >
+                                    Realized (Mark as Paid)
+                                </button>
+                                <button 
+                                    className="btn-secondary" 
+                                    onClick={() => handleChequeStatusUpdate('PENDING')}
+                                    style={{ background: '#dc2626', color: 'white', border: 'none', padding: '12px', borderRadius: '8px' }}
+                                >
+                                    Returned (Mark as Pending)
+                                </button>
+                                <button 
+                                    className="btn-secondary" 
+                                    onClick={() => setIsChequeModalOpen(false)}
+                                    style={{ padding: '12px', borderRadius: '8px' }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

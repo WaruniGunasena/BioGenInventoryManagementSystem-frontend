@@ -35,3 +35,6 @@ export const submitSalesOrderPayment = (paymentData) =>
 export const updateSalesOrderDeliveryStatus = (orderId) =>
     api.get(`/sales-orders/updateDelivery/${orderId}`);
 
+export const updateChequeStatus = (salesOrderId, status) =>
+    api.post(`/sales-orders/updateChequeStatus?salesOrderId=${salesOrderId}&status=${status}`);
+
