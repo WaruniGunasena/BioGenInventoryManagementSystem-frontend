@@ -91,7 +91,6 @@ const SalesOrder = () => {
     const fetchCustomers = async () => {
         try {
             const res = await getAllCustomers();
-            console.log("customer",res);
             let data = [];
             if (res.data && Array.isArray(res.data)) data = res.data;
             else if (res.data && res.data.customers && Array.isArray(res.data.customers)) data = res.data.customers;
