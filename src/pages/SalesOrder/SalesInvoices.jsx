@@ -7,7 +7,7 @@ import ConfirmationModal from "../../components/common/ConfirmationModal";
 import { useReactToPrint } from "react-to-print";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { getPaginatedSalesOrders, searchSalesOrder, softDeleteSalesOrder, approveSalesOrder, submitSalesOrderPayment, updateSalesOrderDeliveryStatus } from "../../api/salesOrderService";
+import { getPaginatedSalesOrders, searchSalesOrder, softDeleteSalesOrder, approveSalesOrder, submitSalesOrderPayment, updateSalesOrderDeliveryStatus, updateChequeStatus, getPendingCheques } from "../../api/salesOrderService";
 import { getUserId, getUserRole } from "../../components/common/Utils/userUtils/userUtils";
 import { useToast } from "../../context/ToastContext";
 import { useNavigate } from "react-router-dom";
@@ -29,6 +29,11 @@ const SalesInvoices = () => {
 
     const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
     const [deliveryInvoice, setDeliveryInvoice] = useState(null);
+
+    const [isChequeModalOpen, setIsChequeModalOpen] = useState(false);
+    const [selectedChequeInvoice, setSelectedChequeInvoice] = useState(null);
+    const [pendingCheques, setPendingCheques] = useState([]);
+    const [isLoadingCheques, setIsLoadingCheques] = useState(false);
 
     const [paymentFormData, setPaymentFormData] = useState({
         paymentMethod: "cash",
@@ -236,7 +241,7 @@ const SalesInvoices = () => {
             setIsPaymentModalOpen(false);
             setPaymentFormData({
                 paymentMethod: "cash",
-                amount: "",
+                amount: "", 
                 chequeIssueDate: "",
                 chequeDueDate: "",
                 bank: "",
@@ -247,6 +252,47 @@ const SalesInvoices = () => {
         } catch (error) {
             console.error("Error submitting payment:", error);
             showToast("error", "Failed to submit payment");
+        }
+    };
+
+    const handleRealizeCheque = async (invoice) => {
+        const salesOrderId = invoice.salesOrderId || invoice.id;
+        setSelectedChequeInvoice(invoice);
+        setIsChequeModalOpen(true);
+        setIsLoadingCheques(true);
+        try {
+            const res = await getPendingCheques(salesOrderId);
+            setPendingCheques(res.data || []);
+        } catch (error) {
+            console.error("Error fetching pending cheques:", error);
+            showToast("error", "Failed to fetch pending cheques");
+        } finally {
+            setIsLoadingCheques(false);
+        }
+    };
+
+    const handleChequeStatusUpdate = async (paymentId, status) => {
+        try {
+            await updateChequeStatus(paymentId, status);
+            showToast("success", `Cheque status updated to ${status}`);
+            
+            // Refetch pending cheques for the modal
+            if (selectedChequeInvoice) {
+                const salesOrderId = selectedChequeInvoice.salesOrderId || selectedChequeInvoice.id;
+                const res = await getPendingCheques(salesOrderId);
+                const updatedCheques = res.data || [];
+                setPendingCheques(updatedCheques);
+                
+                // If no more pending cheques, close modal
+                if (updatedCheques.length === 0) {
+                    setIsChequeModalOpen(false);
+                    setSelectedChequeInvoice(null);
+                }
+            }
+            fetchInvoices(currentPage);
+        } catch (error) {
+            console.error("Error updating cheque status:", error);
+            showToast("error", error?.response?.data?.message || "Failed to update cheque status");
         }
     };
 
@@ -331,36 +377,6 @@ const SalesInvoices = () => {
         {
             header: "Due Balance (RS.)",
             accessor: "dueBalance",
-            //     render: (row) => {
-            //         const pStatus = (row.paymentStatus || 'PENDING').toUpperCase();
-            //         const creditPeriod = (row.creditPeriod || "").toUpperCase();
-            //         const invoiceDate = row.invoiceDate ? new Date(row.invoiceDate) : null;
-
-            //         // If PAID → no due
-            //         if (pStatus === 'PAID') return '0.00';
-
-            //         const due = row.dueBalance !== undefined && row.dueBalance !== null
-            //             ? row.dueBalance
-            //             : (pStatus === 'PENDING' ? row.netTotal : 0);
-
-            //         let label = "";
-
-            //         // Only calculate if not CASH and invoice date exists
-            //         if (creditPeriod !== "CASH" && invoiceDate) {
-            //             const creditDays = row.daysRemaining
-
-            //             if (creditDays < 0) {
-            //                 label = " 🔴 OVERDUE";
-            //             } else {
-            //                 label = ` 🟡 ${creditDays}days`;
-            //             }
-            //         }
-
-            //         return (
-            //             parseFloat(due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) + label
-            //         );
-            //     }
-            // },
             render: (row) => {
                 const pStatus = (row.paymentStatus || 'PENDING').toUpperCase();
                 const creditPeriod = (row.creditPeriod || "").toUpperCase();
@@ -386,7 +402,7 @@ const SalesInvoices = () => {
                         dotColor = "red";
                     } else if (remaining < 10) {
                         label = `${remaining}d left`;
-                        dotColor = "orange"; // amber
+                        dotColor = "orange"; 
                     } else {
                         label = `${remaining}d left`;
                         dotColor = "green";
@@ -434,6 +450,9 @@ const SalesInvoices = () => {
                 } else if (pStatus === 'PARTIAL') {
                     statusLabel = "Partial";
                     statusClass = "status-partial";
+                } else if (pStatus === 'REALIZING') {
+                    statusLabel = "Realizing";
+                    statusClass = "status-partial"; 
                 }
 
                 return (
@@ -441,18 +460,33 @@ const SalesInvoices = () => {
                         <span className={`status-badge ${statusClass}`}>
                             {statusLabel}
                         </span>
-                        {row.status === "Approved" && (pStatus === 'PENDING' || pStatus === 'PARTIAL') && (
-                            <button
-                                className="mark-paid-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleMarkAsPaid(row);
-                                }}
-                                title="Pay"
-                            >
-                                Pay
-                            </button>
-                        )}
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                            {row.status === "Approved" && (parseFloat(row.dueBalance) > 0) && (
+                                <button
+                                    className="mark-paid-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMarkAsPaid(row);
+                                    }}
+                                    title="Pay"
+                                >
+                                    Pay
+                                </button>
+                            )}
+                            {row.status === "Approved" && pStatus === 'REALIZING' && (
+                                <button
+                                    className="mark-paid-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRealizeCheque(row);
+                                    }}
+                                    title="Realize"
+                                    style={{ background: '#059669' }} 
+                                >
+                                    Realize
+                                </button>
+                            )}
+                        </div>
                     </div>
                 );
             }
@@ -477,7 +511,7 @@ const SalesInvoices = () => {
                                     handleMarkAsDelivered(row);
                                 }}
                                 title="Mark as Delivered"
-                                style={{ background: '#6366f1' }} // Emerald green for delivery
+                                style={{ background: '#6366f1' }} 
                             >
                                 Mark Delivered
                             </button>
@@ -834,6 +868,80 @@ const SalesInvoices = () => {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {isChequeModalOpen && selectedChequeInvoice && (
+                <div className="sales-invoice-modal-overlay">
+                    <div className="payment-modal-content" style={{ maxWidth: '600px', width: '90%' }}>
+                        <div className="modal-header">
+                            <h3>Pending Cheques - {selectedChequeInvoice.invoiceNumber}</h3>
+                            <button className="close-modal-btn" onClick={() => setIsChequeModalOpen(false)}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="modal-body" style={{ padding: '20px' }}>
+                            {isLoadingCheques ? (
+                                <p style={{ textAlign: 'center' }}>Loading pending cheques...</p>
+                            ) : pendingCheques.length > 0 ? (
+                                <div className="cheque-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    {pendingCheques.map((cheque) => (
+                                        <div key={cheque.paymentId || cheque.id} className="cheque-item" style={{ 
+                                            border: '1px solid #e5e7eb', 
+                                            borderRadius: '8px', 
+                                            padding: '16px',
+                                            backgroundColor: '#f9fafb'
+                                        }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                                                <div>
+                                                    <p style={{ fontSize: '12px', color: '#6b7280' }}>Bank</p>
+                                                    <p style={{ fontWeight: '500' }}>{cheque.bank}</p>
+                                                </div>
+                                                <div>
+                                                    <p style={{ fontSize: '12px', color: '#6b7280' }}>Cheque Number</p>
+                                                    <p style={{ fontWeight: '500' }}>{cheque.chequeNumber}</p>
+                                                </div>
+                                                <div>
+                                                    <p style={{ fontSize: '12px', color: '#6b7280' }}>Amount</p>
+                                                    <p style={{ fontWeight: '600', color: '#111827' }}>RS. {parseFloat(cheque.amount).toFixed(2)}</p>
+                                                </div>
+                                                <div>
+                                                    <p style={{ fontSize: '12px', color: '#6b7280' }}>Due Date</p>
+                                                    <p style={{ fontWeight: '500' }}>{cheque.chequeDueDate}</p>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                <button 
+                                                    className="btn-primary" 
+                                                    onClick={() => handleChequeStatusUpdate(cheque.paymentId || cheque.id, 'PAID')}
+                                                    style={{ flex: 1, background: '#059669', border: 'none', padding: '10px', borderRadius: '6px', color: 'white', cursor: 'pointer' }}
+                                                >
+                                                    Realize
+                                                </button>
+                                                <button 
+                                                    className="btn-secondary" 
+                                                    onClick={() => handleChequeStatusUpdate(cheque.paymentId || cheque.id, 'RETURNED')}
+                                                    style={{ flex: 1, background: '#dc2626', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer' }}
+                                                >
+                                                    Return
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p style={{ textAlign: 'center' }}>No pending cheques found for this invoice.</p>
+                            )}
+                        </div>
+                        <div className="modal-footer" style={{ borderTop: '1px solid #e5e7eb', padding: '15px' }}>
+                            <button 
+                                className="btn-secondary" 
+                                onClick={() => setIsChequeModalOpen(false)}
+                                style={{ width: '100%', padding: '10px', borderRadius: '6px' }}
+                            >
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>
