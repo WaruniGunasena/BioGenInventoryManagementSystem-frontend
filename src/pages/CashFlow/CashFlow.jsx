@@ -26,8 +26,10 @@ const CashFlow = () => {
 
   const [pendingDebits, setPendingDebits] = useState([]);
   const [pendingCredits, setPendingCredits] = useState([]);
+  const [pendingCommissions, setPendingCommissions] = useState([]);
   const [completedDebits, setCompletedDebits] = useState([]);
   const [completedCredits, setCompletedCredits] = useState([]);
+  const [completedCommissions, setCompletedCommissions] = useState([]);
   const [summaryData, setSummaryData] = useState({
     totalIncome: 0,
     totalExpense: 0,
@@ -51,8 +53,10 @@ const CashFlow = () => {
       if (!startDate || !endDate) {
         setPendingDebits([]);
         setPendingCredits([]);
+        setPendingCommissions([]);
         setCompletedDebits([]);
         setCompletedCredits([]);
+        setCompletedCommissions([]);
         setSummaryData({
           totalIncome: 0, totalExpense: 0, profitOrLoss: 0,
           netCashInflow: 0, inflowPercentageChange: 0, totalSalesCount: 0,
@@ -69,10 +73,12 @@ const CashFlow = () => {
           const res = await getPendingCashFlow(startDate, endDate);
           setPendingDebits(res.data?.debits || []);
           setPendingCredits(res.data?.credits || []);
+          setPendingCommissions(res.data?.commissions || []);
         } else if (activeTab === "complete") {
           const res = await getCompletedCashFlow(startDate, endDate);
           setCompletedDebits(res.data?.debits || []);
           setCompletedCredits(res.data?.credits || []);
+          setCompletedCommissions(res.data?.commissions || []);
         } else if (activeTab === "summary") {
           const res = await getCashFlowSummary(startDate, endDate);
           const summary = res.data?.cashFlowSummary || {};
@@ -209,35 +215,73 @@ const CashFlow = () => {
                           <h2>Credit (Payable)</h2>
                         </div>
                       </div>
-                      <div className="table-responsive">
-                        <table className="ledger-table">
-                          <thead>
-                            <tr>
-                              <th>Invoice Number</th>
-                              <th>Supplier</th>
-                              <th>Amount</th>
-                              <th>Due Date</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {isLoading ? (
-                              <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
-                            ) : (!startDate || !endDate) ? (
-                              <tr><td colSpan="4" className="empty-state" style={{ color: "#94a3b8", fontStyle: "italic" }}>Please select a date range</td></tr>
-                            ) : pendingCredits.length === 0 ? (
-                              <tr><td colSpan="4" className="empty-state">No pending credits matching the criteria</td></tr>
-                            ) : (
-                              pendingCredits.map((item, index) => (
-                                <tr key={index}>
-                                  <td>{item.invoiceNumber || "N/A"}</td>
-                                  <td>{item.supplier || "N/A"}</td>
-                                  <td>{item.amount || "0.00"}</td>
-                                  <td>{item.date || "N/A"}</td>
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </table>
+
+                      <div className="ledger-sub-section">
+                        <h3 className="sub-section-title">Purchase Invoices (GRN)</h3>
+                        <div className="table-responsive">
+                          <table className="ledger-table">
+                            <thead>
+                              <tr>
+                                <th>Invoice Number</th>
+                                <th>Supplier</th>
+                                <th>Amount</th>
+                                <th>Due Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {isLoading ? (
+                                <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
+                              ) : (!startDate || !endDate) ? (
+                                <tr><td colSpan="4" className="empty-state" style={{ color: "#94a3b8", fontStyle: "italic" }}>Please select a date range</td></tr>
+                              ) : pendingCredits.length === 0 ? (
+                                <tr><td colSpan="4" className="empty-state">No pending credits matching the criteria</td></tr>
+                              ) : (
+                                pendingCredits.map((item, index) => (
+                                  <tr key={index}>
+                                    <td>{item.invoiceNumber || "N/A"}</td>
+                                    <td>{item.supplier || "N/A"}</td>
+                                    <td>{item.amount || "0.00"}</td>
+                                    <td>{item.date || "N/A"}</td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div className="ledger-sub-section" style={{ marginTop: "2.5rem" }}>
+                        <h3 className="sub-section-title">Commission Invoices</h3>
+                        <div className="table-responsive">
+                          <table className="ledger-table">
+                            <thead>
+                              <tr>
+                                <th>Invoice Number</th>
+                                <th>Sales Rep</th>
+                                <th>Amount</th>
+                                <th>Month/Year</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {isLoading ? (
+                                <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
+                              ) : (!startDate || !endDate) ? (
+                                <tr><td colSpan="4" className="empty-state" style={{ color: "#94a3b8", fontStyle: "italic" }}>Please select a date range</td></tr>
+                              ) : pendingCommissions.length === 0 ? (
+                                <tr><td colSpan="4" className="empty-state">No pending commission invoices found</td></tr>
+                              ) : (
+                                pendingCommissions.map((item, index) => (
+                                  <tr key={index}>
+                                    <td>{item.commission_invoice_number || item.invoiceNumber || "N/A"}</td>
+                                    <td>{item.salesRep || item.sales_rep_id || "N/A"}</td>
+                                    <td>{item.net_payout || item.amount || "0.00"}</td>
+                                    <td>{item.month_year || item.date || "N/A"}</td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -292,35 +336,73 @@ const CashFlow = () => {
                           <h2>Credit (Paid)</h2>
                         </div>
                       </div>
-                      <div className="table-responsive">
-                        <table className="ledger-table">
-                          <thead>
-                            <tr>
-                              <th>Invoice Number</th>
-                              <th>Supplier</th>
-                              <th>Amount</th>
-                              <th>Date</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {isLoading ? (
-                              <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
-                            ) : (!startDate || !endDate) ? (
-                              <tr><td colSpan="4" className="empty-state" style={{ color: "#94a3b8", fontStyle: "italic" }}>Please select a date range</td></tr>
-                            ) : completedCredits.length === 0 ? (
-                              <tr><td colSpan="4" className="empty-state">No completed credits found</td></tr>
-                            ) : (
-                              completedCredits.map((item, index) => (
-                                <tr key={index}>
-                                  <td>{item.invoiceNumber || "N/A"}</td>
-                                  <td>{item.supplier || "N/A"}</td>
-                                  <td>{item.amount || "0.00"}</td>
-                                  <td>{item.date || "N/A"}</td>
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </table>
+
+                      <div className="ledger-sub-section">
+                        <h3 className="sub-section-title">Purchase Invoices (GRN)</h3>
+                        <div className="table-responsive">
+                          <table className="ledger-table">
+                            <thead>
+                              <tr>
+                                <th>Invoice Number</th>
+                                <th>Supplier</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {isLoading ? (
+                                <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
+                              ) : (!startDate || !endDate) ? (
+                                <tr><td colSpan="4" className="empty-state" style={{ color: "#94a3b8", fontStyle: "italic" }}>Please select a date range</td></tr>
+                              ) : completedCredits.length === 0 ? (
+                                <tr><td colSpan="4" className="empty-state">No completed credits found</td></tr>
+                              ) : (
+                                completedCredits.map((item, index) => (
+                                  <tr key={index}>
+                                    <td>{item.invoiceNumber || "N/A"}</td>
+                                    <td>{item.supplier || "N/A"}</td>
+                                    <td>{item.amount || "0.00"}</td>
+                                    <td>{item.date || "N/A"}</td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div className="ledger-sub-section" style={{ marginTop: "2.5rem" }}>
+                        <h3 className="sub-section-title">Commission Invoices</h3>
+                        <div className="table-responsive">
+                          <table className="ledger-table">
+                            <thead>
+                              <tr>
+                                <th>Invoice Number</th>
+                                <th>Sales Rep</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {isLoading ? (
+                                <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
+                              ) : (!startDate || !endDate) ? (
+                                <tr><td colSpan="4" className="empty-state" style={{ color: "#94a3b8", fontStyle: "italic" }}>Please select a date range</td></tr>
+                              ) : completedCommissions.length === 0 ? (
+                                <tr><td colSpan="4" className="empty-state">No completed commission invoices found</td></tr>
+                              ) : (
+                                completedCommissions.map((item, index) => (
+                                  <tr key={index}>
+                                    <td>{item.commission_invoice_number || item.invoiceNumber || "N/A"}</td>
+                                    <td>{item.salesRep || item.sales_rep_id || "N/A"}</td>
+                                    <td>{item.net_payout || item.amount || "0.00"}</td>
+                                    <td>{item.paid_date || item.date || "N/A"}</td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
                   </div>

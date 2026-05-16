@@ -203,6 +203,20 @@
   padding: 3rem !important;
 }
 
+.sub-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #4318FF;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f4f7fe;
+  display: inline-block;
+}
+
+.ledger-sub-section {
+  position: relative;
+}
+
 /* Summary Cards Redesign */
 .summary-overview-grid {
   display: grid;
