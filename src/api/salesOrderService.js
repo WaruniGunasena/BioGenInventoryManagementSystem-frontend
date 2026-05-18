@@ -35,8 +35,8 @@ export const submitSalesOrderPayment = (paymentData) =>
         headers: { "Content-Type": "application/json" },
     });
 
-export const updateChequeStatus = (paymentId, status) =>
-    api.post(`/sales-orders/update-cheque-status?paymentId=${paymentId}&status=${status}`);
+export const updateChequeStatus = (paymentId, status, userId) =>
+    api.post(`/sales-orders/update-cheque-status?paymentId=${paymentId}&status=${status}&userId=${userId}`);
 
 export const getPendingCheques = (salesOrderId) =>
     api.get(`/sales-orders/pending-cheques/${salesOrderId}`);

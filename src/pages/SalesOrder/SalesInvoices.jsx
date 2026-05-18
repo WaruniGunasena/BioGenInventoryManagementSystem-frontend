@@ -273,7 +273,8 @@ const SalesInvoices = () => {
 
     const handleChequeStatusUpdate = async (paymentId, status) => {
         try {
-            await updateChequeStatus(paymentId, status);
+            const userId = currentUserId || await getUserId();
+            await updateChequeStatus(paymentId, status, userId);
             showToast("success", `Cheque status updated to ${status}`);
             
             // Refetch pending cheques for the modal
