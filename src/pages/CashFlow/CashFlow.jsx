@@ -43,11 +43,13 @@ const CashFlow = () => {
     netCashOutflow: 0,
     outflowPercentageChange: 0,
     totalGrnCount: 0,
+    completedCommissionCount: 0,
     operatingCashFlow: 0,
     accountsReceivable: 0,
     pendingSalesCount: 0,
     accountsPayable: 0,
     pendingPurchaseCount: 0,
+    pendingCommissionCount: 0,
     realizingChequesAmount: 0,
     realizingChequesCount: 0
   });
@@ -66,11 +68,9 @@ const CashFlow = () => {
         setCompletedCheques([]);
         setSummaryData({
           totalIncome: 0, totalExpense: 0, profitOrLoss: 0,
-          netCashInflow: 0, inflowPercentageChange: 0, totalSalesCount: 0,
-          netCashOutflow: 0, outflowPercentageChange: 0, totalGrnCount: 0,
+          netCashOutflow: 0, outflowPercentageChange: 0, totalGrnCount: 0, completedCommissionCount: 0,
           operatingCashFlow: 0,
-          accountsReceivable: 0, pendingSalesCount: 0,
-          accountsPayable: 0, pendingPurchaseCount: 0,
+          accountsPayable: 0, pendingPurchaseCount: 0, pendingCommissionCount: 0,
           realizingChequesAmount: 0, realizingChequesCount: 0
         });
         setIsLoading(false);
@@ -111,11 +111,13 @@ const CashFlow = () => {
             netCashOutflow: summary.netCashOutflow || 0,
             outflowPercentageChange: summary.outflowPercentageChange || 0,
             totalGrnCount: summary.totalGrnCount || 0,
+            completedCommissionCount: summary.completedCommissionCount || 0,
             operatingCashFlow: summary.operatingCashFlow || 0,
             accountsReceivable: summary.accountsReceivable || 0,
             pendingSalesCount: summary.pendingSalesCount || 0,
             accountsPayable: summary.accountsPayable || 0,
             pendingPurchaseCount: summary.pendingPurchaseCount || 0,
+            pendingCommissionCount: summary.pendingCommissionCount || 0,
             realizingChequesAmount: summary.realizingChequesAmount || 0,
             realizingChequesCount: summary.realizingChequesCount || 0
           });
@@ -403,7 +405,7 @@ const CashFlow = () => {
                                 <th>Amount</th>
                                 <th>Realized Date</th>
                               </tr>
-                            </thead>  
+                            </thead>
                             <tbody>
                               {isLoading ? (
                                 <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
@@ -543,7 +545,7 @@ const CashFlow = () => {
                           <span style={{ color: summaryData.outflowPercentageChange >= 0 ? '#ef4444' : '#10b981', fontWeight: 600 }}>
                             {summaryData.outflowPercentageChange > 0 ? '+' : ''}{summaryData.outflowPercentageChange}%
                           </span>
-                          Paid for {summaryData.totalGrnCount.toLocaleString()} {summaryData.totalGrnCount === 1 ? 'Order' : 'Orders'}
+                          Paid for {summaryData.totalGrnCount.toLocaleString()} {summaryData.totalGrnCount === 1 ? 'Order' : 'Orders'} + {summaryData.completedCommissionCount} Commission {summaryData.completedCommissionCount === 1 ? 'Invoice' : 'Invoices'}
                         </p>
                       </div>
                     </div>
@@ -633,7 +635,7 @@ const CashFlow = () => {
                               Rs. {summaryData.accountsPayable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             <div className="pending-count">
-                              {summaryData.pendingPurchaseCount} Pending {summaryData.pendingPurchaseCount === 1 ? 'Order' : 'Orders'}
+                              {summaryData.pendingPurchaseCount} Pending {summaryData.pendingPurchaseCount === 1 ? 'Order' : 'Orders'} + {summaryData.pendingCommissionCount} Commission {summaryData.pendingCommissionCount === 1 ? 'Invoice' : 'Invoices'}
                             </div>
                           </div>
                         </div>
