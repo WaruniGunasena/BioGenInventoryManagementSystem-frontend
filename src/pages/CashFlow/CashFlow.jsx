@@ -67,11 +67,24 @@ const CashFlow = () => {
         setCompletedCommissions([]);
         setCompletedCheques([]);
         setSummaryData({
-          totalIncome: 0, totalExpense: 0, profitOrLoss: 0,
-          netCashOutflow: 0, outflowPercentageChange: 0, totalGrnCount: 0, completedCommissionCount: 0,
+          totalIncome: 0,
+          totalExpense: 0,
+          profitOrLoss: 0,
+          netCashInflow: 0,
+          inflowPercentageChange: 0,
+          totalSalesCount: 0,
+          netCashOutflow: 0,
+          outflowPercentageChange: 0,
+          totalGrnCount: 0,
+          completedCommissionCount: 0,
           operatingCashFlow: 0,
-          accountsPayable: 0, pendingPurchaseCount: 0, pendingCommissionCount: 0,
-          realizingChequesAmount: 0, realizingChequesCount: 0
+          accountsReceivable: 0,
+          pendingSalesCount: 0,
+          accountsPayable: 0,
+          pendingPurchaseCount: 0,
+          pendingCommissionCount: 0,
+          realizingChequesAmount: 0,
+          realizingChequesCount: 0
         });
         setIsLoading(false);
         return;
@@ -521,12 +534,12 @@ const CashFlow = () => {
                         </div>
                       </div>
                       <div className="card-body-modern">
-                        <h3 className="card-amount-modern">Rs. {summaryData.netCashInflow.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                        <h3 className="card-amount-modern">Rs. {(summaryData.netCashInflow || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                         <p className="card-subtitle-modern">
-                          <span style={{ color: summaryData.inflowPercentageChange >= 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>
-                            {summaryData.inflowPercentageChange > 0 ? '+' : ''}{summaryData.inflowPercentageChange}%
+                          <span style={{ color: (summaryData.inflowPercentageChange || 0) >= 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>
+                            {(summaryData.inflowPercentageChange || 0) > 0 ? '+' : ''}{summaryData.inflowPercentageChange || 0}%
                           </span>
-                          Total from {summaryData.totalSalesCount.toLocaleString()} {summaryData.totalSalesCount === 1 ? 'Sale' : 'Sales'}
+                          Total from {(summaryData.totalSalesCount || 0).toLocaleString()} {summaryData.totalSalesCount === 1 ? 'Sale' : 'Sales'}
                         </p>
                       </div>
                     </div>
@@ -540,12 +553,12 @@ const CashFlow = () => {
                         </div>
                       </div>
                       <div className="card-body-modern">
-                        <h3 className="card-amount-modern">Rs. {summaryData.netCashOutflow.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                        <h3 className="card-amount-modern">Rs. {(summaryData.netCashOutflow || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                         <p className="card-subtitle-modern">
-                          <span style={{ color: summaryData.outflowPercentageChange >= 0 ? '#ef4444' : '#10b981', fontWeight: 600 }}>
-                            {summaryData.outflowPercentageChange > 0 ? '+' : ''}{summaryData.outflowPercentageChange}%
+                          <span style={{ color: (summaryData.outflowPercentageChange || 0) >= 0 ? '#ef4444' : '#10b981', fontWeight: 600 }}>
+                            {(summaryData.outflowPercentageChange || 0) > 0 ? '+' : ''}{summaryData.outflowPercentageChange || 0}%
                           </span>
-                          Paid for {summaryData.totalGrnCount.toLocaleString()} {summaryData.totalGrnCount === 1 ? 'Order' : 'Orders'} + {summaryData.completedCommissionCount} Commission {summaryData.completedCommissionCount === 1 ? 'Invoice' : 'Invoices'}
+                          Paid for {(summaryData.totalGrnCount || 0).toLocaleString()} {summaryData.totalGrnCount === 1 ? 'Order' : 'Orders'} + {summaryData.completedCommissionCount || 0} Commission {summaryData.completedCommissionCount === 1 ? 'Invoice' : 'Invoices'}
                         </p>
                       </div>
                     </div>
@@ -561,7 +574,7 @@ const CashFlow = () => {
                         </div>
                       </div>
                       <div className="card-body-modern">
-                        <h3 className="card-amount-modern">Rs. {summaryData.operatingCashFlow.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                        <h3 className="card-amount-modern">Rs. {(summaryData.operatingCashFlow || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                         <p className="card-subtitle-modern">
                           <span style={{ color: '#3b82f6', fontWeight: 600 }}>Net</span>
                           Income - Expense
@@ -590,10 +603,10 @@ const CashFlow = () => {
                           </div>
                           <div className="pending-amount-wrapper">
                             <div className="pending-amount text-blue">
-                              Rs. {summaryData.accountsReceivable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              Rs. {(summaryData.accountsReceivable || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             <div className="pending-count">
-                              {summaryData.pendingSalesCount} Pending {summaryData.pendingSalesCount === 1 ? 'Invoice' : 'Invoices'}
+                              {summaryData.pendingSalesCount || 0} Pending {summaryData.pendingSalesCount === 1 ? 'Invoice' : 'Invoices'}
                             </div>
                           </div>
                         </div>
@@ -610,10 +623,10 @@ const CashFlow = () => {
                           </div>
                           <div className="pending-amount-wrapper">
                             <div className="pending-amount text-amber">
-                              Rs. {summaryData.realizingChequesAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              Rs. {(summaryData.realizingChequesAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             <div className="pending-count">
-                              {summaryData.realizingChequesCount} Pending {summaryData.realizingChequesCount === 1 ? 'Cheque' : 'Cheques'}
+                              {summaryData.realizingChequesCount || 0} Pending {summaryData.realizingChequesCount === 1 ? 'Cheque' : 'Cheques'}
                             </div>
                           </div>
                         </div>
@@ -632,10 +645,10 @@ const CashFlow = () => {
                           </div>
                           <div className="pending-amount-wrapper">
                             <div className="pending-amount text-red">
-                              Rs. {summaryData.accountsPayable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              Rs. {(summaryData.accountsPayable || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             <div className="pending-count">
-                              {summaryData.pendingPurchaseCount} Pending {summaryData.pendingPurchaseCount === 1 ? 'Order' : 'Orders'} + {summaryData.pendingCommissionCount} Commission {summaryData.pendingCommissionCount === 1 ? 'Invoice' : 'Invoices'}
+                              {summaryData.pendingPurchaseCount || 0} Pending {summaryData.pendingPurchaseCount === 1 ? 'Order' : 'Orders'} + {summaryData.pendingCommissionCount || 0} Commission {summaryData.pendingCommissionCount === 1 ? 'Invoice' : 'Invoices'}
                             </div>
                           </div>
                         </div>
