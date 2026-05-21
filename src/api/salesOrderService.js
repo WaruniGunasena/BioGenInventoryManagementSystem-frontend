@@ -27,11 +27,17 @@ export const approveSalesOrder = (salesOrderStatus, userId, salesOrderId) =>
 
 export const getPendingOrderCount = () => api.get("/sales-orders/getPendingOrderCount");
 
+export const updateSalesOrderDeliveryStatus = (orderId) =>
+    api.get(`/sales-orders/updateDelivery/${orderId}`);
+
 export const submitSalesOrderPayment = (paymentData) =>
     api.post("/sales-orders/payment", paymentData, {
         headers: { "Content-Type": "application/json" },
     });
 
-export const updateSalesOrderDeliveryStatus = (orderId) =>
-    api.get(`/sales-orders/updateDelivery/${orderId}`);
+export const updateChequeStatus = (paymentId, status, userId) =>
+    api.post(`/sales-orders/update-cheque-status?paymentId=${paymentId}&status=${status}&userId=${userId}`);
+
+export const getPendingCheques = (salesOrderId) =>
+    api.get(`/sales-orders/pending-cheques/${salesOrderId}`);
 

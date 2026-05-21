@@ -487,6 +487,49 @@ const FINANCIAL_REPORTS = [
             { key: "date", label: "Date", type: "date", required: true, defaultValue: today },
         ],
     },
+    {
+        reportType: "CHEQUE_SUMMARY",
+        reportName: "Cheque Summary Report",
+        description: "All cheque transactions within a date range, optionally filtered by status (Realizing, Realized, Returned).",
+        icon: <CreditCard size={22} />,
+        params: [
+            { key: "startDate", label: "From Date", type: "date", required: true, defaultValue: firstOfMonth },
+            { key: "endDate", label: "To Date", type: "date", required: true, defaultValue: lastOfMonth },
+            {
+                key: "status",
+                label: "Status",
+                type: "select",
+                required: false,
+                defaultValue: "",
+                options: [
+                    { label: "All Statuses", value: "" },
+                    { label: "Realizing", value: "REALIZING" },
+                    { label: "Realized", value: "REALIZED" },
+                    { label: "Returned", value: "RETURNED" },
+                ],
+            },
+        ],
+    },
+    {
+        reportType: "PENDING_CHEQUE_REPORT",
+        reportName: "Pending Cheque Summary",
+        description: "Cheques filtered by status — defaults to Realizing (pending deposit). Filter to see Realized or Returned cheques.",
+        icon: <CreditCard size={22} />,
+        params: [
+            {
+                key: "status",
+                label: "Status",
+                type: "select",
+                required: false,
+                defaultValue: "REALIZING",
+                options: [
+                    { label: "Realizing (Pending)", value: "REALIZING" },
+                    { label: "Realized", value: "REALIZED" },
+                    { label: "Returned", value: "RETURNED" },
+                ],
+            },
+        ],
+    },
 ];
 
 const RETURNS_REPORTS = [
