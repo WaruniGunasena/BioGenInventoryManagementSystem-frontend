@@ -534,6 +534,7 @@
   }
 }
 
+
 .pending-card {
   display: flex;
   align-items: center;
@@ -635,4 +636,18 @@
 .pending-card.payable:hover .pending-count {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
+}
+
+.pending-icon-wrapper.amber {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.15));
+  color: #f59e0b;
+}
+
+.text-amber {
+  color: #f59e0b;
+}
+
+.pending-card.realizing-cheques:hover .pending-count {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
 }

@@ -8,7 +8,8 @@ import {
   TrendingUp,
   Activity,
   ArrowDownRight,
-  ArrowUpRight
+  ArrowUpRight,
+  Clock
 } from "lucide-react";
 import "./CashFlow.css";
 import {
@@ -27,9 +28,11 @@ const CashFlow = () => {
   const [pendingDebits, setPendingDebits] = useState([]);
   const [pendingCredits, setPendingCredits] = useState([]);
   const [pendingCommissions, setPendingCommissions] = useState([]);
+  const [pendingCheques, setPendingCheques] = useState([]);
   const [completedDebits, setCompletedDebits] = useState([]);
   const [completedCredits, setCompletedCredits] = useState([]);
   const [completedCommissions, setCompletedCommissions] = useState([]);
+  const [completedCheques, setCompletedCheques] = useState([]);
   const [summaryData, setSummaryData] = useState({
     totalIncome: 0,
     totalExpense: 0,
@@ -40,11 +43,15 @@ const CashFlow = () => {
     netCashOutflow: 0,
     outflowPercentageChange: 0,
     totalGrnCount: 0,
+    completedCommissionCount: 0,
     operatingCashFlow: 0,
     accountsReceivable: 0,
     pendingSalesCount: 0,
     accountsPayable: 0,
-    pendingPurchaseCount: 0
+    pendingPurchaseCount: 0,
+    pendingCommissionCount: 0,
+    realizingChequesAmount: 0,
+    realizingChequesCount: 0
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -54,17 +61,19 @@ const CashFlow = () => {
         setPendingDebits([]);
         setPendingCredits([]);
         setPendingCommissions([]);
+        setPendingCheques([]);
         setCompletedDebits([]);
         setCompletedCredits([]);
         setCompletedCommissions([]);
+        setCompletedCheques([]);
         setSummaryData({
           totalIncome: 0, totalExpense: 0, profitOrLoss: 0,
-          netCashInflow: 0, inflowPercentageChange: 0, totalSalesCount: 0,
-          netCashOutflow: 0, outflowPercentageChange: 0, totalGrnCount: 0,
+          netCashOutflow: 0, outflowPercentageChange: 0, totalGrnCount: 0, completedCommissionCount: 0,
           operatingCashFlow: 0,
-          accountsReceivable: 0, pendingSalesCount: 0,
-          accountsPayable: 0, pendingPurchaseCount: 0
+          accountsPayable: 0, pendingPurchaseCount: 0, pendingCommissionCount: 0,
+          realizingChequesAmount: 0, realizingChequesCount: 0
         });
+        setIsLoading(false);
         return;
       }
       setIsLoading(true);
@@ -74,11 +83,21 @@ const CashFlow = () => {
           setPendingDebits(res.data?.debits || []);
           setPendingCredits(res.data?.credits || []);
           setPendingCommissions(res.data?.commissions || []);
+          setPendingCheques(res.data?.pendingCheques || []);
+          console.log("pendingDebits", res.data?.debits);
+          console.log("pendingCredits", res.data?.credits);
+          console.log("pendingCommissions", res.data?.commissions);
+          console.log("pendingCheques", res.data?.pendingCheques);
         } else if (activeTab === "complete") {
           const res = await getCompletedCashFlow(startDate, endDate);
           setCompletedDebits(res.data?.debits || []);
           setCompletedCredits(res.data?.credits || []);
           setCompletedCommissions(res.data?.commissions || []);
+          setCompletedCheques(res.data?.realizedCheques || []);
+          console.log("completedDebits", res.data?.debits);
+          console.log("completedCredits", res.data?.credits);
+          console.log("completedCommissions", res.data?.commissions);
+          console.log("realizedCheques", res.data?.realizedCheques);
         } else if (activeTab === "summary") {
           const res = await getCashFlowSummary(startDate, endDate);
           const summary = res.data?.cashFlowSummary || {};
@@ -92,15 +111,19 @@ const CashFlow = () => {
             netCashOutflow: summary.netCashOutflow || 0,
             outflowPercentageChange: summary.outflowPercentageChange || 0,
             totalGrnCount: summary.totalGrnCount || 0,
+            completedCommissionCount: summary.completedCommissionCount || 0,
             operatingCashFlow: summary.operatingCashFlow || 0,
             accountsReceivable: summary.accountsReceivable || 0,
             pendingSalesCount: summary.pendingSalesCount || 0,
             accountsPayable: summary.accountsPayable || 0,
-            pendingPurchaseCount: summary.pendingPurchaseCount || 0
+            pendingPurchaseCount: summary.pendingPurchaseCount || 0,
+            pendingCommissionCount: summary.pendingCommissionCount || 0,
+            realizingChequesAmount: summary.realizingChequesAmount || 0,
+            realizingChequesCount: summary.realizingChequesCount || 0
           });
         }
-      } catch (error) {
-        console.error("Failed to fetch cash flow data:", error);
+      } catch (err) {
+        console.error("Failed to fetch cash flow data:", err);
       } finally {
         setIsLoading(false);
       }
@@ -177,35 +200,73 @@ const CashFlow = () => {
                           <h2>Debit (Receivable)</h2>
                         </div>
                       </div>
-                      <div className="table-responsive">
-                        <table className="ledger-table">
-                          <thead>
-                            <tr>
-                              <th>Invoice Number</th>
-                              <th>Customer</th>
-                              <th>Amount</th>
-                              <th>Due Date</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {isLoading ? (
-                              <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
-                            ) : (!startDate || !endDate) ? (
-                              <tr><td colSpan="4" className="empty-state" style={{ color: "#94a3b8", fontStyle: "italic" }}>Please select a date range</td></tr>
-                            ) : pendingDebits.length === 0 ? (
-                              <tr><td colSpan="4" className="empty-state">No pending debits matching the criteria</td></tr>
-                            ) : (
-                              pendingDebits.map((item, index) => (
-                                <tr key={index}>
-                                  <td>{item.invoiceNumber || "N/A"}</td>
-                                  <td>{item.customer || "N/A"}</td>
-                                  <td>{item.amount || "0.00"}</td>
-                                  <td>{item.date || "N/A"}</td>
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </table>
+
+                      <div className="ledger-sub-section">
+                        <h3 className="sub-section-title">Sales Invoices (Receivable)</h3>
+                        <div className="table-responsive">
+                          <table className="ledger-table">
+                            <thead>
+                              <tr>
+                                <th>Invoice Number</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Due Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {isLoading ? (
+                                <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
+                              ) : (!startDate || !endDate) ? (
+                                <tr><td colSpan="4" className="empty-state" style={{ color: "#94a3b8", fontStyle: "italic" }}>Please select a date range</td></tr>
+                              ) : pendingDebits.length === 0 ? (
+                                <tr><td colSpan="4" className="empty-state">No pending debits matching the criteria</td></tr>
+                              ) : (
+                                pendingDebits.map((item, index) => (
+                                  <tr key={index}>
+                                    <td>{item.invoiceNumber || "N/A"}</td>
+                                    <td>{item.customer || "N/A"}</td>
+                                    <td>{item.amount || "0.00"}</td>
+                                    <td>{item.date || "N/A"}</td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div className="ledger-sub-section" style={{ marginTop: "2.5rem" }}>
+                        <h3 className="sub-section-title">Cheques (Realizing)</h3>
+                        <div className="table-responsive">
+                          <table className="ledger-table">
+                            <thead>
+                              <tr>
+                                <th>Cheque Number</th>
+                                <th>Customer/Order</th>
+                                <th>Amount</th>
+                                <th>Due Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {isLoading ? (
+                                <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
+                              ) : (!startDate || !endDate) ? (
+                                <tr><td colSpan="4" className="empty-state" style={{ color: "#94a3b8", fontStyle: "italic" }}>Please select a date range</td></tr>
+                              ) : pendingCheques.length === 0 ? (
+                                <tr><td colSpan="4" className="empty-state">No pending cheques found</td></tr>
+                              ) : (
+                                pendingCheques.map((item, index) => (
+                                  <tr key={index}>
+                                    <td>{item.cheque_number || item.chequeNumber || "N/A"}</td>
+                                    <td>{item.customer || item.sales_order_id || "N/A"}</td>
+                                    <td>{item.amount || "0.00"}</td>
+                                    <td>{item.cheque_due_date || item.date || "N/A"}</td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
                     <div className="ledger-card credit-card">
@@ -298,35 +359,73 @@ const CashFlow = () => {
                           <h2>Debit (Received)</h2>
                         </div>
                       </div>
-                      <div className="table-responsive">
-                        <table className="ledger-table">
-                          <thead>
-                            <tr>
-                              <th>Invoice Number</th>
-                              <th>Customer</th>
-                              <th>Amount</th>
-                              <th>Date</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {isLoading ? (
-                              <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
-                            ) : (!startDate || !endDate) ? (
-                              <tr><td colSpan="4" className="empty-state" style={{ color: "#94a3b8", fontStyle: "italic" }}>Please select a date range</td></tr>
-                            ) : completedDebits.length === 0 ? (
-                              <tr><td colSpan="4" className="empty-state">No completed debits found</td></tr>
-                            ) : (
-                              completedDebits.map((item, index) => (
-                                <tr key={index}>
-                                  <td>{item.invoiceNumber || "N/A"}</td>
-                                  <td>{item.customer || "N/A"}</td>
-                                  <td>{item.amount || "0.00"}</td>
-                                  <td>{item.date || "N/A"}</td>
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </table>
+
+                      <div className="ledger-sub-section">
+                        <h3 className="sub-section-title">Sales Invoices (Received)</h3>
+                        <div className="table-responsive">
+                          <table className="ledger-table">
+                            <thead>
+                              <tr>
+                                <th>Invoice Number</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {isLoading ? (
+                                <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
+                              ) : (!startDate || !endDate) ? (
+                                <tr><td colSpan="4" className="empty-state" style={{ color: "#94a3b8", fontStyle: "italic" }}>Please select a date range</td></tr>
+                              ) : completedDebits.length === 0 ? (
+                                <tr><td colSpan="4" className="empty-state">No completed debits found</td></tr>
+                              ) : (
+                                completedDebits.map((item, index) => (
+                                  <tr key={index}>
+                                    <td>{item.invoiceNumber || "N/A"}</td>
+                                    <td>{item.customer || "N/A"}</td>
+                                    <td>{item.amount || "0.00"}</td>
+                                    <td>{item.date || "N/A"}</td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div className="ledger-sub-section" style={{ marginTop: "2.5rem" }}>
+                        <h3 className="sub-section-title">Realized Cheques</h3>
+                        <div className="table-responsive">
+                          <table className="ledger-table">
+                            <thead>
+                              <tr>
+                                <th>Cheque Number</th>
+                                <th>Customer/Order</th>
+                                <th>Amount</th>
+                                <th>Realized Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {isLoading ? (
+                                <tr><td colSpan="4" className="empty-state">Loading...</td></tr>
+                              ) : (!startDate || !endDate) ? (
+                                <tr><td colSpan="4" className="empty-state" style={{ color: "#94a3b8", fontStyle: "italic" }}>Please select a date range</td></tr>
+                              ) : completedCheques.length === 0 ? (
+                                <tr><td colSpan="4" className="empty-state">No realized cheques found</td></tr>
+                              ) : (
+                                completedCheques.map((item, index) => (
+                                  <tr key={index}>
+                                    <td>{item.cheque_number || item.chequeNumber || "N/A"}</td>
+                                    <td>{item.customer || item.sales_order_id || "N/A"}</td>
+                                    <td>{item.amount || "0.00"}</td>
+                                    <td>{item.cheque_due_date || item.cheque_due_date || "N/A"}</td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
                     <div className="ledger-card credit-card">
@@ -446,7 +545,7 @@ const CashFlow = () => {
                           <span style={{ color: summaryData.outflowPercentageChange >= 0 ? '#ef4444' : '#10b981', fontWeight: 600 }}>
                             {summaryData.outflowPercentageChange > 0 ? '+' : ''}{summaryData.outflowPercentageChange}%
                           </span>
-                          Paid for {summaryData.totalGrnCount.toLocaleString()} {summaryData.totalGrnCount === 1 ? 'Order' : 'Orders'}
+                          Paid for {summaryData.totalGrnCount.toLocaleString()} {summaryData.totalGrnCount === 1 ? 'Order' : 'Orders'} + {summaryData.completedCommissionCount} Commission {summaryData.completedCommissionCount === 1 ? 'Invoice' : 'Invoices'}
                         </p>
                       </div>
                     </div>
@@ -478,42 +577,66 @@ const CashFlow = () => {
                     </div>
 
                     <div className="pending-cards-grid">
-                      <div className="pending-card receivable">
-                        <div className="pending-icon-wrapper blue">
-                          <ArrowUpRight size={24} strokeWidth={2.5} />
-                        </div>
-                        <div className="pending-details">
-                          <h3 className="pending-title">Accounts Receivable</h3>
-                          <p className="pending-subtitle">
-                            Total from unpaid/partial sales
-                          </p>
-                        </div>
-                        <div className="pending-amount-wrapper">
-                          <div className="pending-amount text-blue">
-                            Rs. {summaryData.accountsReceivable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div className="pending-card receivable">
+                          <div className="pending-icon-wrapper blue">
+                            <ArrowUpRight size={24} strokeWidth={2.5} />
                           </div>
-                          <div className="pending-count">
-                            {summaryData.pendingSalesCount} Pending {summaryData.pendingSalesCount === 1 ? 'Invoice' : 'Invoices'}
+                          <div className="pending-details">
+                            <h3 className="pending-title">Accounts Receivable</h3>
+                            <p className="pending-subtitle">
+                              Total from unpaid/partial sales
+                            </p>
+                          </div>
+                          <div className="pending-amount-wrapper">
+                            <div className="pending-amount text-blue">
+                              Rs. {summaryData.accountsReceivable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                            <div className="pending-count">
+                              {summaryData.pendingSalesCount} Pending {summaryData.pendingSalesCount === 1 ? 'Invoice' : 'Invoices'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pending-card realizing-cheques">
+                          <div className="pending-icon-wrapper amber">
+                            <Clock size={24} strokeWidth={2.5} />
+                          </div>
+                          <div className="pending-details">
+                            <h3 className="pending-title">Realizing Cheques</h3>
+                            <p className="pending-subtitle">
+                              Total from pending cheques
+                            </p>
+                          </div>
+                          <div className="pending-amount-wrapper">
+                            <div className="pending-amount text-amber">
+                              Rs. {summaryData.realizingChequesAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                            <div className="pending-count">
+                              {summaryData.realizingChequesCount} Pending {summaryData.realizingChequesCount === 1 ? 'Cheque' : 'Cheques'}
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="pending-card payable">
-                        <div className="pending-icon-wrapper red">
-                          <ArrowDownRight size={24} strokeWidth={2.5} />
-                        </div>
-                        <div className="pending-details">
-                          <h3 className="pending-title">Accounts Payable</h3>
-                          <p className="pending-subtitle">
-                            Total owed on supplier orders
-                          </p>
-                        </div>
-                        <div className="pending-amount-wrapper">
-                          <div className="pending-amount text-red">
-                            Rs. {summaryData.accountsPayable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <div className="pending-card payable">
+                          <div className="pending-icon-wrapper red">
+                            <ArrowDownRight size={24} strokeWidth={2.5} />
                           </div>
-                          <div className="pending-count">
-                            {summaryData.pendingPurchaseCount} Pending {summaryData.pendingPurchaseCount === 1 ? 'Order' : 'Orders'}
+                          <div className="pending-details">
+                            <h3 className="pending-title">Accounts Payable</h3>
+                            <p className="pending-subtitle">
+                              Total owed on supplier orders
+                            </p>
+                          </div>
+                          <div className="pending-amount-wrapper">
+                            <div className="pending-amount text-red">
+                              Rs. {summaryData.accountsPayable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                            <div className="pending-count">
+                              {summaryData.pendingPurchaseCount} Pending {summaryData.pendingPurchaseCount === 1 ? 'Order' : 'Orders'} + {summaryData.pendingCommissionCount} Commission {summaryData.pendingCommissionCount === 1 ? 'Invoice' : 'Invoices'}
+                            </div>
                           </div>
                         </div>
                       </div>
