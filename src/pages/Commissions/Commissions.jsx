@@ -23,7 +23,7 @@ const Commissions = ({ role = 'salesRep' }) => {
     const [totalCommissionReversal, setTotalCommissionReversal] = useState(0);
     const [netPayout, setNetPayout] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
-    const [activeSubTab, setActiveSubTab] = useState('commissions'); 
+    const [activeSubTab, setActiveSubTab] = useState('commissions');
 
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
@@ -85,9 +85,12 @@ const Commissions = ({ role = 'salesRep' }) => {
                         }
 
                         if (response.data) {
-                            const data = response.data.commissionList || response.data.reversalList || response.data.content || response.data.data || [];
+                            const rawData = response.data.commissionList || response.data.reversalList || response.data.content || response.data.data || [];
                             const total = response.data.totalPages || 1;
-                            setCommissions(data);
+                            const filteredData = (activeSubTab === 'commissions')
+                                ? rawData.filter(item => parseFloat(item.totalCommission) !== 0)
+                                : rawData.filter(item => parseFloat(item.totalCommissionReversal) !== 0);
+                            setCommissions(filteredData);
                             setTotalPages(total);
                         }
                     } catch (e) {
@@ -203,10 +206,9 @@ const Commissions = ({ role = 'salesRep' }) => {
             const resData = response.data;
 
             if (resData) {
-                setInvoiceDetails({
-                    commissions: resData.data || [],
-                    reversals: resData.reversalData || []
-                });
+                const commissions = (resData.data || []).filter(item => parseFloat(item.totalCommission) !== 0);
+                const reversals = (resData.reversalData || []).filter(item => parseFloat(item.totalCommissionReversal) !== 0);
+                setInvoiceDetails({ commissions, reversals });
             }
         } catch (error) {
             console.error("Error fetching commission details:", error);
