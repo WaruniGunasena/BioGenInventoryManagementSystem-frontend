@@ -252,7 +252,7 @@ const ProductReturns = () => {
                                         <option value="">— Select Customer —</option>
                                         {customers.map((c) => (
                                             <option key={c.id || c._id} value={c.id || c._id}>
-                                                {c.name}
+                                                {c.name} - {c.address}
                                             </option>
                                         ))}
                                     </select>
