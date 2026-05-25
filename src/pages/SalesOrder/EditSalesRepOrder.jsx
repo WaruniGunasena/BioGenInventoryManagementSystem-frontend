@@ -106,8 +106,14 @@ const EditSalesRepOrder = () => {
                 if (fromAdded) return { q: fromAdded.quantity, b: fromAdded.bonus };
 
                 if (addedItemsRef.current.length === 0 && invoice?.items) {
-                    const saleLine = invoice.items.find(i => String(i.productId || i.product?.id) === String(pid) && parseFloat(i.sellingPrice) > 0 && !i.isReissue);
-                    const bonusLine = invoice.items.find(i => String(i.productId || i.product?.id) === String(pid) && parseFloat(i.sellingPrice) === 0 && !i.isReissue);
+                    const saleLine = invoice.items.find(i => {
+                        const iProdId = i.productId || i.product?.id;
+                        return iProdId && String(iProdId) === String(pid) && parseFloat(i.sellingPrice) > 0 && !i.isReissue;
+                    });
+                    const bonusLine = invoice.items.find(i => {
+                        const iProdId = i.productId || i.product?.id;
+                        return iProdId && String(iProdId) === String(pid) && parseFloat(i.sellingPrice) === 0 && !i.isReissue;
+                    });
                     if (saleLine || bonusLine) {
                         return { q: saleLine?.quantity || 0, b: bonusLine?.quantity || 0 };
                     }
@@ -168,10 +174,12 @@ const EditSalesRepOrder = () => {
 
         const salelines = (invoice.items || []).filter(i => parseFloat(i.sellingPrice) > 0 && !i.isReissue);
         const preloadedItems = salelines.map(item => {
-            const bonusLine = (invoice.items || []).find(
-                b => (b.productId === item.productId || b.product?.id === item.productId) &&
-                    parseFloat(b.sellingPrice) === 0 && !b.isReissue
-            );
+            const bonusLine = (invoice.items || []).find(b => {
+                const itemProdId = item.productId || item.product?.id;
+                const bProdId = b.productId || b.product?.id;
+                return itemProdId && bProdId && String(itemProdId) === String(bProdId)
+                    && parseFloat(b.sellingPrice) === 0 && !b.isReissue;
+            });
             return {
                 productId: item.productId || item.product?.id,
                 productName: item.productName || item.product?.name || "",

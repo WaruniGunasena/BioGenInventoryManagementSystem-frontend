@@ -1,62 +1,85 @@
 import React from 'react';
+import { TrendingUp, ShoppingCart, Users } from 'lucide-react';
 
-const SalesRepStats = () => {
+const formatCurrency = (val) => {
+    if (val === undefined || val === null) return "LKR 0.00";
+    const num = parseFloat(val);
+    if (num >= 1000000) {
+        return `LKR ${(num / 1000000).toFixed(1)} M`;
+    }
+    return `LKR ${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+const SalesRepStats = ({ data, loading }) => {
     const stats = [
         {
             title: "My Monthly Sales",
-            value: "LKR 2.5 M",
-            change: "+ 15%",
+            value: formatCurrency(data?.myMonthlySales),
+            change: data?.myMonthlySalesChange !== undefined 
+                ? `${data.myMonthlySalesChange >= 0 ? '+' : ''}${data.myMonthlySalesChange.toFixed(0)}%` 
+                : "0%",
             subtitle: "vs last month",
-            isPositive: true,
-            color: "#60a5fa", // blue-400
-            iconColor: "#3b82f6" // blue-500
+            isPositive: data?.myMonthlySalesChange === undefined || data.myMonthlySalesChange >= 0,
+            icon: TrendingUp,
+            color: "#6366f1",
+            bg: "#eef2ff"
         },
         {
             title: "Today's Orders",
-            value: "14 Orders",
-            change: "+ 3",
+            value: `${data?.myTodayOrdersCount ?? 0} Orders`,
+            change: data?.myTodayOrdersChange !== undefined 
+                ? `${data.myTodayOrdersChange >= 0 ? '+' : ''}${data.myTodayOrdersChange}` 
+                : "+0",
             subtitle: "vs yesterday",
-            isPositive: true,
-            color: "#4ade80", // green-400
-            iconColor: "#22c55e" // green-500
-        },
-        {
-            title: "Target Achieved",
-            value: "85%",
-            change: "+ 5%",
-            subtitle: "vs last month",
-            isPositive: true,
-            color: "#f472b6", // pink-400
-            iconColor: "#ec4899" // pink-500
+            isPositive: data?.myTodayOrdersChange === undefined || data.myTodayOrdersChange >= 0,
+            icon: ShoppingCart,
+            color: "#10b981",
+            bg: "#f0fdf4"
         },
         {
             title: "Active Customers",
-            value: "120",
-            change: "+ 12",
+            value: `${data?.myActiveCustomersCount ?? 0}`,
+            change: data?.myActiveCustomersChange !== undefined 
+                ? `${data.myActiveCustomersChange >= 0 ? '+' : ''}${data.myActiveCustomersChange}` 
+                : "+0",
             subtitle: "new this month",
-            isPositive: true,
-            color: "#fbbf24", // amber-400
-            iconColor: "#f59e0b" // amber-500
+            isPositive: data?.myActiveCustomersChange === undefined || data.myActiveCustomersChange >= 0,
+            icon: Users,
+            color: "#0ea5e9",
+            bg: "#f0f9ff"
         }
     ];
 
     return (
         <div className="dashboard-stats-grid">
-            {stats.map((stat, index) => (
-                <div key={index} className="stat-card">
-                    <div className="stat-header">
-                        <h3>{stat.title}</h3>
-                        <span className="more-options">⋮</span>
+            {stats.map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                    <div key={index} className="stat-card" style={{ borderTop: `3px solid ${stat.color}` }}>
+                        <div className="stat-header">
+                            <h3>{stat.title}</h3>
+                            <div className="stat-icon-wrap" style={{ background: stat.bg }}>
+                                <Icon size={18} color={stat.color} />
+                            </div>
+                        </div>
+                        <div className="stat-value" style={{ color: stat.color }}>
+                            {loading ? <span className="stat-skeleton" /> : stat.value}
+                        </div>
+                        <div className="stat-change">
+                            {loading ? (
+                                <span className="stat-skeleton" style={{ width: '60px', height: '14px', marginTop: '4px' }} />
+                            ) : (
+                                <>
+                                    <span className={`change-indicator ${stat.isPositive ? 'positive' : 'negative'}`}>
+                                        {stat.change}
+                                    </span>
+                                    <span className="subtitle"> {stat.subtitle}</span>
+                                </>
+                            )}
+                        </div>
                     </div>
-                    <div className="stat-value">{stat.value}</div>
-                    <div className="stat-change">
-                        <span className={`change-indicator ${stat.isPositive ? 'positive' : 'negative'}`}>
-                            {stat.change}
-                        </span>
-                        <span className="subtitle"> {stat.subtitle}</span>
-                    </div>
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 };
