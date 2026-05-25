@@ -97,20 +97,12 @@ const CashFlow = () => {
           setPendingCredits(res.data?.credits || []);
           setPendingCommissions(res.data?.commissions || []);
           setPendingCheques(res.data?.pendingCheques || []);
-          console.log("pendingDebits", res.data?.debits);
-          console.log("pendingCredits", res.data?.credits);
-          console.log("pendingCommissions", res.data?.commissions);
-          console.log("pendingCheques", res.data?.pendingCheques);
         } else if (activeTab === "complete") {
           const res = await getCompletedCashFlow(startDate, endDate);
           setCompletedDebits(res.data?.debits || []);
           setCompletedCredits(res.data?.credits || []);
           setCompletedCommissions(res.data?.commissions || []);
           setCompletedCheques(res.data?.realizedCheques || []);
-          console.log("completedDebits", res.data?.debits);
-          console.log("completedCredits", res.data?.credits);
-          console.log("completedCommissions", res.data?.commissions);
-          console.log("realizedCheques", res.data?.realizedCheques);
         } else if (activeTab === "summary") {
           const res = await getCashFlowSummary(startDate, endDate);
           const summary = res.data?.cashFlowSummary || {};

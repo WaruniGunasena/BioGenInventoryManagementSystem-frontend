@@ -59,7 +59,12 @@ const Dashboard = () => {
                 toggleMobileSidebar={toggleMobileSidebar}
             />
             {isSalesRepUser || loggedInUserRole === 'SALES_REP' || loggedInUserRole === 'Sales Rep' ? (
-                <SalesRepDashboard userName={loggedInUser} />
+                <SalesRepDashboard 
+                    userName={loggedInUser} 
+                    data={dashData} 
+                    loading={loading} 
+                    onRefresh={fetchDashboardData} 
+                />
             ) : (
                 <div className="dashboard-content">
                     {/* ── Header ── */}
