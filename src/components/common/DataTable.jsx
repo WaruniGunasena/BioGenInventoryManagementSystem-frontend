@@ -256,17 +256,42 @@ const DataTable = ({
                     <ChevronLeft size={16} /> Previous
                 </button>
 
-                <div className="page-numbers">
-                    {[...Array(totalPages)].map((_, i) => (
-                        <button
-                            key={i}
-                            className={`page-btn ${currentPage === i ? 'active' : ''}`}
-                            onClick={() => onPageChange(i)}
-                        >
-                            {i + 1}
-                        </button>
-                    ))}
-                </div>
+
+                {(() => {
+                    const pages = [];
+                    if (totalPages <= 5) {
+                        // Show all pages when total pages are 5 or less
+                        for (let i = 0; i < totalPages; i++) pages.push(i);
+                    } else {
+                        // Always show first page
+                        pages.push(0);
+                        const left = Math.max(1, currentPage - 1);
+                        const right = Math.min(totalPages - 2, currentPage + 1);
+                        if (left > 1) pages.push('ellipsis');
+                        for (let i = left; i <= right; i++) pages.push(i);
+                        if (right < totalPages - 2) pages.push('ellipsis');
+                        // Always show last page
+                        pages.push(totalPages - 1);
+                    }
+                    return (
+                        <div className="page-numbers">
+                            {pages.map((p, idx) => {
+                                if (p === 'ellipsis') {
+                                    return <span key={'ellipsis' + idx} className="ellipsis">…</span>;
+                                }
+                                return (
+                                    <button
+                                        key={p}
+                                        className={`page-btn ${currentPage === p ? 'active' : ''}`}
+                                        onClick={() => onPageChange(p)}
+                                    >
+                                        {p + 1}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    );
+                })()}
 
                 <button
                     className="nav-btn"
