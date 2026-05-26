@@ -133,10 +133,45 @@ const CreditNotes = () => {
             const imgData = canvas.toDataURL("image/png");
             const pdf = new jsPDF("p", "mm", "a4");
             const imgProps = pdf.getImageProperties(imgData);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const marginX = 10;
+            const marginY = 15;
+            const printableWidth = pageWidth - 2 * marginX;
+            const printableHeight = pageHeight - 2 * marginY;
 
-            pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+            const pdfHeight = (imgProps.height * printableWidth) / imgProps.width;
+
+            let leftHeight = pdfHeight;
+            let position = marginY;
+            let pageCount = 0;
+
+            // Render first page
+            pdf.addImage(imgData, "PNG", marginX, position, printableWidth, pdfHeight);
+            
+            // Mask margins on first page
+            pdf.setFillColor(255, 255, 255);
+            pdf.rect(0, 0, pageWidth, marginY, "F");
+            pdf.rect(0, pageHeight - marginY, pageWidth, marginY, "F");
+            
+            leftHeight -= printableHeight;
+
+            // Render subsequent pages if content overflows the A4 page limit
+            while (leftHeight > 0) {
+                pdf.addPage();
+                pageCount++;
+                position = marginY - pageCount * printableHeight;
+                pdf.addImage(imgData, "PNG", marginX, position, printableWidth, pdfHeight);
+                
+                // Mask margins on new page
+                pdf.setFillColor(255, 255, 255);
+                pdf.rect(0, 0, pageWidth, marginY, "F");
+                pdf.rect(0, pageHeight - marginY, pageWidth, marginY, "F");
+                
+                leftHeight -= printableHeight;
+            }
+
             pdf.save(`Credit_Note_${selectedReturn.returnNumber}.pdf`);
         } catch (error) {
             console.error("Error generating PDF:", error);
@@ -183,7 +218,8 @@ const CreditNotes = () => {
         {
             header: "Total (RS.)",
             accessor: "totalReturnAmount",
-            render: (row) => parseFloat(row.totalReturnAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })
+            render: (row) => parseFloat(row.totalReturnAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }),
+            align: 'right'
         },
         {
             header: "Status",
@@ -361,11 +397,12 @@ const CreditNotes = () => {
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <p>Processed By: {selectedReturn.processedBy || "N/A"}
-                                            <span style={{ marginLeft: "30px" }}>Checked By: .........................</span>
-                                            <span style={{ marginLeft: "30px" }}>Approved By: ........................</span>
-                                        </p>
+                                    <div style={{ marginTop: "80px", marginBottom: "30px" }}>
+                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px" }}>
+                                            <p>Processed By: {selectedReturn.processedBy || "N/A"}</p>
+                                            <p>Checked By: ..............................</p>
+                                            <p>Approved By: ..............................</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

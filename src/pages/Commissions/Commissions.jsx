@@ -235,10 +235,45 @@ const Commissions = ({ role = 'salesRep' }) => {
             const imgData = canvas.toDataURL("image/png");
             const pdf = new jsPDF("p", "mm", "a4");
             const imgProps = pdf.getImageProperties(imgData);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const marginX = 10;
+            const marginY = 15;
+            const printableWidth = pageWidth - 2 * marginX;
+            const printableHeight = pageHeight - 2 * marginY;
 
-            pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+            const pdfHeight = (imgProps.height * printableWidth) / imgProps.width;
+
+            let leftHeight = pdfHeight;
+            let position = marginY;
+            let pageCount = 0;
+
+            // Render first page
+            pdf.addImage(imgData, "PNG", marginX, position, printableWidth, pdfHeight);
+            
+            // Mask margins on first page
+            pdf.setFillColor(255, 255, 255);
+            pdf.rect(0, 0, pageWidth, marginY, "F");
+            pdf.rect(0, pageHeight - marginY, pageWidth, marginY, "F");
+            
+            leftHeight -= printableHeight;
+
+            // Render subsequent pages if content overflows the A4 page limit
+            while (leftHeight > 0) {
+                pdf.addPage();
+                pageCount++;
+                position = marginY - pageCount * printableHeight;
+                pdf.addImage(imgData, "PNG", marginX, position, printableWidth, pdfHeight);
+                
+                // Mask margins on new page
+                pdf.setFillColor(255, 255, 255);
+                pdf.rect(0, 0, pageWidth, marginY, "F");
+                pdf.rect(0, pageHeight - marginY, pageWidth, marginY, "F");
+                
+                leftHeight -= printableHeight;
+            }
+
             pdf.save(`Commission_Invoice_${selectedViewInvoice.invoiceNumber}.pdf`);
         } catch (error) {
             console.error("Error generating PDF:", error);
@@ -266,15 +301,15 @@ const Commissions = ({ role = 'salesRep' }) => {
         { header: "Customer", accessor: "customer" },
         { header: "Date", accessor: "date" },
         {
-            header: "Commissionable Amount",
+            header: "Commissionable Amount (Rs)",
             accessor: "commissionableAmount",
-            render: (row) => `Rs. ${(row.commissionableAmount || 0).toFixed(2)}`,
+            render: (row) => `${(row.commissionableAmount || 0).toFixed(2)}`,
             align: 'right'
         },
-        {
-            header: "Total Commission",
+        { 
+            header: "Total Commission (Rs)",
             accessor: "totalCommission",
-            render: (row) => `Rs. ${(row.totalCommission || 0).toFixed(2)}`,
+            render: (row) => `${(row.totalCommission || 0).toFixed(2)}`,
             align: 'right'
         }
     ];
@@ -288,15 +323,15 @@ const Commissions = ({ role = 'salesRep' }) => {
             render: (row) => row.invoiceDate ? row.invoiceDate.split('T')[0] : "-"
         },
         {
-            header: "Total Return Amount",
+            header: "Total Return Amount (Rs)",
             accessor: "totalReturnAmount",
-            render: (row) => `Rs. ${(row.totalReturnAmount || 0).toFixed(2)}`,
+            render: (row) => `${(row.totalReturnAmount || 0).toFixed(2)}`,
             align: 'right'
         },
         {
-            header: "Total Commission Reversal",
+            header: "Total Commission Reversal (Rs)",
             accessor: "totalCommissionReversal",
-            render: (row) => `Rs. ${(row.totalCommissionReversal || 0).toFixed(2)}`,
+            render: (row) => `${(row.totalCommissionReversal || 0).toFixed(2)}`,
             align: 'right'
         }
     ];
