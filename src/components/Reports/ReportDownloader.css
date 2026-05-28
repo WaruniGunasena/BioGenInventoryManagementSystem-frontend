@@ -160,3 +160,103 @@
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
 }
+
+/* ── PaginatedSelect ── */
+.rd-paginated-select {
+    position: relative;
+    width: 100%;
+}
+
+.rd-ps-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border: 1.5px solid var(--rd-border);
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--rd-bg);
+    color: #111827;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.rd-ps-trigger:hover,
+.rd-ps-trigger.open {
+    border-color: var(--rd-primary);
+    background: var(--rd-white);
+}
+
+.rd-ps-value {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rd-ps-value.placeholder {
+    color: var(--rd-muted);
+}
+
+.rd-ps-chevron {
+    flex-shrink: 0;
+    color: var(--rd-muted);
+    transition: transform 0.2s;
+}
+
+.rd-ps-chevron.open {
+    transform: rotate(180deg);
+}
+
+.rd-ps-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 999;
+    background: var(--rd-white);
+    border: 1.5px solid var(--rd-primary);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.18);
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+
+.rd-ps-option {
+    padding: 9px 14px;
+    font-size: 13px;
+    color: var(--rd-text);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+}
+
+.rd-ps-option:hover {
+    background: var(--rd-tint);
+    color: var(--rd-secondary);
+}
+
+.rd-ps-option.selected {
+    background: var(--rd-primary);
+    color: var(--rd-white);
+    font-weight: 600;
+}
+
+.rd-ps-loading {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 14px;
+    font-size: 12px;
+    color: var(--rd-muted);
+}
+
+.rd-ps-empty {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--rd-muted);
+    text-align: center;
+}
