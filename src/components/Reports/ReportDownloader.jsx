@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { ExternalLink, Loader2, FileText } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { ExternalLink, Loader2, FileText, ChevronDown } from "lucide-react";
 import { downloadReport } from "../../api/reportService";
 import { useToast } from "../../context/ToastContext";
 import "./ReportDownloader.css";
@@ -23,6 +23,125 @@ import "./ReportDownloader.css";
  *      options      {Array}    — [{ label, value }] for type="select"
  *    }
  */
+/* ── PaginatedSelect ───────────────────────────────────────────────────
+   Renders a custom dropdown that lazy-loads pages of options as the user
+   scrolls. Options shape: { label: string, value: string }.
+   Props:
+     value        — currently selected value (the ID sent to BE)
+     onChange     — (value) => void
+     loadOptions  — async (page, size) => { options: [{label,value}], hasMore: bool }
+     placeholder  — placeholder string
+     pageSize     — default 20
+────────────────────────────────────────────────────────────────────── */
+const PaginatedSelect = ({ value, onChange, loadOptions, placeholder = "Select…", pageSize = 20 }) => {
+    const [open, setOpen] = useState(false);
+    const [options, setOptions] = useState([]);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [selectedLabel, setSelectedLabel] = useState("");
+    const containerRef = useRef(null);
+    const listRef = useRef(null);
+    const loadedOnce = useRef(false);
+
+    // Load a page of options
+    const loadPage = useCallback(async (pageNum) => {
+        if (loading) return;
+        setLoading(true);
+        try {
+            const result = await loadOptions(pageNum, pageSize);
+            setOptions(prev => pageNum === 0 ? result.options : [...prev, ...result.options]);
+            setHasMore(result.hasMore);
+            setPage(pageNum);
+        } catch (e) {
+            console.error("PaginatedSelect load error", e);
+        } finally {
+            setLoading(false);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loadOptions, pageSize]);
+
+    // Open dropdown → load first page
+    const handleOpen = () => {
+        setOpen(o => {
+            if (!o && !loadedOnce.current) {
+                loadedOnce.current = true;
+                loadPage(0);
+            }
+            return !o;
+        });
+    };
+
+    // Infinite scroll inside the list
+    const handleListScroll = (e) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.target;
+        if (scrollHeight - scrollTop <= clientHeight * 1.5 && hasMore && !loading) {
+            loadPage(page + 1);
+        }
+    };
+
+    // Close on outside click
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Sync label when value changes externally
+    useEffect(() => {
+        if (!value) { setSelectedLabel(""); return; }
+        const found = options.find(o => o.value === value);
+        if (found) setSelectedLabel(found.label);
+    }, [value, options]);
+
+    const handleSelect = (opt) => {
+        onChange(opt.value);
+        setSelectedLabel(opt.label);
+        setOpen(false);
+    };
+
+    return (
+        <div className="rd-paginated-select" ref={containerRef}>
+            <button
+                type="button"
+                className={`rd-ps-trigger ${open ? "open" : ""}`}
+                onClick={handleOpen}
+            >
+                <span className={`rd-ps-value ${!selectedLabel ? "placeholder" : ""}`}>
+                    {selectedLabel || placeholder}
+                </span>
+                <ChevronDown size={15} className={`rd-ps-chevron ${open ? "open" : ""}`} />
+            </button>
+
+            {open && (
+                <div
+                    className="rd-ps-dropdown"
+                    ref={listRef}
+                    onScroll={handleListScroll}
+                >
+                    {options.length === 0 && !loading && (
+                        <div className="rd-ps-empty">No options found</div>
+                    )}
+                    {options.map(opt => (
+                        <div
+                            key={opt.value}
+                            className={`rd-ps-option ${opt.value === value ? "selected" : ""}`}
+                            onClick={() => handleSelect(opt)}
+                        >
+                            {opt.label}
+                        </div>
+                    ))}
+                    {loading && <div className="rd-ps-loading"><Loader2 size={14} className="rd-spin" /> Loading…</div>}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const ReportDownloader = ({
     reportType,
     reportName,
@@ -158,7 +277,15 @@ const ReportDownloader = ({
                                 {param.required && <span className="rd-req">*</span>}
                             </label>
 
-                            {param.type === "select" ? (
+                            {param.type === "paginated-select" ? (
+                                <PaginatedSelect
+                                    value={values[param.key]}
+                                    onChange={(val) => handleChange(param.key, val)}
+                                    loadOptions={param.loadOptions}
+                                    placeholder={param.placeholder || "Select…"}
+                                    pageSize={param.pageSize || 20}
+                                />
+                            ) : param.type === "select" ? (
                                 <select
                                     className="rd-input"
                                     value={values[param.key]}
