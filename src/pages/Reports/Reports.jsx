@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { getAllCustomers } from "../../api/customerService";
 import { getAllProducts } from "../../api/productService";
 import { getAllSuppliers } from "../../api/supplierService";
+import { getPaginatedSalesOrders } from "../../api/salesOrderService";
 import Layout from "../../components/Layout";
 import Sidebar from "../../components/Sidebar";
 import ReportDownloader from "../../components/Reports/ReportDownloader";
@@ -363,10 +364,13 @@ const ORDER_REPORTS = [
         params: [
             {
                 key: "orderId",
-                label: "Sales Order ID",
-                type: "number",
+                label: "Invoice Number",
+                type: "paginated-select",
                 required: true,
-                placeholder: "e.g. 34",
+                placeholder: "Select an invoice...",
+                pageSize: 20,
+                // loadOptions is injected dynamically in the Reports component below
+                loadOptions: null,
             },
         ],
     },
@@ -745,6 +749,38 @@ const Reports = () => {
         ),
         [supplierOptions]);
 
+    // loadOptions function for the ORDER_DETAILS paginated-select
+    // Returns { options: [{label, value}], hasMore } for a given page
+    const loadSalesOrderOptions = useCallback(async (page, size) => {
+        const res = await getPaginatedSalesOrders(page, size);
+        const raw = res.data;
+        // API returns { salesOrderList: [], totalPages, ... }
+        const list = Array.isArray(raw?.salesOrderList)
+            ? raw.salesOrderList
+            : Array.isArray(raw?.content)
+                ? raw.content
+                : Array.isArray(raw?.salesOrders)
+                    ? raw.salesOrders
+                    : Array.isArray(raw)
+                        ? raw
+                        : [];
+        const totalPages = raw?.totalPages ?? 1;
+        const options = list.map(order => ({
+            label: order.invoiceNumber || order.invoice_number || `#${order.id}`,
+            value: String(order.id),
+        }));
+        return { options, hasMore: page < totalPages - 1 };
+    }, []);
+
+    // inject loadOptions into the ORDER_DETAILS card
+    const orderReportsWithInvoices = useMemo(() =>
+        ORDER_REPORTS.map(r =>
+            r.reportType === "ORDER_DETAILS"
+                ? { ...r, params: r.params.map(p => p.key === "orderId" ? { ...p, loadOptions: loadSalesOrderOptions } : p) }
+                : r
+        ),
+        [loadSalesOrderOptions]);
+
     return (
         <Layout>
             <div
@@ -785,7 +821,7 @@ const Reports = () => {
                         <Section title="📈 Sales Reports (Approved Orders)" reports={salesReportsWithCustomers} />
                         <Section title="📊 General Reports" reports={GENERAL_REPORTS} />
                         <Section title="📦 Inventory Reports" reports={inventoryReportsWithProducts} />
-                        <Section title="🗂️ Order Reports" reports={ORDER_REPORTS} />
+                        <Section title="🗂️ Order Reports" reports={orderReportsWithInvoices} />
                         <Section title="👥 Customer Reports" reports={CUSTOMER_REPORTS} />
                         <Section title="🚚 Supplier Reports" reports={supplierReportsWithSuppliers} />
                         <Section title="💰 Financial Reports" reports={FINANCIAL_REPORTS} />
