@@ -279,8 +279,10 @@ const Customers = () => {
                     showAddButton={canAdd}
                     onAddClick={() => setIsAddModalOpen(true)}
                     showActions={canEdit || canDelete}
-                    onEdit={canEdit ? (row) => { setSelectedCustomer(row); setIsEditModalOpen(true); } : null}
-                    onDelete={canDelete ? handleDeleteClick : null}
+                    showEdit={canEdit}
+                    showDelete={canDelete}
+                    onEdit={(row) => { setSelectedCustomer(row); setIsEditModalOpen(true); }}
+                    onDelete={handleDeleteClick}
                     onSearch={handleSearch}
                     onRowClick={handleRowClick}
                     filterOptions={[

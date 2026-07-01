@@ -35,13 +35,14 @@ const Settings = () => {
     const [selectedRole, setSelectedRole] = useState(Object.values(UserRole)[0]);
     const [savedToast, setSavedToast] = useState(false);
 
-    const { permissions, updatePermission } = usePermissionsContext();
+    const { permissions, saveAllPermissions } = usePermissionsContext();
     const currentRole = getRole();
     const canEdit = CAN_EDIT_SETTINGS.includes(currentRole);
 
     // Local draft — changes stay here until Save is clicked
     const [draft, setDraft] = useState(() => deepClone(permissions));
     const [hasChanges, setHasChanges] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     // Sync draft on first mount
     useEffect(() => {
@@ -65,17 +66,19 @@ const Settings = () => {
         setHasChanges(true);
     };
 
-    const handleSave = () => {
-        Object.keys(SECTIONS).forEach((section) => {
-            Object.values(UserRole).forEach((role) => {
-                ACTIONS.forEach(({ key }) => {
-                    updatePermission(section, role, key, draft[section]?.[role]?.[key] ?? false);
-                });
-            });
-        });
-        setHasChanges(false);
-        setSavedToast(true);
-        setTimeout(() => setSavedToast(false), 2500);
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            await saveAllPermissions(deepClone(draft));
+            setHasChanges(false);
+            setSavedToast(true);
+            setTimeout(() => setSavedToast(false), 2500);
+        } catch (err) {
+            console.error('Failed to save permissions:', err);
+            alert('Failed to save permissions. Please try again.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleDiscard = () => {
@@ -108,17 +111,17 @@ const Settings = () => {
                         {canEdit && (
                             <div className="settings-header-actions">
                                 {hasChanges && (
-                                    <button className="settings-btn-discard" onClick={handleDiscard}>
+                                    <button className="settings-btn-discard" onClick={handleDiscard} disabled={isSaving}>
                                         <RotateCcw size={15} /> Discard
                                     </button>
                                 )}
                                 <button
                                     className={`settings-btn-save ${hasChanges ? 'active' : ''}`}
                                     onClick={handleSave}
-                                    disabled={!hasChanges}
+                                    disabled={!hasChanges || isSaving}
                                 >
                                     <Save size={15} />
-                                    {hasChanges ? 'Save Changes' : 'Saved'}
+                                    {isSaving ? 'Saving...' : hasChanges ? 'Save Changes' : 'Saved'}
                                 </button>
                             </div>
                         )}

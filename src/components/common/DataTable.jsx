@@ -29,8 +29,10 @@ const DataTable = ({
     onSelectionChange = () => { },
 
     showActions = true,
-    onEdit = () => { },
-    onDelete = () => { },
+    showEdit = true,
+    showDelete = true,
+    onEdit = null,
+    onDelete = null,
     onToggleStatus = () => { },
     onRowClick = null,          // optional: fires when a data row (not action buttons) is clicked
     customControls = null,      // custom nodes to render in the control-right section
@@ -217,12 +219,12 @@ const DataTable = ({
                                         onClick={(e) => e.stopPropagation()}
                                     >
                                         <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
-                                            {onEdit && (
+                                            {showEdit && onEdit && (
                                                 <button className="action-btn edit-btn" onClick={() => onEdit(row)}>
                                                     <Edit2 size={18} />
                                                 </button>
                                             )}
-                                            {onDelete && (
+                                            {showDelete && onDelete && (
                                                 <button className="action-btn delete-btn" onClick={() => onDelete(row)}>
                                                     <Trash2 size={18} />
                                                 </button>

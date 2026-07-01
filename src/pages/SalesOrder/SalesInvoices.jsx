@@ -11,11 +11,13 @@ import { getPaginatedSalesOrders, searchSalesOrder, softDeleteSalesOrder, approv
 import { getUserId, getUserRole } from "../../components/common/Utils/userUtils/userUtils";
 import { useToast } from "../../context/ToastContext";
 import { useNavigate } from "react-router-dom";
+import usePermissions from "../../hooks/usePermissions";
 import "./SalesInvoices.css";
 
 const SalesInvoices = () => {
     const { showToast } = useToast();
     const navigate = useNavigate();
+    const { canAdd, canEdit, canDelete } = usePermissions('salesOrders');
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -788,12 +790,12 @@ const SalesInvoices = () => {
                                         </button>
                                     </>
                                 )}
-                                {selectedInvoice.status === "Pending" && (
+                                {canEdit && selectedInvoice.status === "Pending" && (
                                     <button className="action-btn btn-edit" onClick={() => handleEditOpen(selectedInvoice)}>
                                         <Edit size={18} /> Edit
                                     </button>
                                 )}
-                                {selectedInvoice.status !== "Deleted" && (
+                                {canDelete && selectedInvoice.status !== "Deleted" && (
                                     <button className="action-btn btn-delete" onClick={() => handleSoftDelete(selectedInvoice)}>
                                         <Trash2 size={18} /> Delete
                                     </button>

@@ -9,12 +9,14 @@ import { createGRN, updateGRN } from "../../api/grnService";
 import AddProductModal from "../../components/Products/AddProductModal";
 import { Trash2, Edit3, FileText, Plus } from "lucide-react";
 import { getUserId } from "../../components/common/Utils/userUtils/userUtils";
+import usePermissions from "../../hooks/usePermissions";
 import "./GRN.css";
 
 const GRN = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { showToast } = useToast();
+    const { canAdd, canEdit, canDelete } = usePermissions('grn');
     const formRef = useRef(null);
     const today = new Date().toLocaleDateString('en-CA');
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -495,6 +497,7 @@ const GRN = () => {
                                         readOnly
                                     />
                                 </div>
+                                {canAdd && (
                                 <button
                                     onClick={() => setIsAddProductModalOpen(true)}
                                     style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", background: "#6366f1", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(99,102,241,0.3)", transition: "all 0.2s", flexShrink: 0 }}
@@ -503,6 +506,7 @@ const GRN = () => {
                                 >
                                     <Plus size={16} /> Add New Product
                                 </button>
+                                )}
                                 <div style={fieldStyle}>
                                     <label style={labelStyle}>Batch Number</label>
                                     <input type="text" name="batchNumber" style={inputStyle} placeholder="Enter Batch Number" value={formData.batchNumber} onChange={handleInputChange} />
@@ -607,6 +611,7 @@ const GRN = () => {
                                         Cancel
                                     </button>
                                 )}
+                                {(editingItemId ? canEdit : canAdd) && (
                                 <button
                                     onClick={handleAddItem}
                                     style={{ padding: "10px 40px", background: "#6366f1", color: "white", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "600", cursor: "pointer", boxShadow: "0 2px 8px rgba(99,102,241,0.35)", transition: "all 0.2s" }}
@@ -615,6 +620,7 @@ const GRN = () => {
                                 >
                                     {editingItemId ? "Update" : "Add"}
                                 </button>
+                                )}
                             </div>
                         </div>
 
@@ -664,8 +670,8 @@ const GRN = () => {
                                                     <td className="text-right">{parseFloat(item.totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                     <td className="text-center">
                                                         <div className="action-btns" style={{ justifyContent: "center" }}>
-                                                            <Edit3 size={18} className="edit-icon" onClick={() => handleEditItem(item)} />
-                                                            <Trash2 size={18} className="delete-icon" onClick={() => handleRemoveItem(item.id)} />
+                                                            {canEdit && <Edit3 size={18} className="edit-icon" onClick={() => handleEditItem(item)} />}
+                                                            {canDelete && <Trash2 size={18} className="delete-icon" onClick={() => handleRemoveItem(item.id)} />}
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -699,7 +705,7 @@ const GRN = () => {
                                     </tbody>
                                 </table>
                                 <div className="add-stock-footer">
-                                    <button className="add-stock-btn" onClick={handleAddStock}>{formData.invoiceId ? "Update Stock" : "Add Stock"}</button>
+                                    {canAdd && <button className="add-stock-btn" onClick={handleAddStock}>{formData.invoiceId ? "Update Stock" : "Add Stock"}</button>}
                                 </div>
                             </div>
                         </div>

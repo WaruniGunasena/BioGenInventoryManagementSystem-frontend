@@ -211,8 +211,10 @@ const Suppliers = () => {
                         onAddClick={() => setIsAddModalOpen(true)}
                         showActions={canEdit || canDelete}
                         showStatusToggle={false}
-                        onEdit={canEdit ? (row) => { setSelectedSupplier(row); setIsEditModalOpen(true); } : null}
-                        onDelete={canDelete ? handleDeleteClick : null}
+                        showEdit={canEdit}
+                        showDelete={canDelete}
+                        onEdit={(row) => { setSelectedSupplier(row); setIsEditModalOpen(true); }}
+                        onDelete={handleDeleteClick}
                         filterOptions={[
                             { label: 'Name: A \u2192 Z', value: FilterType.ASC },
                             { label: 'Name: Z \u2192 A', value: FilterType.DESC },

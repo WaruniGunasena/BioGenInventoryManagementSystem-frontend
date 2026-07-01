@@ -261,8 +261,10 @@ const Category = () => {
                     showAddButton={canAdd}
                     onAddClick={() => handleOpenModal('add')}
                     showActions={canEdit || canDelete}
-                    onEdit={canEdit ? (row) => handleOpenModal('edit', row) : null}
-                    onDelete={canDelete ? handleDeleteClick : null}
+                    showEdit={canEdit}
+                    showDelete={canDelete}
+                    onEdit={(row) => handleOpenModal('edit', row)}
+                    onDelete={handleDeleteClick}
                     onSearch={handleSearch}
                     filterOptions={[
                         { label: 'Name: A → Z', value: FilterType.ASC },
