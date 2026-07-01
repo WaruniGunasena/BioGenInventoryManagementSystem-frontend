@@ -240,8 +240,10 @@ const Products = () => {
                         onAddClick={() => setIsAddModalOpen(true)}
                         showActions={canEdit || canDelete}
                         showStatusToggle={false}
-                        onEdit={canEdit ? (row) => { setSelectedProduct(row); setIsEditModalOpen(true); } : null}
-                        onDelete={canDelete ? handleDeleteClick : null}
+                        showEdit={canEdit}
+                        showDelete={canDelete}
+                        onEdit={(row) => { setSelectedProduct(row); setIsEditModalOpen(true); }}
+                        onDelete={handleDeleteClick}
                         customControls={
                             <select
                                 className="btn-secondary"
