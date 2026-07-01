@@ -17,7 +17,7 @@ import "./SalesInvoices.css";
 const SalesInvoices = () => {
     const { showToast } = useToast();
     const navigate = useNavigate();
-    const { canAdd, canEdit, canDelete } = usePermissions('salesOrders');
+    const { canEdit, canDelete } = usePermissions('salesOrders');
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
