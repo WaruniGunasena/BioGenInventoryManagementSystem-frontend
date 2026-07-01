@@ -58,7 +58,6 @@ const buildDefaults = () => {
     });
 
     const all     = { canAdd: true,  canEdit: true,  canDelete: true  };
-    const addDel  = { canAdd: true,  canEdit: false, canDelete: true  };
     const addOnly = { canAdd: true,  canEdit: false, canDelete: false };
     const none    = { canAdd: false, canEdit: false, canDelete: false };
 
