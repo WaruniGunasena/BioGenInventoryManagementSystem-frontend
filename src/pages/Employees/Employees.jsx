@@ -229,8 +229,10 @@ const Employees = () => {
                     showAddButton={canAdd}
                     onAddClick={() => setIsAddModalOpen(true)}
                     showActions={canEdit || canDelete}
-                    onEdit={canEdit ? (row) => { setSelectedEmployee(row); setIsEditModalOpen(true); } : null}
-                    onDelete={canDelete ? handleDeleteClick : null}
+                    showEdit={canEdit}
+                    showDelete={canDelete}
+                    onEdit={(row) => { setSelectedEmployee(row); setIsEditModalOpen(true); }}
+                    onDelete={handleDeleteClick}
                     onSearch={handleSearch}
                     filterOptions={[
                         { label: 'Name: A → Z', value: FilterType.ASC },
